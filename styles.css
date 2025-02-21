@@ -1,0 +1,61 @@
+@import url('https://fonts.cdnfonts.com/css/luminari');
+@import url('https://fonts.cdnfonts.com/css/noto-serif-gurmukhi');
+
+body {
+    background-color: wheat;
+    width: 70%;
+    margin: auto;
+}
+
+.main-title a{
+    color: rgb(135, 89, 33);
+    font-family: "Luminari", fantasy;
+    font-size: 300%;
+    text-decoration: none;
+}
+
+.main-title a:hover{
+    color: rgb(218, 72, 72);
+}
+
+p {
+    font-family: 'Noto Serif Gurmukhi', sans-serif;
+    color: rgb(54, 50, 41);
+}
+
+.banner a:link {
+    color: green;
+    background-color: transparent;
+    text-decoration: none;
+    font-family: 'Noto Serif Gurmukhi', sans-serif;
+    font-size: larger;
+    margin: 5px;
+}
+  
+.banner a:visited {
+    color: pink;
+    background-color: transparent;
+    text-decoration: none;
+}
+  
+.banner a:hover {
+    color: red;
+    background-color: transparent;
+    text-decoration: underline;
+}
+  
+.banner a:active {
+    color: yellow;
+    background-color: transparent;
+    text-decoration: underline;
+}
+
+.textbox {
+    background-color: rgba(226, 55, 24, 0.148);
+    margin: 20px;
+    padding: 20px;
+}
+
+.banner {
+    margin: auto;
+}
