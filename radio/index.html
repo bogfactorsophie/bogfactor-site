@@ -5,99 +5,180 @@
     <link href="https://fonts.cdnfonts.com/css/luminari" rel="stylesheet">
     <link href="https://fonts.cdnfonts.com/css/noto-serif-gurmukhi" rel="stylesheet">
     <link rel="stylesheet" href="../styles.css">
-    <script src="/scripts/mousefollower.js" defer></script>
+    <script src="../scripts/persistent-player.js"></script>
+    <script src="../scripts/draggable-suns.js"></script>
+    <script src="../scripts/toolbar-live-widget.js"></script>
   </head>
 
-  <body>
-    <div class="header-container">
-      <h1 class="main-title"><a href="/index.html">Radio</a></h1>
-      <div class="image-container">
-        <img src="../assets/sun_image.png" class="rotating-image" alt="Rotating Image">
-      </div>
+  <body class="radio-page">
+    <!-- SVG filter for wavy borders -->
+    <svg style="position: absolute; width: 0; height: 0;">
+      <defs>
+        <filter id="wavy2">
+          <feTurbulence x="0" y="0" baseFrequency="0.02" numOctaves="5" seed="1" />
+          <feDisplacementMap in="SourceGraphic" scale="6" />
+        </filter>
+        <filter id="wavy-smooth">
+          <feTurbulence x="0" y="0" baseFrequency="0.01" numOctaves="2" seed="1" />
+          <feDisplacementMap in="SourceGraphic" scale="3" />
+        </filter>
+      </defs>
+    </svg>
+
+    <div class="toolbar">
+      <a href="/index.html">Home</a>
+      <a href="/radio/index.html">Radio</a>
+      <a href="/about/index.html">About</a>
+      <a href="/blog/index.html">Bog Blog</a>
     </div>
 
-    <div class="banner">
-    <a href="/radio/index.html">Radio</a>
-    <a href="/about/index.html">About</a>
-    <a href="/blog/index.html">Bog Blog</a>
-    </div>
-
-    <div class="textbox">
-      <h2>The Girls Are Back Together</h2>
-      <p>
-        Welcome to our website, traveller, are you ready to join us on our quest? 
-        Sophie and Emily are ready to take you to the bog
-      </p>
-
-      <div class="mixcloud-container">
-        <iframe width="100%" height="60" src="https://player-widget.mixcloud.com/widget/iframe/?hide_cover=1&mini=1&feed=%2Fehfm%2Fbog-factor-04072025%2F" frameborder="0" allow="encrypted-media; fullscreen; autoplay; idle-detection; speaker-selection; web-share;" ></iframe>
-      </div>
-    </div>
-
-    <div class="textbox">
-      <h2>Biome 1 - The Open Road</h2>
-      <p>
-        Welcome to our website, traveller, are you ready to join us on our quest? 
-        Sophie and Emily are ready to take you to the bog
-      </p>
-
-      <div class="mixcloud-container">
-        <iframe width="100%" height="60" src="https://player-widget.mixcloud.com/widget/iframe/?hide_cover=1&mini=1&feed=%2Fehfm%2Fbog-factor-060625%2F" frameborder="0" allow="encrypted-media; fullscreen; autoplay; idle-detection; speaker-selection; web-share;" ></iframe>
-      </div>
-    </div>
-
-    <div class="textbox">
-      <h2>Sophie Does Beltane</h2>
-      <p>
-        Welcome to our website, traveller, are you ready to join us on our quest? 
-        Sophie and Emily are ready to take you to the bog
-      </p>
-
-      <div class="mixcloud-container">
-        <iframe width="100%" height="60" src="https://player-widget.mixcloud.com/widget/iframe/?hide_cover=1&mini=1&feed=%2Fehfm%2Fbog-factor-020525%2F" frameborder="0" allow="encrypted-media; fullscreen; autoplay; idle-detection; speaker-selection; web-share;" ></iframe>
-      </div>
-    </div>
-
-    <div class="textbox">
-      <h2>The Awkward Second Show</h2>
-      <p>
-        Welcome to our website, traveller, are you ready to join us on our quest? 
-        Sophie and Emily are ready to take you to the bog
-      </p>
-
-      <div class="mixcloud-container">
-        <iframe width="100%" height="60" src="https://player-widget.mixcloud.com/widget/iframe/?hide_cover=1&mini=1&feed=%2Fehfm%2Fbog-factor-040425%2F" frameborder="0" allow="encrypted-media; fullscreen; autoplay; idle-detection; speaker-selection; web-share;" ></iframe>
-      </div>
-    </div>
-
-
-    <div class="textbox">
-      <h2>The First Show in the Residency</h2>
-      <p>
-        Welcome to our website, traveller, are you ready to join us on our quest? 
-        Sophie and Emily are ready to take you to the bog
-      </p>
-
-      <div class="mixcloud-container">
-        <iframe width="100%" height="60" src="https://player-widget.mixcloud.com/widget/iframe/?hide_cover=1&mini=1&feed=%2Fehfm%2Fbog-factor-070325%2F" frameborder="0" ></iframe>
-    </div>
-    </div>
-
-        <div class="textbox"> 
-      <h2>The Primordial Trial Show</h2>
-      <p>
-        Welcome to our website, traveller, are you ready to join us on our quest? 
-        Sophie and Emily are ready to take you to the bog
-      </p>
-
-      <div class="mixcloud-container">
-        <iframe width="100%" height="60" src="https://player-widget.mixcloud.com/widget/iframe/?hide_cover=1&mini=1&feed=%2Fehfm%2Fiwd-24-open-decks-bog-factor%2F" frameborder="0" allow="encrypted-media; fullscreen; autoplay; idle-detection; speaker-selection; web-share;" ></iframe>
-      </div>
-    </div>
+    <div id="shows-container"></div>
 
     <footer class="footer">
       <a href="https://www.instagram.com" target="_blank">Instagram</a>
       <a href="https://www.mixcloud.com" target="_blank">Mixcloud</a>
     </footer>
+
+    <script>
+      // Modal functions
+      function openModal(modalId) {
+        document.getElementById(modalId).style.display = 'block';
+      }
+
+      function closeModal(modalId) {
+        document.getElementById(modalId).style.display = 'none';
+      }
+
+      // Close modal when clicking outside of it
+      window.onclick = function(event) {
+        if (event.target.classList.contains('modal')) {
+          event.target.style.display = 'none';
+        }
+      }
+
+      // Generate shows from JSON
+      window.loadShows = async function() {
+        try {
+          const response = await fetch('shows.json');
+          const shows = await response.json();
+
+          const container = document.getElementById('shows-container');
+
+          shows.forEach(show => {
+            // Create show textbox
+            const showDiv = document.createElement('div');
+            showDiv.className = 'textbox';
+
+            const title = document.createElement('h2');
+            title.textContent = show.title;
+
+            const description = document.createElement('p');
+            description.textContent = show.description;
+
+            showDiv.appendChild(title);
+            showDiv.appendChild(description);
+
+            // Add image if present
+            if (show.image) {
+              const imageContainer = document.createElement('div');
+              imageContainer.className = 'show-image-container';
+
+              const img = document.createElement('img');
+              img.src = show.image;
+              img.alt = show.title;
+              img.className = 'show-image';
+
+              imageContainer.appendChild(img);
+              showDiv.appendChild(imageContainer);
+            }
+
+            const buttonContainer = document.createElement('div');
+            buttonContainer.className = 'button-container';
+
+            const playButton = document.createElement('button');
+            playButton.className = 'play-btn';
+            playButton.textContent = '▶ Play';
+            playButton.onclick = () => {
+              if (window.BogFactorPlayer) {
+                window.BogFactorPlayer.playTrack(show.mixcloudPath, show.title);
+              }
+            };
+
+            const tracklistButton = document.createElement('button');
+            tracklistButton.className = 'tracklist-btn';
+            tracklistButton.textContent = 'View Tracklist';
+            tracklistButton.onclick = () => openModal(`modal-${show.id}`);
+
+            buttonContainer.appendChild(playButton);
+            buttonContainer.appendChild(tracklistButton);
+
+            showDiv.appendChild(buttonContainer);
+
+            // Create modal
+            const modal = document.createElement('div');
+            modal.id = `modal-${show.id}`;
+            modal.className = 'modal';
+
+            const modalContent = document.createElement('div');
+            modalContent.className = 'modal-content';
+
+            const closeBtn = document.createElement('button');
+            closeBtn.className = 'close-btn';
+            closeBtn.innerHTML = '&times;';
+            closeBtn.onclick = () => closeModal(`modal-${show.id}`);
+
+            const modalTitle = document.createElement('h3');
+            modalTitle.textContent = `${show.title} Tracklist`;
+
+            const tracklistContent = document.createElement('div');
+            tracklistContent.className = 'tracklist-content';
+
+            if (show.tracklist && show.tracklist.length > 0) {
+              const ul = document.createElement('ul');
+              show.tracklist.forEach(track => {
+                const li = document.createElement('li');
+                li.className = 'tracklist-item';
+
+                const trackText = document.createElement('span');
+                trackText.className = 'track-text';
+                trackText.textContent = track;
+
+                const youtubeBtn = document.createElement('a');
+                youtubeBtn.className = 'youtube-search-btn';
+                youtubeBtn.innerHTML = '🔍';
+                youtubeBtn.title = `Search "${track}" on YouTube`;
+                youtubeBtn.href = `https://www.youtube.com/results?search_query=${encodeURIComponent(track)}`;
+                youtubeBtn.target = '_blank';
+                youtubeBtn.rel = 'noopener noreferrer';
+
+                li.appendChild(trackText);
+                li.appendChild(youtubeBtn);
+                ul.appendChild(li);
+              });
+              tracklistContent.appendChild(ul);
+            } else {
+              const placeholder = document.createElement('p');
+              placeholder.textContent = 'Tracklist coming soon...';
+              tracklistContent.appendChild(placeholder);
+            }
+
+            modalContent.appendChild(closeBtn);
+            modalContent.appendChild(modalTitle);
+            modalContent.appendChild(tracklistContent);
+            modal.appendChild(modalContent);
+
+            // Append to container
+            container.appendChild(showDiv);
+            container.appendChild(modal);
+          });
+        } catch (error) {
+          console.error('Error loading shows:', error);
+          document.getElementById('shows-container').innerHTML = '<p>Error loading shows. Please try again later.</p>';
+        }
+      }
+
+      // Load shows when page loads
+      loadShows();
+    </script>
   </body>
 </html>

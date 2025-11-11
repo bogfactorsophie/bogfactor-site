@@ -6,22 +6,30 @@
     <link href="https://fonts.cdnfonts.com/css/luminari" rel="stylesheet">
     <link href="https://fonts.cdnfonts.com/css/noto-serif-gurmukhi" rel="stylesheet">
     <link rel="stylesheet" href="/styles.css">
-    <script src="/scripts/mousefollower.js" defer></script>
+    <script src="../scripts/draggable-suns.js"></script>
+    <script src="../scripts/toolbar-live-widget.js"></script>
   </head>
 
-  <body>
-    <div class="site-header">
-      <div class="header-container">
-        <h1 class="main-title"><a href="/index.html">Blog Factor</a></h1>
-        <div class="image-container">
-        <img src="../assets/sun_image.png" class="rotating-image" alt="Rotating Image">
-      </div>
-      </div>
-    <div class="banner">
-    <a href="/radio/index.html">Radio</a>
-    <a href="/about/index.html">About</a>
-    <a href="/blog/index.html">Bog Blog</a>
-    </div>
+  <body class="blog-page">
+    <!-- SVG filter for wavy borders -->
+    <svg style="position: absolute; width: 0; height: 0;">
+      <defs>
+        <filter id="wavy2">
+          <feTurbulence x="0" y="0" baseFrequency="0.02" numOctaves="5" seed="1" />
+          <feDisplacementMap in="SourceGraphic" scale="6" />
+        </filter>
+        <filter id="wavy-smooth">
+          <feTurbulence x="0" y="0" baseFrequency="0.01" numOctaves="2" seed="1" />
+          <feDisplacementMap in="SourceGraphic" scale="3" />
+        </filter>
+      </defs>
+    </svg>
+
+    <div class="toolbar">
+      <a href="/index.html">Home</a>
+      <a href="/radio/index.html">Radio</a>
+      <a href="/about/index.html">About</a>
+      <a href="/blog/index.html">Bog Blog</a>
     </div>
 
   </body>
