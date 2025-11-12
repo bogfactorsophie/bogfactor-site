@@ -1,0 +1,103 @@
+[
+  {
+    "id": "nov2025",
+    "title": "Bog Fav - November 2025",
+    "description": "Welcome to our website, traveller, are you ready to join us on our quest? Sophie and Emily are ready to take you to the bog",
+    "mixcloudPath": "/ehfm/bog-fav/",
+    "date": "2025-11",
+    "image": "../assets/the-stranglers.jpg",
+    "tracklist": []
+  },
+  {
+    "id": "oct2025",
+    "title": "Conk Factor - October 2025",
+    "description": "Welcome to our website, traveller, are you ready to join us on our quest? Sophie and Emily are ready to take you to the bog",
+    "mixcloudPath": "/ehfm/conk-factor-2025-031025/",
+    "date": "2025-10",
+    "tracklist": []
+  },
+  {
+    "id": "sep2025",
+    "title": "September 2025 Show",
+    "description": "Welcome to our website, traveller, are you ready to join us on our quest? Sophie and Emily are ready to take you to the bog",
+    "mixcloudPath": "/ehfm/bog-factor-050925/",
+    "date": "2025-09",
+    "tracklist": []
+  },
+  {
+    "id": "aug2025",
+    "title": "August 2025 Show",
+    "description": "Welcome to our website, traveller, are you ready to join us on our quest? Sophie and Emily are ready to take you to the bog",
+    "mixcloudPath": "/ehfm/bog-factor-010825/",
+    "date": "2025-08",
+    "tracklist": ["Space Flight - I Roy",
+                  "I Hear A New World - Joe Meek & The Blue Men",
+                  "Touareg Spaceship - Mamman Sani & Tropikal Camel",
+                  "Po D'Terra - João Cirilo",
+                  "Frog Bog - Moondog",
+                  "Conspiracy on Neptune - Prince Jammy",
+                  "Intergalactic Love Song (feat. Paige Douglas) - The Diddys",
+                  "Space Traveler",
+                  "Love in Outer Space [Vocal] - Sun Ra and His Arkestra",
+                  "UFO - ESG",
+                  "Le Bracelet - Alain Goraguer",
+                  "Be Thankful for What You Got - The Space Lady",
+                  "U.F.O. - Jim Sullivan",
+                  "2001 - Gilberto Gil",
+                  "From \"Visiting Friends\" - Vernon Elliott",
+                  "Numbers / Computer World (3-D) - Kraftwerk",
+                  "Nuclear Si - Aviador Dro",
+                  "Space Is The Place - Sun Ra and his Arkestra",
+                  "Door To The Cosmos - Motor City Drum Ensemble",
+                  "Female Of The Species - Space"
+      ]
+  },
+  {
+    "id": "july2025",
+    "title": "The Girls Are Back Together",
+    "description": "Welcome to our website, traveller, are you ready to join us on our quest? Sophie and Emily are ready to take you to the bog",
+    "mixcloudPath": "/ehfm/bog-factor-04072025/",
+    "date": "2025-07",
+    "tracklist": []
+  },
+  {
+    "id": "june2025",
+    "title": "Biome 1 - The Open Road",
+    "description": "Welcome to our website, traveller, are you ready to join us on our quest? Sophie and Emily are ready to take you to the bog",
+    "mixcloudPath": "/ehfm/bog-factor-060625/",
+    "date": "2025-06",
+    "tracklist": []
+  },
+  {
+    "id": "may2025",
+    "title": "Sophie Does Beltane",
+    "description": "Welcome to our website, traveller, are you ready to join us on our quest? Sophie and Emily are ready to take you to the bog",
+    "mixcloudPath": "/ehfm/bog-factor-020525/",
+    "date": "2025-05",
+    "tracklist": []
+  },
+  {
+    "id": "apr2025",
+    "title": "The Awkward Second Show",
+    "description": "Welcome to our website, traveller, are you ready to join us on our quest? Sophie and Emily are ready to take you to the bog",
+    "mixcloudPath": "/ehfm/bog-factor-040425/",
+    "date": "2025-04",
+    "tracklist": []
+  },
+  {
+    "id": "mar2025",
+    "title": "The First Show in the Residency",
+    "description": "Welcome to our website, traveller, are you ready to join us on our quest? Sophie and Emily are ready to take you to the bog",
+    "mixcloudPath": "/ehfm/bog-factor-070325/",
+    "date": "2025-03",
+    "tracklist": []
+  },
+  {
+    "id": "iwd2024",
+    "title": "The Primordial Trial Show",
+    "description": "Welcome to our website, traveller, are you ready to join us on our quest? Sophie and Emily are ready to take you to the bog",
+    "mixcloudPath": "/ehfm/iwd-24-open-decks-bog-factor/",
+    "date": "2024-03",
+    "tracklist": []
+  }
+]
