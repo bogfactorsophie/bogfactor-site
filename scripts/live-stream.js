@@ -173,7 +173,18 @@
     return widget;
   }
 
+  function updateToolbarHeight() {
+    const toolbar = document.querySelector('.toolbar');
+    if (toolbar) {
+      const height = toolbar.offsetHeight;
+      document.documentElement.style.setProperty('--toolbar-height', `${height}px`);
+    }
+  }
+
   function init() {
+    // Set toolbar height CSS variable
+    updateToolbarHeight();
+
     const widget = createWidget();
 
     // Insert after toolbar
@@ -183,6 +194,9 @@
     } else {
       document.body.insertBefore(widget, document.body.firstChild);
     }
+
+    // Update toolbar height on window resize
+    window.addEventListener('resize', updateToolbarHeight);
 
     // Attach play button event listener
     const playBtn = document.getElementById('stream-play-btn');

@@ -540,7 +540,7 @@ img {
 /* Live Stream Widget */
 .stream-widget {
     position: fixed;
-    top: 80px;
+    top: calc(var(--toolbar-height, 65px) + 15px);
     left: 20px;
     background: rgba(247, 224, 193, 0.95);
     backdrop-filter: blur(10px);
@@ -707,7 +707,7 @@ img {
     /* Increase live stream widget size on mobile */
     .stream-widget {
         position: fixed;
-        top: 125px;
+        top: calc(var(--toolbar-height, 90px) + 15px);
         left: 10px;
         right: 10px;
         max-width: none;
@@ -870,7 +870,7 @@ img {
     }
 
     .stream-widget {
-        top: 95px;
+        top: calc(var(--toolbar-height, 80px) + 15px);
         left: 5px;
         right: 5px;
         padding: 20px 15px;
