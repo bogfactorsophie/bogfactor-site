@@ -69,9 +69,45 @@
             // Create show textbox
             const showDiv = document.createElement('div');
             showDiv.className = 'textbox';
+            showDiv.id = show.id; // Add ID for anchor links
 
             const title = document.createElement('h2');
-            title.textContent = show.title;
+            title.className = 'show-title';
+
+            // Make title a clickable anchor link
+            const titleLink = document.createElement('a');
+            titleLink.href = `#${show.id}`;
+            titleLink.textContent = show.title;
+            titleLink.className = 'show-title-link';
+            titleLink.onclick = (e) => {
+              e.preventDefault();
+              const toolbar = document.querySelector('.toolbar');
+              const toolbarHeight = toolbar ? toolbar.offsetHeight : 0;
+              const targetPosition = showDiv.getBoundingClientRect().top + window.pageYOffset - toolbarHeight - 20;
+              window.scrollTo({ top: targetPosition, behavior: 'smooth' });
+              // Update URL without triggering scroll
+              history.pushState(null, null, `#${show.id}`);
+            };
+
+            // Add copy link button
+            const linkIcon = document.createElement('button');
+            linkIcon.className = 'copy-link-btn';
+            linkIcon.innerHTML = '🔗';
+            linkIcon.title = 'Copy link to this show';
+            linkIcon.onclick = (e) => {
+              e.preventDefault();
+              const url = `${window.location.origin}${window.location.pathname}#${show.id}`;
+              navigator.clipboard.writeText(url).then(() => {
+                linkIcon.innerHTML = '✓';
+                setTimeout(() => linkIcon.innerHTML = '🔗', 2000);
+              }).catch(() => {
+                // Fallback for older browsers
+                linkIcon.innerHTML = '🔗';
+              });
+            };
+
+            title.appendChild(titleLink);
+            title.appendChild(linkIcon);
 
             const description = document.createElement('p');
             description.textContent = show.description;
@@ -179,7 +215,20 @@
       }
 
       // Load shows when page loads
-      loadShows();
+      loadShows().then(() => {
+        // If there's a hash in the URL, scroll to it with offset for toolbar
+        if (window.location.hash) {
+          const target = document.querySelector(window.location.hash);
+          if (target) {
+            setTimeout(() => {
+              const toolbar = document.querySelector('.toolbar');
+              const toolbarHeight = toolbar ? toolbar.offsetHeight : 0;
+              const targetPosition = target.getBoundingClientRect().top + window.pageYOffset - toolbarHeight - 20;
+              window.scrollTo({ top: targetPosition, behavior: 'smooth' });
+            }, 100);
+          }
+        }
+      });
     </script>
   </body>
 </html>
