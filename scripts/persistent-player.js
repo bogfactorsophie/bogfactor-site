@@ -78,6 +78,17 @@
         return;
       }
 
+      // Stop live stream if it's playing and clear its state
+      if (window.BogFactorLiveStream) {
+        if (window.BogFactorLiveStream.stopStream) {
+          window.BogFactorLiveStream.stopStream();
+        }
+        // Clear the playing state so it doesn't auto-resume on next page
+        if (window.BogFactorLiveStream.clearPlayingState) {
+          window.BogFactorLiveStream.clearPlayingState();
+        }
+      }
+
       this.currentTrack = { mixcloudPath, title };
 
       // Update player title
@@ -93,6 +104,14 @@
       player.classList.remove('player-hidden');
       player.classList.add('player-visible');
 
+      // Add class to body so other elements can respond
+      document.body.classList.add('mixcloud-player-active');
+
+      // Update floating player to show mute icon
+      if (window.BogFactorLiveStream && window.BogFactorLiveStream.updateFloatingPlayer) {
+        window.BogFactorLiveStream.updateFloatingPlayer();
+      }
+
       // Add padding to body to prevent content from being hidden
       document.body.style.paddingBottom = '140px';
     },
@@ -101,6 +120,14 @@
       const player = document.getElementById('persistent-player');
       player.classList.remove('player-visible');
       player.classList.add('player-hidden');
+
+      // Remove class from body
+      document.body.classList.remove('mixcloud-player-active');
+
+      // Update floating player to restore normal state
+      if (window.BogFactorLiveStream && window.BogFactorLiveStream.updateFloatingPlayer) {
+        window.BogFactorLiveStream.updateFloatingPlayer();
+      }
 
       // Remove body padding
       document.body.style.paddingBottom = '0';

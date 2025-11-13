@@ -16,6 +16,19 @@
   let floatingPlayer = null;
   let mainWidget = null;
 
+  // Store/restore playing state across page navigation
+  function savePlayingState() {
+    sessionStorage.setItem('bogFactorLiveStreamPlaying', isPlaying ? 'true' : 'false');
+  }
+
+  function getPlayingState() {
+    return sessionStorage.getItem('bogFactorLiveStreamPlaying') === 'true';
+  }
+
+  function clearPlayingState() {
+    sessionStorage.removeItem('bogFactorLiveStreamPlaying');
+  }
+
   function getFirstFridayOfMonth(year, month) {
     // month is 0-indexed (0 = January)
     const firstDay = new Date(year, month, 1);
@@ -120,11 +133,13 @@
       isPlaying = false;
       updatePlayButton();
       updateFloatingPlayer();
+      savePlayingState();
     } else {
       audioElement.play();
       isPlaying = true;
       updatePlayButton();
       updateFloatingPlayer();
+      savePlayingState();
     }
   }
 
@@ -141,13 +156,22 @@
 
     const logo = floatingPlayer.querySelector('.floating-player-logo');
     const pauseBtn = floatingPlayer.querySelector('.floating-player-pause');
+    const muteIcon = floatingPlayer.querySelector('.floating-player-mute');
+    const isMixcloudActive = document.body.classList.contains('mixcloud-player-active');
 
-    if (isPlaying) {
+    if (isMixcloudActive && muteIcon) {
+      // Show mute icon when Mixcloud is playing
+      logo.style.display = 'none';
+      pauseBtn.style.display = 'none';
+      muteIcon.style.display = 'flex';
+    } else if (isPlaying) {
       logo.style.display = 'none';
       pauseBtn.style.display = 'flex';
+      if (muteIcon) muteIcon.style.display = 'none';
     } else {
       logo.style.display = 'block';
       pauseBtn.style.display = 'none';
+      if (muteIcon) muteIcon.style.display = 'none';
     }
   }
 
@@ -160,6 +184,7 @@
       <div class="floating-player-circle">
         <img src="${EHFM_LOGO}" alt="Play EHFM Live" class="floating-player-logo" />
         <button class="floating-player-pause" aria-label="Pause">&#9208;&#xFE0E;</button>
+        <div class="floating-player-mute" title="Live stream paused while show is playing">&#128263;</div>
       </div>
       ${isLandingPage ? '<button class="floating-player-expand" aria-label="Expand widget">+</button>' : ''}
     `;
@@ -167,6 +192,11 @@
     // Logo click - start playing
     const logo = player.querySelector('.floating-player-logo');
     logo.addEventListener('click', () => {
+      // Don't allow playing if Mixcloud is active
+      if (document.body.classList.contains('mixcloud-player-active')) {
+        return;
+      }
+
       if (!audioElement) {
         audioElement = new Audio(STREAM_URL);
       }
@@ -174,17 +204,24 @@
       isPlaying = true;
       updateFloatingPlayer();
       updatePlayButton();
+      savePlayingState();
     });
 
     // Pause button click - stop playing
     const pauseBtn = player.querySelector('.floating-player-pause');
     pauseBtn.addEventListener('click', () => {
+      // Don't allow pausing if Mixcloud is active
+      if (document.body.classList.contains('mixcloud-player-active')) {
+        return;
+      }
+
       if (audioElement) {
         audioElement.pause();
       }
       isPlaying = false;
       updateFloatingPlayer();
       updatePlayButton();
+      savePlayingState();
     });
 
     // Expand button click - show main widget (only on landing page)
@@ -276,6 +313,32 @@
     }
   }
 
+  function restoreAudioState() {
+    // Check if audio was playing in previous page
+    const wasPlaying = getPlayingState();
+    const isMixcloudActive = document.body.classList.contains('mixcloud-player-active');
+
+    // Only restore if it was playing and Mixcloud isn't active
+    if (wasPlaying && !isMixcloudActive) {
+      // Small delay to ensure UI is ready
+      setTimeout(() => {
+        if (!audioElement) {
+          audioElement = new Audio(STREAM_URL);
+        }
+        audioElement.play().then(() => {
+          isPlaying = true;
+          updatePlayButton();
+          updateFloatingPlayer();
+        }).catch(err => {
+          console.log('Could not auto-play audio:', err);
+          // Clear state if autoplay fails
+          isPlaying = false;
+          savePlayingState();
+        });
+      }, 100);
+    }
+  }
+
   function init() {
     // Check if we're on the landing page or another page
     const isLandingPage = window.location.pathname === '/' || window.location.pathname === '/index.html';
@@ -323,6 +386,12 @@
       showFloatingPlayer();
     }
 
+    // Restore audio state from previous page
+    restoreAudioState();
+
+    // Save state before page unload
+    window.addEventListener('beforeunload', savePlayingState);
+
     // Update countdown every minute
     setInterval(() => {
       const countdownEl = document.querySelector('.countdown');
@@ -363,6 +432,25 @@
       }
     }, 60000); // Every minute
   }
+
+  // Expose API for other scripts
+  window.BogFactorLiveStream = {
+    stopStream() {
+      if (audioElement && isPlaying) {
+        audioElement.pause();
+        isPlaying = false;
+        updatePlayButton();
+        updateFloatingPlayer();
+        savePlayingState();
+      }
+    },
+    updateFloatingPlayer() {
+      updateFloatingPlayer();
+    },
+    clearPlayingState() {
+      clearPlayingState();
+    }
+  };
 
   // Initialize when DOM is ready
   if (document.readyState === 'loading') {
