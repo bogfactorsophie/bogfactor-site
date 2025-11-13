@@ -612,7 +612,7 @@ html {
     left: 20px;
     background: rgba(247, 224, 193, 0.95);
     backdrop-filter: blur(10px);
-    padding: 20px;
+    padding: 28px 20px 20px 20px;
     max-width: 350px;
     width: auto;
     border-radius: 8px;
@@ -624,31 +624,150 @@ html {
     transition: opacity 0.3s ease, transform 0.3s ease;
 }
 
-.stream-close-btn {
+.stream-minimize-btn {
     position: absolute;
     top: 8px;
     right: 8px;
     background: none;
     border: none;
-    font-size: 28px;
+    font-size: 24px;
     color: rgb(135, 89, 33);
     cursor: pointer;
     padding: 0;
     width: 32px;
     height: 32px;
-    line-height: 28px;
+    line-height: 24px;
     opacity: 0.6;
     transition: opacity 0.3s ease, transform 0.2s ease, color 0.3s ease;
 }
 
-.stream-close-btn:hover {
+.stream-minimize-btn:hover {
     opacity: 1;
     transform: scale(1.1);
     color: rgb(218, 72, 72);
 }
 
-.stream-close-btn:active {
+.stream-minimize-btn:active {
     transform: scale(0.9);
+}
+
+/* Floating Audio Player */
+.floating-audio-player {
+    position: fixed;
+    bottom: 20px;
+    left: 20px;
+    width: 70px;
+    height: 70px;
+    z-index: 1001;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    animation: float-in 0.5s ease-out;
+}
+
+.floating-player-circle {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    overflow: hidden;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    border: 3px solid wheat;
+    background-color: #fff;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0;
+    transition: border-color 0.3s ease, box-shadow 0.2s ease;
+}
+
+@keyframes float-in {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.8);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+.floating-audio-player:hover {
+    transform: scale(1.1);
+}
+
+.floating-audio-player:active {
+    transform: scale(0.95);
+}
+
+.floating-player-circle:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
+    border-color: rgb(218, 72, 72);
+}
+
+.floating-player-circle:focus-within {
+    outline: 2px solid rgb(218, 72, 72);
+    outline-offset: 2px;
+}
+
+.floating-player-logo {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    display: block;
+    border-radius: 50%;
+    padding: 0px;
+    box-sizing: border-box;
+}
+
+.floating-player-pause {
+    width: 100%;
+    height: 100%;
+    background-color: rgb(218, 72, 72);
+    border: none;
+    border-radius: 50%;
+    color: wheat;
+    font-size: 32px;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.3s ease;
+}
+
+.floating-player-pause:hover {
+    background-color: rgb(200, 60, 60);
+}
+
+.floating-player-expand {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    background-color: rgb(135, 89, 33);
+    color: wheat;
+    border: 2px solid wheat;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    line-height: 1;
+    padding: 0;
+}
+
+.floating-player-expand:hover {
+    background-color: rgb(218, 72, 72);
+    transform: scale(1.15);
+    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+}
+
+.floating-player-expand:active {
+    transform: scale(0.95);
 }
 
 .stream-live-indicator {
@@ -959,12 +1078,33 @@ html {
         gap: 8px;
     }
 
-    /* Make close button bigger on mobile for better touch target */
-    .stream-close-btn {
-        font-size: 32px;
+    /* Make minimize button bigger on mobile for better touch target */
+    .stream-minimize-btn {
+        font-size: 28px;
         width: 44px;
         height: 44px;
-        line-height: 32px;
+        line-height: 28px;
+    }
+
+    /* Floating player adjustments for mobile */
+    .floating-audio-player {
+        width: 60px;
+        height: 60px;
+        bottom: 15px;
+        left: 15px;
+        border-width: 2px;
+    }
+
+    .floating-player-pause {
+        font-size: 28px;
+    }
+
+    .floating-player-expand {
+        width: 28px;
+        height: 28px;
+        font-size: 20px;
+        top: -10px;
+        right: -10px;
     }
 }
 
@@ -1023,5 +1163,24 @@ html {
     .toolbar-live-btn {
         font-size: 12px;
         padding: 8px 10px;
+    }
+
+    /* Floating player adjustments for small mobile */
+    .floating-audio-player {
+        width: 55px;
+        height: 55px;
+        bottom: 12px;
+        left: 12px;
+        border-width: 2px;
+    }
+
+    .floating-player-pause {
+        font-size: 24px;
+    }
+
+    .floating-player-expand {
+        width: 26px;
+        height: 26px;
+        font-size: 18px;
     }
 }

@@ -13,6 +13,8 @@
 
   let audioElement = null;
   let isPlaying = false;
+  let floatingPlayer = null;
+  let mainWidget = null;
 
   function getFirstFridayOfMonth(year, month) {
     // month is 0-indexed (0 = January)
@@ -117,10 +119,12 @@
       audioElement.pause();
       isPlaying = false;
       updatePlayButton();
+      updateFloatingPlayer();
     } else {
       audioElement.play();
       isPlaying = true;
       updatePlayButton();
+      updateFloatingPlayer();
     }
   }
 
@@ -129,6 +133,95 @@
     if (playBtn) {
       playBtn.innerHTML = isPlaying ? '&#9208;&#xFE0E;' : '&#9654;&#xFE0E;';
       playBtn.setAttribute('aria-label', isPlaying ? 'Pause' : 'Play');
+    }
+  }
+
+  function updateFloatingPlayer() {
+    if (!floatingPlayer) return;
+
+    const logo = floatingPlayer.querySelector('.floating-player-logo');
+    const pauseBtn = floatingPlayer.querySelector('.floating-player-pause');
+
+    if (isPlaying) {
+      logo.style.display = 'none';
+      pauseBtn.style.display = 'flex';
+    } else {
+      logo.style.display = 'block';
+      pauseBtn.style.display = 'none';
+    }
+  }
+
+  function createFloatingPlayer() {
+    const isLandingPage = window.location.pathname === '/' || window.location.pathname === '/index.html';
+
+    const player = document.createElement('div');
+    player.className = 'floating-audio-player';
+    player.innerHTML = `
+      <div class="floating-player-circle">
+        <img src="${EHFM_LOGO}" alt="Play EHFM Live" class="floating-player-logo" />
+        <button class="floating-player-pause" aria-label="Pause">&#9208;&#xFE0E;</button>
+      </div>
+      ${isLandingPage ? '<button class="floating-player-expand" aria-label="Expand widget">+</button>' : ''}
+    `;
+
+    // Logo click - start playing
+    const logo = player.querySelector('.floating-player-logo');
+    logo.addEventListener('click', () => {
+      if (!audioElement) {
+        audioElement = new Audio(STREAM_URL);
+      }
+      audioElement.play();
+      isPlaying = true;
+      updateFloatingPlayer();
+      updatePlayButton();
+    });
+
+    // Pause button click - stop playing
+    const pauseBtn = player.querySelector('.floating-player-pause');
+    pauseBtn.addEventListener('click', () => {
+      if (audioElement) {
+        audioElement.pause();
+      }
+      isPlaying = false;
+      updateFloatingPlayer();
+      updatePlayButton();
+    });
+
+    // Expand button click - show main widget (only on landing page)
+    if (isLandingPage) {
+      const expandBtn = player.querySelector('.floating-player-expand');
+      if (expandBtn) {
+        expandBtn.addEventListener('click', (e) => {
+          e.stopPropagation(); // Prevent triggering parent click events
+          if (mainWidget) {
+            // Show the main widget
+            mainWidget.style.display = 'block';
+            mainWidget.style.opacity = '1';
+            mainWidget.style.transform = 'translateY(0)';
+            // Hide floating player
+            hideFloatingPlayer();
+          }
+        });
+      }
+    }
+
+    return player;
+  }
+
+  function showFloatingPlayer() {
+    if (!floatingPlayer) {
+      floatingPlayer = createFloatingPlayer();
+      document.body.appendChild(floatingPlayer);
+      updateFloatingPlayer();
+    } else {
+      floatingPlayer.style.display = 'block';
+      updateFloatingPlayer(); // Update state when showing existing player
+    }
+  }
+
+  function hideFloatingPlayer() {
+    if (floatingPlayer) {
+      floatingPlayer.style.display = 'none';
     }
   }
 
@@ -143,7 +236,7 @@
     if (live) {
       // We're live!
       widget.innerHTML = `
-        <button class="stream-close-btn" aria-label="Close widget">&times;</button>
+        <button class="stream-minimize-btn" aria-label="Minimize widget">&#9866;</button>
         <div class="stream-live-indicator">
           <span class="live-dot"></span>
           <span class="live-text">LIVE NOW!</span>
@@ -159,7 +252,7 @@
     } else {
       // Off-air
       widget.innerHTML = `
-        <button class="stream-close-btn" aria-label="Close widget">&times;</button>
+        <button class="stream-minimize-btn" aria-label="Minimize widget">&#9866;</button>
         <div class="stream-header">
           <p class="countdown">Next show in ${getTimeUntilShow(nextShow)}</p>
         </div>
@@ -184,44 +277,50 @@
   }
 
   function init() {
-    // Set toolbar height CSS variable
+    // Check if we're on the landing page or another page
+    const isLandingPage = window.location.pathname === '/' || window.location.pathname === '/index.html';
+
+    // Set toolbar height CSS variable (needed on all pages)
     updateToolbarHeight();
-
-    const widget = createWidget();
-
-    // Insert after toolbar
-    const toolbar = document.querySelector('.toolbar');
-    if (toolbar) {
-      toolbar.insertAdjacentElement('afterend', widget);
-    } else {
-      document.body.insertBefore(widget, document.body.firstChild);
-    }
-
-    // Update toolbar height on window resize
     window.addEventListener('resize', updateToolbarHeight);
 
-    // Attach play button event listener
-    const playBtn = document.getElementById('stream-play-btn');
-    if (playBtn) {
-      playBtn.addEventListener('click', togglePlay);
-    }
+    if (isLandingPage) {
+      // Landing page: show widget
+      const widget = createWidget();
+      mainWidget = widget; // Store reference to widget for expand functionality
 
-    // Attach close button event listener
-    const closeBtn = widget.querySelector('.stream-close-btn');
-    if (closeBtn) {
-      closeBtn.addEventListener('click', () => {
-        // Stop audio if playing
-        if (audioElement && isPlaying) {
-          audioElement.pause();
-          isPlaying = false;
-        }
-        // Hide widget with animation
-        widget.style.opacity = '0';
-        widget.style.transform = 'translateY(-20px)';
-        setTimeout(() => {
-          widget.style.display = 'none';
-        }, 300);
-      });
+      // Insert after toolbar
+      const toolbar = document.querySelector('.toolbar');
+      if (toolbar) {
+        toolbar.insertAdjacentElement('afterend', widget);
+      } else {
+        document.body.insertBefore(widget, document.body.firstChild);
+      }
+
+      // Attach play button event listener
+      const playBtn = document.getElementById('stream-play-btn');
+      if (playBtn) {
+        playBtn.addEventListener('click', togglePlay);
+      }
+
+      // Attach minimize button event listener
+      const minimizeBtn = widget.querySelector('.stream-minimize-btn');
+      if (minimizeBtn) {
+        minimizeBtn.addEventListener('click', () => {
+          // Don't stop audio - keep it playing if it was playing
+          // Hide widget with animation
+          widget.style.opacity = '0';
+          widget.style.transform = 'translateY(-20px)';
+          setTimeout(() => {
+            widget.style.display = 'none';
+            // Show floating player after widget is minimized
+            showFloatingPlayer();
+          }, 300);
+        });
+      }
+    } else {
+      // Other pages (radio, about): just show floating player
+      showFloatingPlayer();
     }
 
     // Update countdown every minute
