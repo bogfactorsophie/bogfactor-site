@@ -66,6 +66,7 @@ h2 {
     width: 90%;
     max-width: 900px;
     background: #f7e0c1be;
+    box-sizing: border-box;
     /* v2.1 : borders effect with SVG : try to play with scale to change them */
     filter: url(#wavy2);
     /* v2.2 : Noise added for a vellum paper effect */
@@ -96,7 +97,7 @@ body.blog-page .textbox {
     align-items: center;
     justify-content: center;
     gap: 20px;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
 }
 
 .toolbar a {
@@ -304,6 +305,7 @@ img {
     font-family: 'Noto Serif Gurmukhi', sans-serif;
     border-radius: 8px;
     border: 3px solid rgb(135, 89, 33);
+    box-sizing: border-box;
 }
 
 .modal-content h3 {
@@ -550,6 +552,7 @@ img {
     text-align: center;
     filter: url(#wavy-smooth);
     z-index: 500;
+    box-sizing: border-box;
 }
 
 .stream-live-indicator {
@@ -673,4 +676,236 @@ img {
     margin: 10px 0 0 0;
     font-size: 13px;
     font-style: italic;
+}
+
+/* Mobile Responsive Styles */
+@media screen and (max-width: 768px) {
+    /* Increase base text size for better accessibility on mobile */
+    p {
+        font-size: 18px;
+        line-height: 1.6;
+    }
+
+    h2 {
+        font-size: 24px;
+        line-height: 1.4;
+    }
+
+    /* Make textboxes narrower for better readability */
+    .textbox {
+        width: 92%;
+        max-width: 500px;
+        padding: 20px 15px;
+        box-sizing: border-box;
+    }
+
+    /* Keep images at reasonable size */
+    .show-image {
+        max-width: 100%;
+    }
+
+    /* Increase live stream widget size on mobile */
+    .stream-widget {
+        position: fixed;
+        top: 125px;
+        left: 10px;
+        right: 10px;
+        max-width: none;
+        width: auto;
+        padding: 25px 20px;
+        box-sizing: border-box;
+    }
+
+    .live-text {
+        font-size: 24px;
+    }
+
+    .live-dot {
+        width: 16px;
+        height: 16px;
+    }
+
+    .stream-play-button {
+        width: 80px;
+        height: 80px;
+        font-size: 32px;
+    }
+
+    .ehfm-logo {
+        width: 120px;
+        height: 120px;
+    }
+
+    .stream-subtitle {
+        font-size: 16px;
+    }
+
+    /* Increase draggable sun size on mobile */
+    .sun-container img {
+        width: 80px !important;
+        height: 80px !important;
+    }
+
+    /* Make tracklist modal take up more screen */
+    .modal-content {
+        width: 95%;
+        max-width: none;
+        margin: 10px auto;
+        padding: 25px 20px;
+        box-sizing: border-box;
+    }
+
+    .modal-content h3 {
+        font-size: 22px;
+    }
+
+    .tracklist-content {
+        font-size: 16px;
+    }
+
+    .track-text {
+        font-size: 16px;
+        line-height: 1.5;
+    }
+
+    .youtube-search-btn {
+        padding: 8px 12px;
+        font-size: 18px;
+    }
+
+    /* Improve button accessibility on mobile */
+    .play-btn,
+    .tracklist-btn {
+        padding: 14px 24px;
+        font-size: 18px;
+        min-height: 48px;
+    }
+
+    .button-container {
+        flex-direction: column;
+        width: 100%;
+        gap: 12px;
+    }
+
+    .button-container button {
+        width: 100%;
+        max-width: 300px;
+    }
+
+    /* Toolbar adjustments */
+    .toolbar {
+        padding: 18px 8px;
+        gap: 8px;
+        flex-wrap: nowrap;
+        justify-content: space-evenly;
+    }
+
+    .toolbar a {
+        font-size: 18px;
+        margin: 0 5px;
+        padding: 12px 8px;
+        min-height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 1 auto;
+        white-space: nowrap;
+    }
+
+    .toolbar-live-btn {
+        font-size: 14px;
+        padding: 10px 12px;
+        flex-shrink: 1;
+        min-width: auto;
+    }
+
+    .toolbar-live-text {
+        display: none;
+    }
+
+    .toolbar-live-widget {
+        margin-left: 0;
+    }
+
+    /* Footer adjustments */
+    .footer {
+        gap: 15px;
+    }
+
+    .footer a {
+        font-size: 18px;
+        padding: 10px;
+    }
+
+    /* About page specific improvements */
+    .about-page .textbox {
+        max-width: 500px;
+    }
+
+    .about-page p,
+    .radio-page p {
+        font-size: 18px;
+    }
+
+    .about-image {
+        width: 95%;
+    }
+}
+
+/* Extra small mobile devices */
+@media screen and (max-width: 480px) {
+    p {
+        font-size: 17px;
+    }
+
+    h2 {
+        font-size: 22px;
+    }
+
+    .textbox {
+        width: 95%;
+        max-width: 100%;
+        padding: 18px 12px;
+        box-sizing: border-box;
+    }
+
+    .stream-widget {
+        top: 95px;
+        left: 5px;
+        right: 5px;
+        padding: 20px 15px;
+        box-sizing: border-box;
+    }
+
+    .ehfm-logo {
+        width: 100px;
+        height: 100px;
+    }
+
+    .stream-play-button {
+        width: 70px;
+        height: 70px;
+        font-size: 28px;
+    }
+
+    .sun-container img {
+        width: 60px !important;
+        height: 60px !important;
+    }
+
+    .toolbar {
+        padding: 16px 5px;
+        gap: 5px;
+    }
+
+    .toolbar a {
+        font-size: 16px;
+        margin: 0 3px;
+        padding: 12px 6px;
+    }
+
+    .toolbar-live-btn {
+        font-size: 12px;
+        padding: 8px 10px;
+    }
 }
