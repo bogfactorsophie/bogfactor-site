@@ -12,52 +12,81 @@ Bog Factor is a static website for a radio show hosted by Sophie and Emily on EH
 
 The site uses a flat directory structure with section-based organization:
 
-- `index.html` - Landing page with background image, rotating sun logo, and footer links
-- `radio/index.html` - Radio show archive with embedded Mixcloud players
+- `index.html` - Landing page with background image, live stream widget, and footer links
+- `radio/index.html` - Radio show archive with embedded Mixcloud players and tracklist modals
 - `about/index.html` - About page with information about the show and hosts
-- `blog/index.html` - Blog section (currently minimal content)
+- `radio/shows.json` - Master data file containing all show metadata and tracklists
 - `styles.css` - Global stylesheet shared across all pages
-- `scripts/mousefollower.js` - Interactive mouse cursor trail effect
+- `scripts/` - JavaScript modules for interactive features
 - `assets/` - Image and media files
+- `tools/` - Development utilities and test files
 
 ### Navigation Pattern
 
-All subpages (radio, about, blog) share a consistent layout:
-- Header with site title linking back to `/index.html`
-- Rotating sun image in header
-- Navigation banner with links to all three sections
+All subpages (radio, about) share a consistent layout:
+- Toolbar navigation at the top with links to Home, Radio, and About
+- SVG wavy border filters for visual effects
 - Footer with Instagram and Mixcloud links
 
-The landing page (`index.html`) has a minimal layout with just the background image, rotating sun, and footer.
+The landing page (`index.html`) has a minimal layout with the background image, toolbar navigation, live stream widget (when show is live), and footer.
 
 ### CSS Architecture
 
 `styles.css` contains:
 - Global typography using Luminari (display) and Noto Serif Gurmukhi (body text) from CDN fonts
 - `.textbox` class for content boxes with SVG wavy borders and noise texture effect
-- `.rotating-image` animations (forward/reverse on hover)
-- `.cursor-image` styles for mousefollower effect
-- `.banner` navigation link styling with color transitions
+- `.toolbar` styles for the navigation bar
+- `.stream-widget` styles for the live streaming player interface
+- `.modal` styles for tracklist popups on the radio page
+- Draggable sun elements with animations
 - Responsive footer layout
 
 ### JavaScript Features
 
-`scripts/mousefollower.js` implements a custom cursor trail effect:
-- Creates three trailing images (sun, neolithic ball, beastie) that follow the mouse
-- Uses `requestAnimationFrame` for smooth animation
-- Trail particles drift towards current mouse position
-- Handles scroll events to maintain position
-- Shows/hides images on mouse enter/leave
+The site uses vanilla JavaScript modules for interactive features:
+
+- `scripts/bog-scale.js` - Interactive hover effect for the bog factor scale image
+- `scripts/draggable-suns.js` - Creates draggable sun elements that float across the page
+- `scripts/live-stream.js` - Manages the live stream player and widget on the landing page
+- `scripts/persistent-player.js` - Persistent audio player for Mixcloud shows on the radio page
+- `scripts/toolbar-live-widget.js` - Live indicator widget shown in the toolbar during broadcasts
+
+All scripts use IIFE (Immediately Invoked Function Expressions) to avoid global namespace pollution.
 
 ### Asset Organization
 
 Images in `assets/`:
-- `sun_image.png` - Rotating header logo
-- `vibes-graphic.jpg` - Landing page background
-- `sophie-and-emily.jpg` - Photo of hosts
+- `sun_image.png` - Draggable sun element used throughout the site
+- `vibes-graphic.jpg` - Landing page background image
+- `sophie-and-emily.jpg` - Photo of hosts used on about page
 - `bog factor scale.jpg` - Interactive bog factor scale (expands on hover)
-- `beastie.png`, `neolithic-towie-ball.webp`, `pig.png` - Cursor trail images
-- `cursor.png` - Additional cursor asset
+- Show-specific images:
+  - `conker-season-pack.png` - Conk Factor 2025 episode
+  - `crop-circle-pic.jpg` - Space Age Special episode
+  - `ehfm-ground-floor-studio.jpg` - First show in residency
+  - `Helston-Dragon.jpg` - Beltane episode
+  - `no-souptember.jpg` - Summer Isn't Over episode
+  - `the-stranglers.jpg` - Soft Rock & Sleaze episode
+
+### Show Data Structure
+
+Show metadata is stored in `radio/shows.json` as an array of show objects. Each show contains:
+- `id` - Unique identifier (e.g., "nov2025")
+- `title` - Show title and date
+- `description` - Brief description of the episode theme
+- `mixcloudPath` - Path to the Mixcloud player (e.g., "/ehfm/bog-fav/")
+- `date` - Date in YYYY-MM format
+- `image` (optional) - Relative path to show-specific image
+- `tracklist` - Array of track strings in "Artist - Title" format
+
+The radio page dynamically generates show cards and tracklist modals from this JSON file.
+
+### Development Tools
+
+The `tools/` directory contains:
+- `test-live.html` - Test page for live streaming widget functionality
+- `rekordbox-to-json.py` - Python utility to convert Rekordbox DJ playlist exports to JSON format
+- `README.md` - Instructions for adding new radio shows to the site
 
 ## Development
 
@@ -70,29 +99,35 @@ This is a static site with no build process. To develop:
 
 Since this is a static site:
 - Open `index.html` in browser to test landing page
-- Navigate to subpages (`radio/`, `about/`, `blog/`) to test those sections
-- Test mousefollower effect by moving cursor across pages
-- Test rotating sun hover effect in headers
+- Navigate to subpages (`radio/`, `about/`) to test those sections
+- Test draggable sun elements by clicking and dragging them
+- Test live stream widget functionality using `tools/test-live.html`
+- Test tracklist modals and YouTube search links on the radio page
+- Verify show data displays correctly after editing `radio/shows.json`
 
 ### Path Conventions
 
-- Root-relative paths are used inconsistently:
-  - Some pages use `/styles.css`, others use `../styles.css`
-  - Some use `/scripts/mousefollower.js`, others use relative paths
-  - Images use `../assets/` or `/assets/` depending on context
+- Root-relative paths are used for navigation links (e.g., `/index.html`, `/radio/index.html`)
+- Relative paths are used for assets and scripts within subdirectories:
+  - Landing page uses: `styles.css`, `scripts/`, `assets/`
+  - Subpages use: `../styles.css`, `../scripts/`, `../assets/`
+- Show images in `shows.json` use relative paths: `../assets/image-name.jpg`
 
 When adding new pages or modifying paths, maintain consistency with the existing pattern for that section.
 
 ## Current State
 
-The site is actively being worked on:
-- Landing page has been simplified (branch: sophie/change-landing-page)
-- Modified files: `index.html`, `styles.css`
-- Recent commits show iterative design changes
+The site is actively being worked on with recent enhancements:
+- Live streaming widget added to landing page with play/pause controls
+- Persistent audio player for radio archive with Mixcloud integration
+- Draggable sun elements for interactive experience
+- Tracklist modals with YouTube search integration
+- Clean, optimized codebase with unused files removed
 
-### Known Issues
+### Best Practices
 
-- Path inconsistencies between absolute and relative references
-- Landing page has a typo: `</div>s` at line 29 in `index.html`
-- Footer links point to general Instagram/Mixcloud URLs instead of Bog Factor specific accounts on some pages
-- Use vanilla HTML and CSS where possible to create a website that loads fast
+- Use vanilla HTML, CSS, and JavaScript for fast loading times
+- Keep the codebase minimal and clean - no build process or dependencies
+- Store all show data in `radio/shows.json` for easy updates
+- Use root-relative paths for navigation, relative paths for assets
+- Test changes using a local static server or by opening files directly in browser
