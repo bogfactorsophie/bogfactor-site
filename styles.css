@@ -621,6 +621,34 @@ html {
     filter: url(#wavy-smooth);
     z-index: 500;
     box-sizing: border-box;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+.stream-close-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    background: none;
+    border: none;
+    font-size: 28px;
+    color: rgb(135, 89, 33);
+    cursor: pointer;
+    padding: 0;
+    width: 32px;
+    height: 32px;
+    line-height: 28px;
+    opacity: 0.6;
+    transition: opacity 0.3s ease, transform 0.2s ease, color 0.3s ease;
+}
+
+.stream-close-btn:hover {
+    opacity: 1;
+    transform: scale(1.1);
+    color: rgb(218, 72, 72);
+}
+
+.stream-close-btn:active {
+    transform: scale(0.9);
 }
 
 .stream-live-indicator {
@@ -929,6 +957,14 @@ html {
 
     .show-title {
         gap: 8px;
+    }
+
+    /* Make close button bigger on mobile for better touch target */
+    .stream-close-btn {
+        font-size: 32px;
+        width: 44px;
+        height: 44px;
+        line-height: 32px;
     }
 }
 

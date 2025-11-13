@@ -143,6 +143,7 @@
     if (live) {
       // We're live!
       widget.innerHTML = `
+        <button class="stream-close-btn" aria-label="Close widget">&times;</button>
         <div class="stream-live-indicator">
           <span class="live-dot"></span>
           <span class="live-text">LIVE NOW!</span>
@@ -158,6 +159,7 @@
     } else {
       // Off-air
       widget.innerHTML = `
+        <button class="stream-close-btn" aria-label="Close widget">&times;</button>
         <div class="stream-header">
           <p class="countdown">Next show in ${getTimeUntilShow(nextShow)}</p>
         </div>
@@ -204,6 +206,24 @@
       playBtn.addEventListener('click', togglePlay);
     }
 
+    // Attach close button event listener
+    const closeBtn = widget.querySelector('.stream-close-btn');
+    if (closeBtn) {
+      closeBtn.addEventListener('click', () => {
+        // Stop audio if playing
+        if (audioElement && isPlaying) {
+          audioElement.pause();
+          isPlaying = false;
+        }
+        // Hide widget with animation
+        widget.style.opacity = '0';
+        widget.style.transform = 'translateY(-20px)';
+        setTimeout(() => {
+          widget.style.display = 'none';
+        }, 300);
+      });
+    }
+
     // Update countdown every minute
     setInterval(() => {
       const countdownEl = document.querySelector('.countdown');
@@ -223,6 +243,22 @@
           const playBtn = document.getElementById('stream-play-btn');
           if (playBtn) {
             playBtn.addEventListener('click', togglePlay);
+          }
+
+          // Reattach close button listener
+          const closeBtn = newWidget.querySelector('.stream-close-btn');
+          if (closeBtn) {
+            closeBtn.addEventListener('click', () => {
+              if (audioElement && isPlaying) {
+                audioElement.pause();
+                isPlaying = false;
+              }
+              newWidget.style.opacity = '0';
+              newWidget.style.transform = 'translateY(-20px)';
+              setTimeout(() => {
+                newWidget.style.display = 'none';
+              }, 300);
+            });
           }
         }
       }
