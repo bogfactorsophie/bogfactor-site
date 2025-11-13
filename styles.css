@@ -498,6 +498,21 @@ img {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
 
+.about-page a {
+    color: rgb(135, 89, 33);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.about-page a:hover {
+    color: rgb(218, 72, 72);
+    text-decoration: underline;
+}
+
+.about-page a:visited {
+    color: rgb(130, 71, 81);
+}
+
 .textbox ul {
     list-style-type: circle;
     color: rgb(54, 50, 41);
