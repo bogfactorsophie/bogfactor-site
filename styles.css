@@ -608,7 +608,7 @@ html {
 /* Live Stream Widget */
 .stream-widget {
     position: fixed;
-    top: calc(var(--toolbar-height, 65px) + 15px);
+    top: calc(var(--toolbar-height, 65px) + 30px);
     left: 20px;
     background: rgba(247, 224, 193, 0.95);
     backdrop-filter: blur(10px);
@@ -656,16 +656,20 @@ html {
     position: fixed;
     bottom: 20px;
     left: 20px;
-    width: 70px;
-    height: 70px;
+    width: auto;
+    max-width: 200px;
     z-index: 1001;
     transition: transform 0.2s ease, box-shadow 0.2s ease, bottom 0.3s ease;
     animation: float-in 0.5s ease-out;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 2px;
 }
 
 /* Move floating player up when Mixcloud player is active */
 body.mixcloud-player-active .floating-audio-player {
-    bottom: 290px;
+    bottom: 200px;
 }
 
 body.mixcloud-player-active .floating-player-circle {
@@ -673,9 +677,16 @@ body.mixcloud-player-active .floating-player-circle {
     opacity: 0.9;
 }
 
+.floating-player-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .floating-player-circle {
-    width: 100%;
-    height: 100%;
+    width: 70px;
+    height: 70px;
     border-radius: 50%;
     overflow: hidden;
     cursor: pointer;
@@ -688,6 +699,8 @@ body.mixcloud-player-active .floating-player-circle {
     justify-content: center;
     padding: 0;
     transition: border-color 0.3s ease, box-shadow 0.2s ease;
+    flex-shrink: 0;
+    position: relative;
 }
 
 @keyframes float-in {
@@ -778,8 +791,8 @@ body.mixcloud-player-active .floating-player-circle:hover {
 
 .floating-player-expand {
     position: absolute;
-    top: -8px;
-    right: -8px;
+    top: -2px;
+    right: -2px;
     width: 24px;
     height: 24px;
     border-radius: 50%;
@@ -806,6 +819,38 @@ body.mixcloud-player-active .floating-player-circle:hover {
 
 .floating-player-expand:active {
     transform: scale(0.95);
+}
+
+.toolbar-live-label {
+    background: rgba(218, 72, 72, 0.95);
+    color: wheat;
+    padding: 10px 16px;
+    border-radius: 20px;
+    font-family: 'Luminari', fantasy;
+    font-size: 14px;
+    font-weight: bold;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.toolbar-live-label:hover {
+    background: rgb(218, 72, 72);
+    transform: scale(1.1);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+}
+
+.toolbar-live-dot {
+    width: 8px;
+    height: 8px;
+    background-color: wheat;
+    border-radius: 50%;
+    animation: pulse 1.5s ease-in-out infinite;
+    flex-shrink: 0;
 }
 
 .stream-live-indicator {
@@ -1072,6 +1117,17 @@ body.mixcloud-player-active .floating-player-circle:hover {
         min-width: auto;
     }
 
+    .toolbar-live-label {
+        font-size: 12px;
+        padding: 8px 12px;
+        gap: 6px;
+    }
+
+    .toolbar-live-dot {
+        width: 7px;
+        height: 7px;
+    }
+
     .toolbar-live-text {
         display: none;
     }
@@ -1126,15 +1182,18 @@ body.mixcloud-player-active .floating-player-circle:hover {
 
     /* Floating player adjustments for mobile */
     .floating-audio-player {
-        width: 60px;
-        height: 60px;
         bottom: 15px;
         left: 15px;
+    }
+
+    .floating-player-circle {
+        width: 60px;
+        height: 60px;
         border-width: 2px;
     }
 
     body.mixcloud-player-active .floating-audio-player {
-        bottom: 175px;
+        bottom: 200px;
     }
 
     .floating-player-pause {
@@ -1149,9 +1208,18 @@ body.mixcloud-player-active .floating-player-circle:hover {
         width: 28px;
         height: 28px;
         font-size: 20px;
-        top: -10px;
-        right: -10px;
+        top: -2px;
+        right: -2px;
     }
+
+    .floating-player-expand:hover {
+        transform: scale(1.15);
+    }
+
+    .floating-player-expand:active {
+        transform: scale(0.95);
+    }
+
 }
 
 /* Extra small mobile devices */
@@ -1211,12 +1279,26 @@ body.mixcloud-player-active .floating-player-circle:hover {
         padding: 8px 10px;
     }
 
+    .toolbar-live-label {
+        font-size: 11px;
+        padding: 6px 10px;
+        gap: 5px;
+    }
+
+    .toolbar-live-dot {
+        width: 6px;
+        height: 6px;
+    }
+
     /* Floating player adjustments for small mobile */
     .floating-audio-player {
-        width: 55px;
-        height: 55px;
         bottom: 12px;
         left: 12px;
+    }
+
+    .floating-player-circle {
+        width: 55px;
+        height: 55px;
         border-width: 2px;
     }
 
@@ -1236,5 +1318,15 @@ body.mixcloud-player-active .floating-player-circle:hover {
         width: 26px;
         height: 26px;
         font-size: 18px;
+        top: -2px;
+        right: -2px;
+    }
+
+    .floating-player-expand:hover {
+        transform: scale(1.15);
+    }
+
+    .floating-player-expand:active {
+        transform: scale(0.95);
     }
 }

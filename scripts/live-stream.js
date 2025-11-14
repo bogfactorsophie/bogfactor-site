@@ -175,23 +175,50 @@
     }
   }
 
+  function createToolbarLiveLabel() {
+    const label = document.createElement('div');
+    label.className = 'toolbar-live-label';
+    label.innerHTML = '<span class="toolbar-live-dot"></span>Live Now';
+    label.style.cursor = 'pointer';
+    label.addEventListener('click', togglePlay);
+    return label;
+  }
+
+  function updateToolbarLiveLabel() {
+    const toolbar = document.querySelector('.toolbar');
+    if (!toolbar) return;
+
+    const existingLabel = toolbar.querySelector('.toolbar-live-label');
+    const live = isLiveNow();
+
+    if (live && !existingLabel) {
+      // Add label to toolbar
+      const label = createToolbarLiveLabel();
+      toolbar.insertBefore(label, toolbar.firstChild);
+    } else if (!live && existingLabel) {
+      // Remove label if not live
+      existingLabel.remove();
+    }
+  }
+
   function createFloatingPlayer() {
     const isLandingPage = window.location.pathname === '/' || window.location.pathname === '/index.html';
 
     const player = document.createElement('div');
     player.className = 'floating-audio-player';
     player.innerHTML = `
-      <div class="floating-player-circle">
-        <img src="${EHFM_LOGO}" alt="Play EHFM Live" class="floating-player-logo" />
-        <button class="floating-player-pause" aria-label="Pause">&#9208;&#xFE0E;</button>
-        <div class="floating-player-mute" title="Live stream paused while show is playing">&#128263;</div>
+      <div class="floating-player-wrapper">
+        <div class="floating-player-circle">
+          <img src="${EHFM_LOGO}" alt="Play EHFM Live" class="floating-player-logo" />
+          <button class="floating-player-pause" aria-label="Pause">&#9208;&#xFE0E;</button>
+          <div class="floating-player-mute" title="Live stream paused while show is playing">&#128263;</div>
+        </div>
+        ${isLandingPage ? '<button class="floating-player-expand" aria-label="Expand widget">+</button>' : ''}
       </div>
-      ${isLandingPage ? '<button class="floating-player-expand" aria-label="Expand widget">+</button>' : ''}
     `;
 
-    // Logo click - start playing
-    const logo = player.querySelector('.floating-player-logo');
-    logo.addEventListener('click', () => {
+    // Function to start playing
+    const startPlaying = () => {
       // Don't allow playing if Mixcloud is active
       if (document.body.classList.contains('mixcloud-player-active')) {
         return;
@@ -205,7 +232,11 @@
       updateFloatingPlayer();
       updatePlayButton();
       savePlayingState();
-    });
+    };
+
+    // Logo click - start playing
+    const logo = player.querySelector('.floating-player-logo');
+    logo.addEventListener('click', startPlaying);
 
     // Pause button click - stop playing
     const pauseBtn = player.querySelector('.floating-player-pause');
@@ -347,6 +378,9 @@
     updateToolbarHeight();
     window.addEventListener('resize', updateToolbarHeight);
 
+    // Add live label to toolbar if live
+    updateToolbarLiveLabel();
+
     if (isLandingPage) {
       // Landing page: show widget
       const widget = createWidget();
@@ -399,6 +433,9 @@
         const nextShow = getNextShowDate();
         countdownEl.textContent = `In ${getTimeUntilShow(nextShow)}`;
       }
+
+      // Update toolbar live label
+      updateToolbarLiveLabel();
 
       // Check if we should switch to live mode
       if (isLiveNow() && !document.querySelector('.stream-live-indicator')) {
