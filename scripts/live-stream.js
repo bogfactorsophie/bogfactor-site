@@ -461,8 +461,19 @@
       if (isLiveNow() && !document.querySelector('.stream-live-indicator')) {
         const oldWidget = document.getElementById('stream-widget');
         if (oldWidget) {
+          // Check if widget was minimized
+          const wasMinimized = oldWidget.style.display === 'none';
+
           const newWidget = createWidget();
           oldWidget.replaceWith(newWidget);
+
+          // If it was minimized, keep the new widget minimized
+          if (wasMinimized) {
+            newWidget.style.display = 'none';
+            newWidget.style.opacity = '0';
+            newWidget.style.transform = 'translateY(-20px)';
+            // Floating player should remain visible
+          }
 
           // Reattach play button listener
           const playBtn = document.getElementById('stream-play-btn');

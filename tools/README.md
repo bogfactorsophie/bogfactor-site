@@ -63,3 +63,10 @@ The tracklist will automatically appear in the modal popup when you click "View 
 - Keep most recent shows at the top of the array
 - The page loads instantly - all show data is fetched and rendered client-side
 - No build process needed - just edit the JSON and refresh!
+
+---
+
+## Test Pages
+
+- **test-live.html** - Test the live streaming widget in "LIVE NOW!" mode
+- **test-countdown.html** - Test countdown timer with presets to simulate different times before/during/after show
