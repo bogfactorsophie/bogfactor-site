@@ -110,16 +110,36 @@
     const now = new Date();
     const diff = nextShow - now;
 
+    // If we've passed the show time (negative diff), return "Starting now..."
+    if (diff < 0) {
+      return 'Starting now...';
+    }
+
     const days = Math.floor(diff / (1000 * 60 * 60 * 24));
     const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
+    // If less than 1 day, show detailed textual format with seconds
+    if (days === 0) {
+      const parts = [];
+
+      if (hours > 0) {
+        parts.push(`${hours} hour${hours !== 1 ? 's' : ''}`);
+      }
+      if (minutes > 0) {
+        parts.push(`${minutes} minute${minutes !== 1 ? 's' : ''}`);
+      }
+      if (seconds > 0 || parts.length === 0) {
+        parts.push(`${seconds} second${seconds !== 1 ? 's' : ''}`);
+      }
+
+      return parts.join(' ');
+    }
+
+    // If more than 1 day, show original format
     if (days > 0) {
       return `${days} day${days !== 1 ? 's' : ''}, ${hours} hour${hours !== 1 ? 's' : ''}`;
-    } else if (hours > 0) {
-      return `${hours} hour${hours !== 1 ? 's' : ''}, ${minutes} minute${minutes !== 1 ? 's' : ''}`;
-    } else {
-      return `${minutes} minute${minutes !== 1 ? 's' : ''}`;
     }
   }
 
@@ -426,12 +446,12 @@
     // Save state before page unload
     window.addEventListener('beforeunload', savePlayingState);
 
-    // Update countdown every minute
-    setInterval(() => {
+    // Function to update countdown and other elements
+    function updateCountdownAndStatus() {
       const countdownEl = document.querySelector('.countdown');
       if (countdownEl) {
         const nextShow = getNextShowDate();
-        countdownEl.textContent = `In ${getTimeUntilShow(nextShow)}`;
+        countdownEl.textContent = `Next show in ${getTimeUntilShow(nextShow)}`;
       }
 
       // Update toolbar live label
@@ -450,24 +470,61 @@
             playBtn.addEventListener('click', togglePlay);
           }
 
-          // Reattach close button listener
-          const closeBtn = newWidget.querySelector('.stream-close-btn');
-          if (closeBtn) {
-            closeBtn.addEventListener('click', () => {
-              if (audioElement && isPlaying) {
-                audioElement.pause();
-                isPlaying = false;
-              }
+          // Reattach minimize button listener
+          const minimizeBtn = newWidget.querySelector('.stream-minimize-btn');
+          if (minimizeBtn) {
+            minimizeBtn.addEventListener('click', () => {
+              // Don't stop audio - keep it playing if it was playing
+              // Hide widget with animation
               newWidget.style.opacity = '0';
               newWidget.style.transform = 'translateY(-20px)';
               setTimeout(() => {
                 newWidget.style.display = 'none';
+                // Show floating player after widget is minimized
+                showFloatingPlayer();
               }, 300);
             });
           }
         }
       }
-    }, 60000); // Every minute
+    }
+
+    // Determine update interval based on time until show
+    function getUpdateInterval() {
+      const nextShow = getNextShowDate();
+      const now = new Date();
+      const diff = nextShow - now;
+      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+      // Update every second if currently live OR less than 1 day until show
+      // Otherwise, update every minute
+      if (isLiveNow() || days === 0) {
+        return 1000;
+      }
+      return 60000;
+    }
+
+    // Start with appropriate interval
+    let updateIntervalId;
+    let currentInterval = getUpdateInterval();
+
+    function startUpdateInterval() {
+      if (updateIntervalId) {
+        clearInterval(updateIntervalId);
+      }
+      updateIntervalId = setInterval(() => {
+        updateCountdownAndStatus();
+
+        // Check if we need to change the update frequency
+        const newInterval = getUpdateInterval();
+        if (newInterval !== currentInterval) {
+          currentInterval = newInterval;
+          startUpdateInterval(); // Restart with new interval
+        }
+      }, currentInterval);
+    }
+
+    startUpdateInterval();
   }
 
   // Expose API for other scripts

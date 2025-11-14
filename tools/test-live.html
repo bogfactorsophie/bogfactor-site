@@ -5,15 +5,15 @@
     <title>Bog Factor - LIVE TEST</title>
     <link href="https://fonts.cdnfonts.com/css/luminari" rel="stylesheet">
     <link href="https://fonts.cdnfonts.com/css/noto-serif-gurmukhi" rel="stylesheet">
-    <link rel="stylesheet" href="styles.css">
-    <script src="scripts/draggable-suns.js"></script>
+    <link rel="stylesheet" href="../styles.css">
+    <script src="../scripts/draggable-suns.js"></script>
   </head>
 
   <body>
 
     <style>
       body {
-        background: url('assets/vibes-graphic.jpg') no-repeat center center fixed;
+        background: url('../assets/vibes-graphic.jpg') no-repeat center center fixed;
         background-size: cover;
         display: flex;
         flex-direction: column;
@@ -37,9 +37,9 @@
     </svg>
 
     <div class="toolbar">
-      <a href="/index.html">Home</a>
-      <a href="/radio/index.html">Radio</a>
-      <a href="/about/index.html">About</a>
+      <a href="../index.html">Home</a>
+      <a href="../radio/index.html">Radio</a>
+      <a href="../about/index.html">About</a>
 
       <!-- Toolbar Live Widget (for testing) -->
       <div id="toolbar-live-widget" class="toolbar-live-widget">
@@ -53,6 +53,7 @@
 
     <!-- LIVE MODE WIDGET -->
     <div id="stream-widget" class="stream-widget">
+      <button class="stream-minimize-btn" aria-label="Minimize widget">&#9866;</button>
       <div class="stream-live-indicator">
         <span class="live-dot"></span>
         <span class="live-text">LIVE NOW!</span>
@@ -69,8 +70,10 @@
     <script>
       // Simple play/pause functionality for demo
       const STREAM_URL = 'https://ehfm.out.airtime.pro/ehfm_a';
+      const EHFM_LOGO = 'https://thumbnailer.mixcloud.com/unsafe/640x640/profile/4/5/d/0/f256-daaa-4954-86cc-aa43b7af4e6e';
       let audioElement = null;
       let isPlaying = false;
+      let floatingPlayer = null;
 
       function togglePlay() {
         if (!audioElement) {
@@ -81,14 +84,120 @@
           audioElement.pause();
           isPlaying = false;
           document.getElementById('stream-play-btn').innerHTML = '&#9654;&#xFE0E;';
+          updateFloatingPlayer();
         } else {
           audioElement.play();
           isPlaying = true;
           document.getElementById('stream-play-btn').innerHTML = '&#9208;&#xFE0E;';
+          updateFloatingPlayer();
+        }
+      }
+
+      function updateFloatingPlayer() {
+        if (!floatingPlayer) return;
+
+        const logo = floatingPlayer.querySelector('.floating-player-logo');
+        const pauseBtn = floatingPlayer.querySelector('.floating-player-pause');
+
+        if (isPlaying) {
+          logo.style.display = 'none';
+          pauseBtn.style.display = 'flex';
+        } else {
+          logo.style.display = 'block';
+          pauseBtn.style.display = 'none';
+        }
+      }
+
+      function createFloatingPlayer() {
+        const player = document.createElement('div');
+        player.className = 'floating-audio-player';
+        player.innerHTML = `
+          <div class="floating-player-wrapper">
+            <div class="floating-player-circle">
+              <img src="${EHFM_LOGO}" alt="Play EHFM Live" class="floating-player-logo" />
+              <button class="floating-player-pause" aria-label="Pause">&#9208;&#xFE0E;</button>
+            </div>
+            <button class="floating-player-expand" aria-label="Expand widget">+</button>
+          </div>
+        `;
+
+        // Logo click - start playing
+        const logo = player.querySelector('.floating-player-logo');
+        logo.addEventListener('click', () => {
+          if (!audioElement) {
+            audioElement = new Audio(STREAM_URL);
+          }
+          audioElement.play();
+          isPlaying = true;
+          updateFloatingPlayer();
+        });
+
+        // Pause button click - stop playing
+        const pauseBtn = player.querySelector('.floating-player-pause');
+        pauseBtn.addEventListener('click', () => {
+          if (audioElement) {
+            audioElement.pause();
+          }
+          isPlaying = false;
+          updateFloatingPlayer();
+        });
+
+        // Expand button click - show main widget
+        const expandBtn = player.querySelector('.floating-player-expand');
+        if (expandBtn) {
+          expandBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const widget = document.getElementById('stream-widget');
+            if (widget) {
+              widget.style.display = 'block';
+              widget.style.opacity = '1';
+              widget.style.transform = 'translateY(0)';
+              // Update main play button state
+              const mainPlayBtn = document.getElementById('stream-play-btn');
+              if (mainPlayBtn) {
+                mainPlayBtn.innerHTML = isPlaying ? '&#9208;&#xFE0E;' : '&#9654;&#xFE0E;';
+              }
+            }
+            hideFloatingPlayer();
+          });
+        }
+
+        return player;
+      }
+
+      function showFloatingPlayer() {
+        if (!floatingPlayer) {
+          floatingPlayer = createFloatingPlayer();
+          document.body.appendChild(floatingPlayer);
+          updateFloatingPlayer();
+        } else {
+          floatingPlayer.style.display = 'flex';
+          updateFloatingPlayer();
+        }
+      }
+
+      function hideFloatingPlayer() {
+        if (floatingPlayer) {
+          floatingPlayer.style.display = 'none';
         }
       }
 
       document.getElementById('stream-play-btn').addEventListener('click', togglePlay);
+
+      // Minimize button
+      const minimizeBtn = document.querySelector('.stream-minimize-btn');
+      if (minimizeBtn) {
+        minimizeBtn.addEventListener('click', () => {
+          const widget = document.getElementById('stream-widget');
+          widget.style.opacity = '0';
+          widget.style.transform = 'translateY(-20px)';
+          setTimeout(() => {
+            widget.style.display = 'none';
+            // Show floating player after widget is minimized
+            showFloatingPlayer();
+          }, 300);
+        });
+      }
 
       // Toolbar live button
       let toolbarAudio = null;
@@ -108,7 +217,11 @@
           if (audioElement) {
             audioElement.pause();
             isPlaying = false;
-            document.getElementById('stream-play-btn').innerHTML = '&#9654;&#xFE0E;';
+            const mainPlayBtn = document.getElementById('stream-play-btn');
+            if (mainPlayBtn) {
+              mainPlayBtn.innerHTML = '&#9654;&#xFE0E;';
+            }
+            updateFloatingPlayer();
           }
           toolbarAudio.play();
           isToolbarPlaying = true;

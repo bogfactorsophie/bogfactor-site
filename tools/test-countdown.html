@@ -1,0 +1,637 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Countdown - Bog Factor</title>
+    <link href="https://fonts.cdnfonts.com/css/luminari" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/noto-serif-gurmukhi" rel="stylesheet">
+    <link rel="stylesheet" href="../styles.css">
+  </head>
+
+  <body>
+    <style>
+      body {
+        background: url('../assets/vibes-graphic.jpg') no-repeat center center fixed;
+        background-size: cover;
+        display: flex;
+        flex-direction: column;
+        height: 100vh;
+        margin: 0;
+        padding: 20px;
+      }
+      .test-controls {
+        background: #f7e0c1;
+        padding: 20px;
+        margin: 20px auto;
+        max-width: 600px;
+        border-radius: 8px;
+        filter: url(#wavy-smooth);
+      }
+      .test-controls h2 {
+        margin-top: 0;
+        font-family: 'Luminari', fantasy;
+        color: rgb(135, 89, 33);
+      }
+      .test-controls label {
+        display: block;
+        margin: 15px 0 5px 0;
+        font-family: 'Noto Serif Gurmukhi', sans-serif;
+        font-weight: 600;
+      }
+      .test-controls input, .test-controls select {
+        width: 100%;
+        padding: 8px;
+        font-size: 16px;
+        border: 2px solid rgb(135, 89, 33);
+        border-radius: 4px;
+        box-sizing: border-box;
+      }
+      .test-controls button {
+        background-color: rgb(135, 89, 33);
+        color: wheat;
+        border: none;
+        padding: 12px 20px;
+        font-family: 'MedievalSharp', cursive;
+        font-size: 16px;
+        cursor: pointer;
+        margin-top: 15px;
+        width: 100%;
+      }
+      .test-controls button:hover {
+        background-color: rgb(218, 72, 72);
+      }
+      .test-info {
+        margin-top: 15px;
+        padding: 10px;
+        background: rgba(135, 89, 33, 0.1);
+        border-radius: 4px;
+        font-family: 'Noto Serif Gurmukhi', sans-serif;
+        font-size: 14px;
+      }
+    </style>
+
+    <!-- SVG filter for wavy borders -->
+    <svg style="position: absolute; width: 0; height: 0;">
+      <defs>
+        <filter id="wavy-smooth">
+          <feTurbulence x="0" y="0" baseFrequency="0.01" numOctaves="2" seed="1" />
+          <feDisplacementMap in="SourceGraphic" scale="3" />
+        </filter>
+      </defs>
+    </svg>
+
+    <div class="test-controls">
+      <h2>Countdown Test Controls</h2>
+      <p>Set a test "next show" date and time to see how the countdown displays.</p>
+
+      <label for="test-preset">Quick Test Presets:</label>
+      <select id="test-preset">
+        <option value="">-- Choose a preset --</option>
+        <option value="1min">1 minute from now (watch it go live!)</option>
+        <option value="59min-ago">1 minute until show ends (watch it end!)</option>
+        <option value="30min">30 minutes from now</option>
+        <option value="2hours">2 hours from now</option>
+        <option value="12hours">12 hours from now</option>
+        <option value="23hours">23 hours from now</option>
+        <option value="2days">2 days from now</option>
+      </select>
+
+      <label for="test-datetime">Or set custom date/time:</label>
+      <input type="datetime-local" id="test-datetime">
+
+      <button id="apply-test">Apply Test Date</button>
+      <button id="reset-test">Reset to Real Date</button>
+
+      <div class="test-info">
+        <strong>Current display:</strong> <span id="current-countdown">Loading...</span><br>
+        <strong>Time format:</strong> <span id="time-format">-</span><br>
+        <strong>Update interval:</strong> <span id="update-interval">-</span><br>
+        <strong>Status:</strong> <span id="live-status">-</span><br>
+        <br>
+        <em>Tip: Try "1 minute from now" to watch the countdown reach zero and automatically switch to "LIVE NOW!" mode.</em>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <a href="../index.html">Home</a>
+      <a href="../radio/index.html">Radio</a>
+      <a href="../about/index.html">About</a>
+    </div>
+
+    <script>
+      // Test version of live stream script with override capability
+      (function() {
+        'use strict';
+
+        const STREAM_URL = 'https://ehfm.out.airtime.pro/ehfm_a';
+        const SHOW_START_HOUR = 13;
+        const SHOW_END_HOUR = 14;
+        const EHFM_LOGO = 'https://thumbnailer.mixcloud.com/unsafe/640x640/profile/4/5/d/0/f256-daaa-4954-86cc-aa43b7af4e6e';
+
+        let testNextShowDate = null;
+        let audioElement = null;
+        let isPlaying = false;
+        let updateIntervalId = null;
+        let currentInterval = 60000;
+        let floatingPlayer = null;
+
+        function getFirstFridayOfMonth(year, month) {
+          const firstDay = new Date(year, month, 1);
+          const dayOfWeek = firstDay.getDay();
+          let daysUntilFriday = (5 - dayOfWeek + 7) % 7;
+          if (daysUntilFriday === 0 && firstDay.getDate() !== 1) {
+            daysUntilFriday = 7;
+          }
+          const firstFriday = new Date(year, month, 1 + daysUntilFriday);
+          return firstFriday;
+        }
+
+        function getNextShowDate() {
+          const now = new Date();
+
+          // In test mode, check if test show has ended
+          if (testNextShowDate) {
+            const showEnd = new Date(testNextShowDate.getTime() + 60 * 60 * 1000); // 1 hour after start
+
+            // If show has ended, calculate next month's show
+            if (now >= showEnd) {
+              const testDate = new Date(testNextShowDate);
+              let year = testDate.getFullYear();
+              let month = testDate.getMonth() + 1; // Next month
+              if (month > 11) {
+                month = 0;
+                year++;
+              }
+              const nextShow = getFirstFridayOfMonth(year, month);
+              nextShow.setHours(SHOW_START_HOUR, 0, 0, 0);
+              return nextShow;
+            } else {
+              return testNextShowDate;
+            }
+          }
+
+          // Normal production logic
+          const ukNow = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/London' }));
+
+          let year = ukNow.getFullYear();
+          let month = ukNow.getMonth();
+
+          let nextShow = getFirstFridayOfMonth(year, month);
+          nextShow.setHours(SHOW_START_HOUR, 0, 0, 0);
+          const nextShowUK = new Date(nextShow.toLocaleString('en-US', { timeZone: 'Europe/London' }));
+
+          if (ukNow > new Date(nextShowUK.getTime() + 60 * 60 * 1000)) {
+            month++;
+            if (month > 11) {
+              month = 0;
+              year++;
+            }
+            nextShow = getFirstFridayOfMonth(year, month);
+            nextShow.setHours(SHOW_START_HOUR, 0, 0, 0);
+          }
+
+          return nextShow;
+        }
+
+        function getTimeUntilShow(nextShow) {
+          const now = new Date();
+          const diff = nextShow - now;
+
+          // If we've passed the show time (negative diff), return "Starting now..."
+          if (diff < 0) {
+            return 'Starting now...';
+          }
+
+          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+          const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+          const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+
+          // If less than 1 day, show detailed textual format with seconds
+          if (days === 0) {
+            const parts = [];
+
+            if (hours > 0) {
+              parts.push(`${hours} hour${hours !== 1 ? 's' : ''}`);
+            }
+            if (minutes > 0) {
+              parts.push(`${minutes} minute${minutes !== 1 ? 's' : ''}`);
+            }
+            if (seconds > 0 || parts.length === 0) {
+              parts.push(`${seconds} second${seconds !== 1 ? 's' : ''}`);
+            }
+
+            return parts.join(' ');
+          }
+
+          // If more than 1 day, show original format
+          if (days > 0) {
+            return `${days} day${days !== 1 ? 's' : ''}, ${hours} hour${hours !== 1 ? 's' : ''}`;
+          }
+        }
+
+        function isLiveNow() {
+          // In test mode, simulate going live when countdown reaches zero
+          if (testNextShowDate) {
+            const now = new Date();
+            const showEnd = new Date(testNextShowDate.getTime() + 60 * 60 * 1000); // 1 hour after start
+            return now >= testNextShowDate && now < showEnd;
+          }
+          return false;
+        }
+
+        function togglePlay() {
+          if (!audioElement) {
+            audioElement = new Audio(STREAM_URL);
+          }
+
+          if (isPlaying) {
+            audioElement.pause();
+            isPlaying = false;
+            updatePlayButton();
+            updateFloatingPlayer();
+          } else {
+            audioElement.play();
+            isPlaying = true;
+            updatePlayButton();
+            updateFloatingPlayer();
+          }
+        }
+
+        function updatePlayButton() {
+          const playBtn = document.getElementById('stream-play-btn');
+          if (playBtn) {
+            playBtn.innerHTML = isPlaying ? '&#9208;&#xFE0E;' : '&#9654;&#xFE0E;';
+            playBtn.setAttribute('aria-label', isPlaying ? 'Pause' : 'Play');
+          }
+        }
+
+        function updateFloatingPlayer() {
+          if (!floatingPlayer) return;
+
+          const logo = floatingPlayer.querySelector('.floating-player-logo');
+          const pauseBtn = floatingPlayer.querySelector('.floating-player-pause');
+
+          if (isPlaying) {
+            logo.style.display = 'none';
+            pauseBtn.style.display = 'flex';
+          } else {
+            logo.style.display = 'block';
+            pauseBtn.style.display = 'none';
+          }
+        }
+
+        function createFloatingPlayer() {
+          const player = document.createElement('div');
+          player.className = 'floating-audio-player';
+          player.innerHTML = `
+            <div class="floating-player-wrapper">
+              <div class="floating-player-circle">
+                <img src="${EHFM_LOGO}" alt="Play EHFM Live" class="floating-player-logo" />
+                <button class="floating-player-pause" aria-label="Pause">&#9208;&#xFE0E;</button>
+              </div>
+              <button class="floating-player-expand" aria-label="Expand widget">+</button>
+            </div>
+          `;
+
+          // Logo click - start playing
+          const logo = player.querySelector('.floating-player-logo');
+          logo.addEventListener('click', () => {
+            if (!audioElement) {
+              audioElement = new Audio(STREAM_URL);
+            }
+            audioElement.play();
+            isPlaying = true;
+            updateFloatingPlayer();
+            updatePlayButton();
+          });
+
+          // Pause button click - stop playing
+          const pauseBtn = player.querySelector('.floating-player-pause');
+          pauseBtn.addEventListener('click', () => {
+            if (audioElement) {
+              audioElement.pause();
+            }
+            isPlaying = false;
+            updateFloatingPlayer();
+            updatePlayButton();
+          });
+
+          // Expand button click - show main widget
+          const expandBtn = player.querySelector('.floating-player-expand');
+          if (expandBtn) {
+            expandBtn.addEventListener('click', (e) => {
+              e.stopPropagation();
+              const widget = document.getElementById('stream-widget');
+              if (widget) {
+                widget.style.display = 'block';
+                widget.style.opacity = '1';
+                widget.style.transform = 'translateY(0)';
+                updatePlayButton();
+              }
+              hideFloatingPlayer();
+            });
+          }
+
+          return player;
+        }
+
+        function showFloatingPlayer() {
+          if (!floatingPlayer) {
+            floatingPlayer = createFloatingPlayer();
+            document.body.appendChild(floatingPlayer);
+            updateFloatingPlayer();
+          } else {
+            floatingPlayer.style.display = 'flex';
+            updateFloatingPlayer();
+          }
+        }
+
+        function hideFloatingPlayer() {
+          if (floatingPlayer) {
+            floatingPlayer.style.display = 'none';
+          }
+        }
+
+        function createToolbarLiveLabel() {
+          const label = document.createElement('div');
+          label.className = 'toolbar-live-label';
+          label.innerHTML = '<span class="toolbar-live-dot"></span>Live Now';
+          label.style.cursor = 'pointer';
+          label.addEventListener('click', togglePlay);
+          return label;
+        }
+
+        function updateToolbarLiveLabel() {
+          const toolbar = document.querySelector('.toolbar');
+          if (!toolbar) return;
+
+          const existingLabel = toolbar.querySelector('.toolbar-live-label');
+          const live = isLiveNow();
+
+          if (live && !existingLabel) {
+            // Add label to toolbar
+            const label = createToolbarLiveLabel();
+            toolbar.insertBefore(label, toolbar.firstChild);
+          } else if (!live && existingLabel) {
+            // Remove label if not live
+            existingLabel.remove();
+          }
+        }
+
+        function createWidget() {
+          const widget = document.createElement('div');
+          widget.id = 'stream-widget';
+          widget.className = 'stream-widget';
+
+          const live = isLiveNow();
+          const nextShow = getNextShowDate();
+
+          if (live) {
+            // We're live!
+            widget.innerHTML = `
+              <button class="stream-minimize-btn" aria-label="Minimize widget">&#9866;</button>
+              <div class="stream-live-indicator">
+                <span class="live-dot"></span>
+                <span class="live-text">LIVE NOW!</span>
+              </div>
+              <div class="stream-player">
+                <button id="stream-play-btn" class="stream-play-button" aria-label="Play">&#9654;&#xFE0E;</button>
+                <a href="https://www.ehfm.live/" target="_blank" rel="noopener noreferrer">
+                  <img src="${EHFM_LOGO}" alt="EHFM Logo" class="ehfm-logo">
+                </a>
+              </div>
+              <p class="stream-subtitle">Broadcasting from the bog &#8226; 1-2pm UK</p>
+            `;
+          } else {
+            // Off-air
+            widget.innerHTML = `
+              <button class="stream-minimize-btn" aria-label="Minimize widget">&#9866;</button>
+              <div class="stream-header">
+                <p class="countdown">Next show in ${getTimeUntilShow(nextShow)}</p>
+              </div>
+              <div class="stream-player">
+                <button id="stream-play-btn" class="stream-play-button" aria-label="Play">&#9654;&#xFE0E;</button>
+                <a href="https://www.ehfm.live/" target="_blank" rel="noopener noreferrer">
+                  <img src="${EHFM_LOGO}" alt="EHFM Logo" class="ehfm-logo">
+                </a>
+              </div>
+            `;
+          }
+
+          return widget;
+        }
+
+        function updateCountdownAndStatus() {
+          const countdownEl = document.querySelector('.countdown');
+          const nextShow = getNextShowDate();
+          const timeUntil = getTimeUntilShow(nextShow);
+
+          if (countdownEl) {
+            countdownEl.textContent = `Next show in ${timeUntil}`;
+          }
+
+          // Update test info
+          const now = new Date();
+          const diff = nextShow - now;
+          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+          document.getElementById('current-countdown').textContent = timeUntil;
+          document.getElementById('time-format').textContent = days === 0 ? 'Textual with seconds (< 1 day)' : 'Days, Hours (> 1 day)';
+          document.getElementById('update-interval').textContent = currentInterval === 1000 ? 'Every second' : 'Every minute';
+          document.getElementById('live-status').textContent = isLiveNow() ? 'LIVE NOW! 🔴' : 'Off-air (countdown mode)';
+
+          // Update toolbar live label
+          updateToolbarLiveLabel();
+
+          // Check if we should switch to live mode
+          if (isLiveNow() && !document.querySelector('.stream-live-indicator')) {
+            const oldWidget = document.getElementById('stream-widget');
+            if (oldWidget) {
+              const newWidget = createWidget();
+              oldWidget.replaceWith(newWidget);
+
+              // Reattach play button listener
+              const playBtn = document.getElementById('stream-play-btn');
+              if (playBtn) {
+                playBtn.addEventListener('click', togglePlay);
+              }
+
+              // Reattach minimize button listener
+              const minimizeBtn = newWidget.querySelector('.stream-minimize-btn');
+              if (minimizeBtn) {
+                minimizeBtn.addEventListener('click', () => {
+                  newWidget.style.opacity = '0';
+                  newWidget.style.transform = 'translateY(-20px)';
+                  setTimeout(() => {
+                    newWidget.style.display = 'none';
+                    // Show floating player after widget is minimized
+                    showFloatingPlayer();
+                  }, 300);
+                });
+              }
+            }
+          }
+          // Check if we should switch back to countdown mode (when live ends)
+          else if (!isLiveNow() && document.querySelector('.stream-live-indicator')) {
+            const oldWidget = document.getElementById('stream-widget');
+            if (oldWidget) {
+              const newWidget = createWidget();
+              oldWidget.replaceWith(newWidget);
+
+              // Reattach play button listener
+              const playBtn = document.getElementById('stream-play-btn');
+              if (playBtn) {
+                playBtn.addEventListener('click', togglePlay);
+              }
+
+              // Reattach minimize button listener
+              const minimizeBtn = newWidget.querySelector('.stream-minimize-btn');
+              if (minimizeBtn) {
+                minimizeBtn.addEventListener('click', () => {
+                  newWidget.style.opacity = '0';
+                  newWidget.style.transform = 'translateY(-20px)';
+                  setTimeout(() => {
+                    newWidget.style.display = 'none';
+                    // Show floating player after widget is minimized
+                    showFloatingPlayer();
+                  }, 300);
+                });
+              }
+            }
+          }
+        }
+
+        function getUpdateInterval() {
+          const nextShow = getNextShowDate();
+          const now = new Date();
+          const diff = nextShow - now;
+          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+
+          // Update every second if currently live OR less than 1 day until show
+          if (isLiveNow() || days === 0) {
+            return 1000;
+          }
+          return 60000;
+        }
+
+        function startUpdateInterval() {
+          if (updateIntervalId) {
+            clearInterval(updateIntervalId);
+          }
+          updateIntervalId = setInterval(() => {
+            updateCountdownAndStatus();
+
+            const newInterval = getUpdateInterval();
+            if (newInterval !== currentInterval) {
+              currentInterval = newInterval;
+              startUpdateInterval();
+            }
+          }, currentInterval);
+        }
+
+        function init() {
+          const widget = createWidget();
+          const toolbar = document.querySelector('.toolbar');
+          if (toolbar) {
+            toolbar.insertAdjacentElement('afterend', widget);
+          } else {
+            document.body.appendChild(widget);
+          }
+
+          // Update toolbar live label on init
+          updateToolbarLiveLabel();
+
+          const playBtn = document.getElementById('stream-play-btn');
+          if (playBtn) {
+            playBtn.addEventListener('click', togglePlay);
+          }
+
+          // Attach minimize button listener
+          const minimizeBtn = widget.querySelector('.stream-minimize-btn');
+          if (minimizeBtn) {
+            minimizeBtn.addEventListener('click', () => {
+              widget.style.opacity = '0';
+              widget.style.transform = 'translateY(-20px)';
+              setTimeout(() => {
+                widget.style.display = 'none';
+                // Show floating player after widget is minimized
+                showFloatingPlayer();
+              }, 300);
+            });
+          }
+
+          // Test controls
+          document.getElementById('test-preset').addEventListener('change', function(e) {
+            if (!e.target.value) return;
+
+            const now = new Date();
+            let testDate = new Date(now);
+
+            switch(e.target.value) {
+              case '1min':
+                testDate.setMinutes(testDate.getMinutes() + 1);
+                break;
+              case '59min-ago':
+                testDate.setMinutes(testDate.getMinutes() - 59);
+                break;
+              case '30min':
+                testDate.setMinutes(testDate.getMinutes() + 30);
+                break;
+              case '2hours':
+                testDate.setHours(testDate.getHours() + 2);
+                break;
+              case '12hours':
+                testDate.setHours(testDate.getHours() + 12);
+                break;
+              case '23hours':
+                testDate.setHours(testDate.getHours() + 23);
+                break;
+              case '2days':
+                testDate.setDate(testDate.getDate() + 2);
+                break;
+            }
+
+            const dateString = testDate.toISOString().slice(0, 16);
+            document.getElementById('test-datetime').value = dateString;
+          });
+
+          document.getElementById('apply-test').addEventListener('click', function() {
+            const dateInput = document.getElementById('test-datetime').value;
+            if (dateInput) {
+              testNextShowDate = new Date(dateInput);
+              currentInterval = getUpdateInterval();
+              startUpdateInterval();
+              updateCountdownAndStatus();
+              alert('Test date applied! Countdown will now update.');
+            } else {
+              alert('Please select a date/time first.');
+            }
+          });
+
+          document.getElementById('reset-test').addEventListener('click', function() {
+            testNextShowDate = null;
+            currentInterval = getUpdateInterval();
+            startUpdateInterval();
+            updateCountdownAndStatus();
+            document.getElementById('test-datetime').value = '';
+            document.getElementById('test-preset').value = '';
+            alert('Reset to real next show date.');
+          });
+
+          currentInterval = getUpdateInterval();
+          startUpdateInterval();
+          updateCountdownAndStatus();
+        }
+
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', init);
+        } else {
+          init();
+        }
+
+      })();
+    </script>
+  </body>
+</html>
