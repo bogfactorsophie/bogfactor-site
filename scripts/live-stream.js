@@ -29,6 +29,54 @@
     sessionStorage.removeItem('bogFactorLiveStreamPlaying');
   }
 
+  // Get current time components in UK timezone
+  function getUKTimeComponents(date = new Date()) {
+    const formatter = new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/London',
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    });
+
+    const parts = formatter.formatToParts(date);
+    const get = (type) => parts.find(p => p.type === type).value;
+
+    return {
+      year: parseInt(get('year')),
+      month: parseInt(get('month')) - 1, // 0-indexed for JavaScript Date
+      day: parseInt(get('day')),
+      hour: parseInt(get('hour')),
+      minute: parseInt(get('minute')),
+      second: parseInt(get('second'))
+    };
+  }
+
+  // Create a Date object representing a specific time in UK timezone
+  function createDateInUKTimezone(year, month, day, hour, minute = 0) {
+    // Create a test date at noon UTC on the target day
+    const testDate = new Date(Date.UTC(year, month, day, 12, 0, 0));
+
+    // Get what hour that appears as in UK timezone
+    const ukHourAtNoonUTC = parseInt(new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Europe/London',
+      hour: '2-digit',
+      hour12: false
+    }).format(testDate));
+
+    // Calculate UK offset: if noon UTC shows as 13:00 UK, offset is +1 (BST)
+    // if noon UTC shows as 12:00 UK, offset is 0 (GMT)
+    const ukOffsetHours = ukHourAtNoonUTC - 12;
+
+    // To create a date at "hour:minute" UK time, we need UTC time to be (hour - offset)
+    const utcHour = hour - ukOffsetHours;
+
+    return new Date(Date.UTC(year, month, day, utcHour, minute, 0));
+  }
+
   function getFirstFridayOfMonth(year, month) {
     // month is 0-indexed (0 = January)
     const firstDay = new Date(year, month, 1);
@@ -46,27 +94,29 @@
 
   function getNextShowDate() {
     const now = new Date();
-    const ukNow = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/London' }));
+    const ukNow = getUKTimeComponents(now);
 
-    let year = ukNow.getFullYear();
-    let month = ukNow.getMonth();
+    let year = ukNow.year;
+    let month = ukNow.month;
 
     // Get first Friday of current month
-    let nextShow = getFirstFridayOfMonth(year, month);
-    nextShow.setHours(SHOW_START_HOUR, 0, 0, 0);
+    const firstFriday = getFirstFridayOfMonth(year, month);
+    const firstFridayDay = firstFriday.getDate();
 
-    // Convert to UK time for comparison
-    const nextShowUK = new Date(nextShow.toLocaleString('en-US', { timeZone: 'Europe/London' }));
+    // Create show date at 1pm UK time on first Friday
+    let nextShow = createDateInUKTimezone(year, month, firstFridayDay, SHOW_START_HOUR, 0);
 
-    // If we've passed this month's show, get next month's
-    if (ukNow > new Date(nextShowUK.getTime() + 60 * 60 * 1000)) { // after 2pm of first Friday
+    // If we've passed this month's show (after 2pm UK time), get next month's show
+    const showEndTime = createDateInUKTimezone(year, month, firstFridayDay, SHOW_END_HOUR, 0);
+
+    if (now > showEndTime) {
       month++;
       if (month > 11) {
         month = 0;
         year++;
       }
-      nextShow = getFirstFridayOfMonth(year, month);
-      nextShow.setHours(SHOW_START_HOUR, 0, 0, 0);
+      const nextFirstFriday = getFirstFridayOfMonth(year, month);
+      nextShow = createDateInUKTimezone(year, month, nextFirstFriday.getDate(), SHOW_START_HOUR, 0);
     }
 
     return nextShow;
@@ -74,20 +124,18 @@
 
   function isLiveNow() {
     const now = new Date();
-    const ukNow = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/London' }));
+    const ukNow = getUKTimeComponents(now);
 
-    const year = ukNow.getFullYear();
-    const month = ukNow.getMonth();
+    const year = ukNow.year;
+    const month = ukNow.month;
     const firstFriday = getFirstFridayOfMonth(year, month);
 
-    // Check if today is first Friday
-    const isFirstFriday = ukNow.getDate() === firstFriday.getDate() &&
-                          ukNow.getMonth() === firstFriday.getMonth() &&
-                          ukNow.getFullYear() === firstFriday.getFullYear();
+    // Check if today is first Friday in UK timezone
+    const isFirstFriday = ukNow.day === firstFriday.getDate() &&
+                          ukNow.month === firstFriday.getMonth();
 
     // Check if time is between 1pm-2pm UK
-    const hour = ukNow.getHours();
-    const isShowTime = hour >= SHOW_START_HOUR && hour < SHOW_END_HOUR;
+    const isShowTime = ukNow.hour >= SHOW_START_HOUR && ukNow.hour < SHOW_END_HOUR;
 
     return isFirstFriday && isShowTime;
   }
