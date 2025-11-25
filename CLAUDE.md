@@ -48,7 +48,7 @@ The site uses vanilla JavaScript modules for interactive features:
 - `scripts/bog-scale.js` - Interactive hover effect for the bog factor scale image
 - `scripts/draggable-suns.js` - Creates draggable sun elements that float across the page
 - `scripts/live-stream.js` - Manages the live stream player and widget on the landing page
-- `scripts/persistent-player.js` - Persistent audio player for Mixcloud shows on the radio page
+- `scripts/mixcloud-player.js` - Fixed player at bottom of page for Mixcloud show playback
 - `scripts/toolbar-live-widget.js` - Live indicator widget shown in the toolbar during broadcasts
 
 All scripts use IIFE (Immediately Invoked Function Expressions) to avoid global namespace pollution.
@@ -119,7 +119,7 @@ When adding new pages or modifying paths, maintain consistency with the existing
 
 The site is actively being worked on with recent enhancements:
 - Live streaming widget added to landing page with play/pause controls
-- Persistent audio player for radio archive with Mixcloud integration
+- Fixed Mixcloud player for radio archive with slide-up/down animations
 - Draggable sun elements for interactive experience
 - Tracklist modals with YouTube search integration
 - Clean, optimized codebase with unused files removed

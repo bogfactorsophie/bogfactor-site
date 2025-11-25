@@ -1,13 +1,12 @@
 /**
- * Bog Factor Persistent Player
- * Enables continuous Mixcloud playback across page navigation
+ * Bog Factor Mixcloud Player
+ * Fixed player at bottom of page for Mixcloud show playback
  */
 
 (function() {
   'use strict';
 
-  const PersistentPlayer = {
-    player: null,
+  const MixcloudPlayer = {
     widget: null,
     currentTrack: null,
 
@@ -17,9 +16,9 @@
     },
 
     createPlayerContainer() {
-      // Create persistent player container
+      // Create player container
       const playerContainer = document.createElement('div');
-      playerContainer.id = 'persistent-player';
+      playerContainer.id = 'mixcloud-player';
       playerContainer.className = 'player-hidden';
       playerContainer.innerHTML = `
         <div class="player-controls">
@@ -100,9 +99,16 @@
     },
 
     showPlayer() {
-      const player = document.getElementById('persistent-player');
-      player.classList.remove('player-hidden');
-      player.classList.add('player-visible');
+      const player = document.getElementById('mixcloud-player');
+
+      // Force a reflow to ensure the hidden state is rendered before animating
+      player.offsetHeight;
+
+      // Use requestAnimationFrame to ensure animation triggers
+      requestAnimationFrame(() => {
+        player.classList.remove('player-hidden');
+        player.classList.add('player-visible');
+      });
 
       // Add class to body so other elements can respond
       document.body.classList.add('mixcloud-player-active');
@@ -117,7 +123,7 @@
     },
 
     hidePlayer() {
-      const player = document.getElementById('persistent-player');
+      const player = document.getElementById('mixcloud-player');
       player.classList.remove('player-visible');
       player.classList.add('player-hidden');
 
@@ -136,12 +142,12 @@
 
   // Initialize when DOM is ready
   if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => PersistentPlayer.init());
+    document.addEventListener('DOMContentLoaded', () => MixcloudPlayer.init());
   } else {
-    PersistentPlayer.init();
+    MixcloudPlayer.init();
   }
 
   // Expose to window for play buttons to use
-  window.BogFactorPlayer = PersistentPlayer;
+  window.BogFactorPlayer = MixcloudPlayer;
 
 })();

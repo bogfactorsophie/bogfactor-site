@@ -429,8 +429,8 @@ img {
     transform: scale(0.95);
 }
 
-/* Persistent Player Styles */
-#persistent-player {
+/* Mixcloud Player Styles */
+#mixcloud-player {
     position: fixed;
     bottom: 0;
     left: 0;
@@ -441,11 +441,11 @@ img {
     transition: transform 0.3s ease-in-out;
 }
 
-#persistent-player.player-hidden {
+#mixcloud-player.player-hidden {
     transform: translateY(100%);
 }
 
-#persistent-player.player-visible {
+#mixcloud-player.player-visible {
     transform: translateY(0);
 }
 
