@@ -265,6 +265,12 @@
             playBtn.innerHTML = isPlaying ? '&#9208;&#xFE0E;' : '&#9654;&#xFE0E;';
             playBtn.setAttribute('aria-label', isPlaying ? 'Pause' : 'Play');
           }
+
+          // Update toolbar button icon
+          const toolbarPlayIcon = document.querySelector('.toolbar-play-icon');
+          if (toolbarPlayIcon) {
+            toolbarPlayIcon.innerHTML = isPlaying ? '&#9208;&#xFE0E;' : '&#9654;&#xFE0E;';
+          }
         }
 
         function updateFloatingPlayer() {
@@ -325,9 +331,20 @@
               e.stopPropagation();
               const widget = document.getElementById('stream-widget');
               if (widget) {
+                // Set initial hidden state
                 widget.style.display = 'block';
-                widget.style.opacity = '1';
-                widget.style.transform = 'translateY(0)';
+                widget.style.opacity = '0';
+                widget.style.transform = 'translateY(-20px)';
+
+                // Force reflow to ensure initial state is rendered
+                widget.offsetHeight;
+
+                // Animate to visible state
+                requestAnimationFrame(() => {
+                  widget.style.opacity = '1';
+                  widget.style.transform = 'translateY(0)';
+                });
+
                 updatePlayButton();
               }
               hideFloatingPlayer();
@@ -354,29 +371,46 @@
           }
         }
 
-        function createToolbarLiveLabel() {
-          const label = document.createElement('div');
-          label.className = 'toolbar-live-label';
-          label.innerHTML = '<span class="toolbar-live-dot"></span>Live Now';
-          label.style.cursor = 'pointer';
-          label.addEventListener('click', togglePlay);
-          return label;
+        function createToolbarLiveWidget() {
+          const liveWidget = document.createElement('div');
+          liveWidget.id = 'toolbar-live-widget';
+          liveWidget.className = 'toolbar-live-widget';
+
+          liveWidget.innerHTML = `
+            <button id="toolbar-live-btn" class="toolbar-live-btn">
+              <span class="toolbar-live-dot"></span>
+              <span class="toolbar-live-text">LIVE NOW</span>
+              <span class="toolbar-play-icon">&#9654;&#xFE0E;</span>
+            </button>
+            <a href="https://www.ehfm.live/chat" target="_blank" rel="noopener noreferrer" class="toolbar-chat-btn">
+              <span class="toolbar-chat-icon">🗨</span>
+              <span class="toolbar-chat-text">Chat</span>
+            </a>
+          `;
+
+          // Attach click handler
+          const btn = liveWidget.querySelector('#toolbar-live-btn');
+          if (btn) {
+            btn.addEventListener('click', togglePlay);
+          }
+
+          return liveWidget;
         }
 
         function updateToolbarLiveLabel() {
           const toolbar = document.querySelector('.toolbar');
           if (!toolbar) return;
 
-          const existingLabel = toolbar.querySelector('.toolbar-live-label');
+          const existingWidget = toolbar.querySelector('#toolbar-live-widget');
           const live = isLiveNow();
 
-          if (live && !existingLabel) {
-            // Add label to toolbar
-            const label = createToolbarLiveLabel();
-            toolbar.insertBefore(label, toolbar.firstChild);
-          } else if (!live && existingLabel) {
-            // Remove label if not live
-            existingLabel.remove();
+          if (live && !existingWidget) {
+            // Add widget to toolbar
+            const widget = createToolbarLiveWidget();
+            toolbar.appendChild(widget);
+          } else if (!live && existingWidget) {
+            // Remove widget if not live
+            existingWidget.remove();
           }
         }
 

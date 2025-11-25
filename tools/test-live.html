@@ -48,6 +48,10 @@
           <span class="toolbar-live-text">LIVE NOW</span>
           <span class="toolbar-play-icon">&#9654;&#xFE0E;</span>
         </button>
+        <a href="https://www.ehfm.live/chat" target="_blank" rel="noopener noreferrer" class="toolbar-chat-btn">
+          <span class="toolbar-chat-icon">🗨</span>
+          <span class="toolbar-chat-text">Chat</span>
+        </a>
       </div>
     </div>
 
@@ -149,9 +153,20 @@
             e.stopPropagation();
             const widget = document.getElementById('stream-widget');
             if (widget) {
+              // Set initial hidden state
               widget.style.display = 'block';
-              widget.style.opacity = '1';
-              widget.style.transform = 'translateY(0)';
+              widget.style.opacity = '0';
+              widget.style.transform = 'translateY(-20px)';
+
+              // Force reflow to ensure initial state is rendered
+              widget.offsetHeight;
+
+              // Animate to visible state
+              requestAnimationFrame(() => {
+                widget.style.opacity = '1';
+                widget.style.transform = 'translateY(0)';
+              });
+
               // Update main play button state
               const mainPlayBtn = document.getElementById('stream-play-btn');
               if (mainPlayBtn) {

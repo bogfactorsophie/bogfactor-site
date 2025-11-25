@@ -125,6 +125,9 @@ body.blog-page .textbox {
 /* Toolbar Live Widget */
 .toolbar-live-widget {
     margin-left: auto;
+    display: flex;
+    gap: 10px;
+    align-items: center;
 }
 
 .toolbar-live-btn {
@@ -133,7 +136,7 @@ body.blog-page .textbox {
     gap: 8px;
     background-color: rgba(218, 72, 72, 0.9);
     color: wheat;
-    border: 2px solid rgb(218, 72, 72);
+    border: none;
     padding: 8px 16px;
     font-family: 'Luminari', fantasy;
     font-size: 14px;
@@ -141,6 +144,9 @@ body.blog-page .textbox {
     border-radius: 20px;
     transition: all 0.3s ease;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    line-height: 1.5;
+    box-sizing: border-box;
+    min-height: 40px;
 }
 
 .toolbar-live-btn:hover {
@@ -151,6 +157,49 @@ body.blog-page .textbox {
 
 .toolbar-live-btn:active {
     transform: scale(0.98);
+}
+
+.toolbar-chat-btn {
+    display: flex !important;
+    align-items: center;
+    gap: 8px;
+    background: rgb(107, 142, 35) !important;
+    background-color: rgb(107, 142, 35) !important;
+    color: wheat !important;
+    border: none !important;
+    padding: 8px 16px;
+    font-family: 'Luminari', fantasy;
+    font-size: 14px;
+    cursor: pointer;
+    border-radius: 20px;
+    transition: all 0.3s ease;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    text-decoration: none !important;
+    opacity: 1 !important;
+    line-height: 1.5;
+    box-sizing: border-box;
+    min-height: 40px;
+}
+
+.toolbar-chat-btn:hover {
+    background: rgb(85, 115, 25) !important;
+    background-color: rgb(85, 115, 25) !important;
+    color: wheat !important;
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.toolbar-chat-btn:active {
+    transform: scale(0.98);
+}
+
+.toolbar-chat-icon {
+    font-size: 16px;
+}
+
+.toolbar-chat-text {
+    font-weight: bold;
+    letter-spacing: 0.5px;
 }
 
 .toolbar-live-dot {
@@ -1117,6 +1166,13 @@ body.mixcloud-player-active .floating-player-circle:hover {
         min-width: auto;
     }
 
+    .toolbar-chat-btn {
+        font-size: 14px;
+        padding: 10px 12px;
+        flex-shrink: 1;
+        min-width: auto;
+    }
+
     .toolbar-live-label {
         font-size: 12px;
         padding: 8px 12px;
@@ -1132,8 +1188,13 @@ body.mixcloud-player-active .floating-player-circle:hover {
         display: none;
     }
 
+    .toolbar-chat-text {
+        display: none;
+    }
+
     .toolbar-live-widget {
         margin-left: 0;
+        gap: 6px;
     }
 
     /* Footer adjustments */
@@ -1275,6 +1336,11 @@ body.mixcloud-player-active .floating-player-circle:hover {
     }
 
     .toolbar-live-btn {
+        font-size: 12px;
+        padding: 8px 10px;
+    }
+
+    .toolbar-chat-btn {
         font-size: 12px;
         padding: 8px 10px;
     }

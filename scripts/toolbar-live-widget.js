@@ -92,6 +92,10 @@
         <span class="toolbar-live-text">LIVE NOW</span>
         <span class="toolbar-play-icon">&#9654;&#xFE0E;</span>
       </button>
+      <a href="https://www.ehfm.live/chat" target="_blank" rel="noopener noreferrer" class="toolbar-chat-btn">
+        <span class="toolbar-chat-icon">🗨</span>
+        <span class="toolbar-chat-text">Chat</span>
+      </a>
     `;
 
     toolbar.appendChild(liveWidget);
