@@ -330,10 +330,20 @@
         expandBtn.addEventListener('click', (e) => {
           e.stopPropagation(); // Prevent triggering parent click events
           if (mainWidget) {
-            // Show the main widget
+            // Set initial hidden state
             mainWidget.style.display = 'block';
-            mainWidget.style.opacity = '1';
-            mainWidget.style.transform = 'translateY(0)';
+            mainWidget.style.opacity = '0';
+            mainWidget.style.transform = 'translateY(-20px)';
+
+            // Force reflow to ensure initial state is rendered
+            mainWidget.offsetHeight;
+
+            // Animate to visible state
+            requestAnimationFrame(() => {
+              mainWidget.style.opacity = '1';
+              mainWidget.style.transform = 'translateY(0)';
+            });
+
             // Hide floating player
             hideFloatingPlayer();
           }
