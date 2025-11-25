@@ -740,8 +740,8 @@ body.mixcloud-player-active .floating-player-circle {
     overflow: hidden;
     cursor: pointer;
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    border: 3px solid wheat;
-    background-color: #fff;
+    border: 2px solid wheat;
+    background-color: #2AB7A9;
     box-sizing: border-box;
     display: flex;
     align-items: center;
@@ -800,7 +800,7 @@ body.mixcloud-player-active .floating-player-circle:hover {
     object-fit: contain;
     display: block;
     border-radius: 50%;
-    padding: 0px;
+    padding: 0;
     box-sizing: border-box;
 }
 
