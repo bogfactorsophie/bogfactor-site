@@ -1,8 +1,33 @@
-# Radio Shows - How to Add New Shows
+# Bog Factor Developer Tools
 
-The radio page now generates shows dynamically from `shows.json`. This makes it easy to add new shows each month!
+## Test Pages
+
+- **test-live.html** - Test the live streaming widget in "LIVE NOW!" mode
+- **test-countdown.html** - Test countdown timer with presets to simulate different times before/during/after show and transitions from not live to live back to not live
+
+### Test Live
+
+This page is a convenience tool so that you don't need to configure the page and wait for it to go live, instead you can immediately see it.
+
+There should be toolbar icons directing the user to "Listen Live" and "Chat" visible on all pages.
+
+The "Listen Live" feature should start the same live player that is controlled on the main and floating players.
+
+The "Chat" feature should send users to a Chatango chatroom hosted by EHFM
+
+### Test Countdown
+
+As the show is only scheduled for once a month, it is convenient to be able to simulate what it looks like in the moments leading up to the start and the end of the show. This ensures that the site transitions cleanly and looks good throughout. Even the Bog Factor is only live for an hour, EHFM broadcasts 24/7 and so the user should be able to listen to our friend's shows through our site.
+
+Typically this test page is used by setting the start of the show to be a minute from now, waiting until the next minute, and watching and listening for any transitions.
+
+Then, the user can set the end of the show to be in a minute and do the same.
+
+---
 
 ## Adding a New Show
+
+The radio page generates shows dynamically from `shows.json`. This makes it easy to add new shows each month!
 
 Edit `radio/shows.json` and add a new object at the **top** of the array (most recent shows first):
 
@@ -64,9 +89,6 @@ The tracklist will automatically appear in the modal popup when you click "View 
 - The page loads instantly - all show data is fetched and rendered client-side
 - No build process needed - just edit the JSON and refresh!
 
----
 
-## Test Pages
 
-- **test-live.html** - Test the live streaming widget in "LIVE NOW!" mode
-- **test-countdown.html** - Test countdown timer with presets to simulate different times before/during/after show
+

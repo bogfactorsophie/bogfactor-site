@@ -4,7 +4,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Bog Factor is a static website for a radio show hosted by Sophie and Emily on EHFM. The site is built with vanilla HTML, CSS, and JavaScript with no build process or dependencies.
+Bog Factor is a monthly radio show hosted by Sophie and Emily on EHFM, a community radio station broadcasting from Edinburgh. The girls play music of all genres but with a particular bent for psychedelic, folk, and sleazy music. They are inspired by nature and the neolithic, and have a particular fondness for the Rhynie Man, who they want to free from his shackles.
+
+The show is live from 1pm-2pm UK time on the first Friday of every month.
+
+## Web Design Principles
+
+As much as is practical the site is built with vanilla HTML, CSS, and JavaScript with no build process or dependencies.
+
+The website is intended to be quirky and fun with playful elements.
+
+When the show is live on air the site should transform and encourage users to listen and chat with the hosts.
+
+The colour pallette should use warm earthy tones, and avoid hard blacks and whites. Folksy motifs should be used, with design inspired by folk art, old guide books, and other old world ephemera.
+
+## Hosting
+
+The website is hosted on Cloudflare Pages, and the domain [bogfactor.co.uk](https://bogfactor.co.uk) is connected with the `main` branch of this repository.
 
 ## Architecture
 
@@ -18,7 +34,7 @@ The site uses a flat directory structure with section-based organization:
 - `radio/shows.json` - Master data file containing all show metadata and tracklists
 - `styles.css` - Global stylesheet shared across all pages
 - `scripts/` - JavaScript modules for interactive features
-- `assets/` - Image and media files
+- `assets/` - Image and other media files
 - `tools/` - Development utilities and test files
 
 ### Navigation Pattern
@@ -26,7 +42,7 @@ The site uses a flat directory structure with section-based organization:
 All subpages (radio, about) share a consistent layout:
 - Toolbar navigation at the top with links to Home, Radio, and About
 - SVG wavy border filters for visual effects
-- Footer with Instagram and Mixcloud links
+- Footer with Instagram and Email mailto links
 
 The landing page (`index.html`) has a minimal layout with the background image, toolbar navigation, live stream widget (when show is live), and footer.
 
@@ -95,16 +111,6 @@ This is a static site with no build process. To develop:
 1. Edit HTML, CSS, or JS files directly
 2. Open files in browser or serve with any static server (e.g., `python3 -m http.server`)
 
-### Testing Changes
-
-Since this is a static site:
-- Open `index.html` in browser to test landing page
-- Navigate to subpages (`radio/`, `about/`) to test those sections
-- Test draggable sun elements by clicking and dragging them
-- Test live stream widget functionality using `tools/test-live.html`
-- Test tracklist modals and YouTube search links on the radio page
-- Verify show data displays correctly after editing `radio/shows.json`
-
 ### Path Conventions
 
 - Root-relative paths are used for navigation links (e.g., `/index.html`, `/radio/index.html`)
@@ -131,3 +137,21 @@ The site is actively being worked on with recent enhancements:
 - Store all show data in `radio/shows.json` for easy updates
 - Use root-relative paths for navigation, relative paths for assets
 - Test changes using a local static server or by opening files directly in browser
+
+## Testing
+
+Usually in active development we will spin up a local web server, this will host the site at `http://127.0.0.1:3000`
+
+Any new feature that affects the website when Bog Factor is live on air (or the transitions between live and not live) should be added in an identical manner to the test pages at `tools\test-live.html` and `tools\test-countdown.html`. Testing is a very important part of development and should be considered whenever making any changes.
+
+The procedure for testing is something like:
+- Open `index.html` in browser to test landing page
+- Navigate to subpages (`radio/`, `about/`) to test those sections
+- Test tracklist modals and YouTube search links on the radio page
+- Test Mixcloud widgets on the radio page
+- Test draggable sun elements by clicking and dragging them
+- Test behaviour of the site when Bog Factor is on air using `tools/test-live.html`
+- Test behaviour of the site when Bog Factor goes on and off air using `tools/test-countdown.html`
+- Verify show data displays correctly after editing `radio/shows.json`
+
+Further documentation of these test features is included in `radio/README.md`
