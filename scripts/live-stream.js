@@ -209,6 +209,11 @@
       updateFloatingPlayer();
       savePlayingState();
     }
+
+    // Notify toolbar widget to update its UI
+    if (window.BogFactorToolbarWidget) {
+      window.BogFactorToolbarWidget.updateUI(isPlaying);
+    }
   }
 
   function updatePlayButton() {
@@ -598,6 +603,28 @@
 
   // Expose API for other scripts
   window.BogFactorLiveStream = {
+    toggleStream() {
+      if (!audioElement) {
+        audioElement = new Audio(STREAM_URL);
+      }
+
+      if (isPlaying) {
+        audioElement.pause();
+        isPlaying = false;
+      } else {
+        audioElement.play();
+        isPlaying = true;
+      }
+
+      updatePlayButton();
+      updateFloatingPlayer();
+      savePlayingState();
+
+      // Notify toolbar widget to update its UI
+      if (window.BogFactorToolbarWidget) {
+        window.BogFactorToolbarWidget.updateUI(isPlaying);
+      }
+    },
     stopStream() {
       if (audioElement && isPlaying) {
         audioElement.pause();
@@ -605,7 +632,15 @@
         updatePlayButton();
         updateFloatingPlayer();
         savePlayingState();
+
+        // Notify toolbar widget to update its UI
+        if (window.BogFactorToolbarWidget) {
+          window.BogFactorToolbarWidget.updateUI(false);
+        }
       }
+    },
+    getPlayingState() {
+      return isPlaying;
     },
     updateFloatingPlayer() {
       updateFloatingPlayer();
