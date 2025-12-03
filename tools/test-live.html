@@ -72,12 +72,30 @@
     </div>
 
     <script>
-      // Simple play/pause functionality for demo
+      // Simple play/pause functionality for demo - SYNCHRONIZED
       const STREAM_URL = 'https://ehfm.out.airtime.pro/ehfm_a';
       const EHFM_LOGO = 'https://thumbnailer.mixcloud.com/unsafe/640x640/profile/4/5/d/0/f256-daaa-4954-86cc-aa43b7af4e6e';
       let audioElement = null;
       let isPlaying = false;
       let floatingPlayer = null;
+
+      // Update ALL UI elements to reflect current playing state
+      function updateAllUI() {
+        // Update main play button
+        const mainPlayBtn = document.getElementById('stream-play-btn');
+        if (mainPlayBtn) {
+          mainPlayBtn.innerHTML = isPlaying ? '&#9208;&#xFE0E;' : '&#9654;&#xFE0E;';
+        }
+
+        // Update toolbar play icon
+        const toolbarPlayIcon = document.querySelector('.toolbar-play-icon');
+        if (toolbarPlayIcon) {
+          toolbarPlayIcon.innerHTML = isPlaying ? '&#9208;&#xFE0E;' : '&#9654;&#xFE0E;';
+        }
+
+        // Update floating player
+        updateFloatingPlayer();
+      }
 
       function togglePlay() {
         if (!audioElement) {
@@ -87,14 +105,12 @@
         if (isPlaying) {
           audioElement.pause();
           isPlaying = false;
-          document.getElementById('stream-play-btn').innerHTML = '&#9654;&#xFE0E;';
-          updateFloatingPlayer();
         } else {
           audioElement.play();
           isPlaying = true;
-          document.getElementById('stream-play-btn').innerHTML = '&#9208;&#xFE0E;';
-          updateFloatingPlayer();
         }
+
+        updateAllUI();
       }
 
       function updateFloatingPlayer() {
@@ -133,7 +149,7 @@
           }
           audioElement.play();
           isPlaying = true;
-          updateFloatingPlayer();
+          updateAllUI();
         });
 
         // Pause button click - stop playing
@@ -143,7 +159,7 @@
             audioElement.pause();
           }
           isPlaying = false;
-          updateFloatingPlayer();
+          updateAllUI();
         });
 
         // Expand button click - show main widget
@@ -167,11 +183,8 @@
                 widget.style.transform = 'translateY(0)';
               });
 
-              // Update main play button state
-              const mainPlayBtn = document.getElementById('stream-play-btn');
-              if (mainPlayBtn) {
-                mainPlayBtn.innerHTML = isPlaying ? '&#9208;&#xFE0E;' : '&#9654;&#xFE0E;';
-              }
+              // Update UI to ensure all elements are in sync
+              updateAllUI();
             }
             hideFloatingPlayer();
           });
@@ -184,10 +197,10 @@
         if (!floatingPlayer) {
           floatingPlayer = createFloatingPlayer();
           document.body.appendChild(floatingPlayer);
-          updateFloatingPlayer();
+          updateAllUI();
         } else {
           floatingPlayer.style.display = 'flex';
-          updateFloatingPlayer();
+          updateAllUI();
         }
       }
 
@@ -214,37 +227,8 @@
         });
       }
 
-      // Toolbar live button
-      let toolbarAudio = null;
-      let isToolbarPlaying = false;
-
-      function toggleToolbarPlay() {
-        if (!toolbarAudio) {
-          toolbarAudio = new Audio(STREAM_URL);
-        }
-
-        if (isToolbarPlaying) {
-          toolbarAudio.pause();
-          isToolbarPlaying = false;
-          document.querySelector('.toolbar-play-icon').innerHTML = '&#9654;&#xFE0E;';
-        } else {
-          // Pause main player if playing
-          if (audioElement) {
-            audioElement.pause();
-            isPlaying = false;
-            const mainPlayBtn = document.getElementById('stream-play-btn');
-            if (mainPlayBtn) {
-              mainPlayBtn.innerHTML = '&#9654;&#xFE0E;';
-            }
-            updateFloatingPlayer();
-          }
-          toolbarAudio.play();
-          isToolbarPlaying = true;
-          document.querySelector('.toolbar-play-icon').innerHTML = '&#9208;&#xFE0E;';
-        }
-      }
-
-      document.getElementById('toolbar-live-btn').addEventListener('click', toggleToolbarPlay);
+      // Toolbar live button - uses same audio element and togglePlay function
+      document.getElementById('toolbar-live-btn').addEventListener('click', togglePlay);
     </script>
 
     <footer class="footer">

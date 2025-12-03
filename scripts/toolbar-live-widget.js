@@ -7,12 +7,8 @@
 (function() {
   'use strict';
 
-  const STREAM_URL = 'https://ehfm.out.airtime.pro/ehfm_a';
   const SHOW_START_HOUR = 13; // 1pm UK time (24h format)
   const SHOW_END_HOUR = 14;   // 2pm UK time
-
-  let toolbarAudio = null;
-  let isToolbarPlaying = false;
 
   function getFirstFridayOfMonth(year, month) {
     const firstDay = new Date(year, month, 1);
@@ -44,36 +40,18 @@
   }
 
   function toggleToolbarPlay() {
-    // Check if landing page player is playing and pause it
-    if (window.BogFactorPlayer && window.BogFactorPlayer.widget) {
-      try {
-        window.BogFactorPlayer.widget.pause();
-      } catch (e) {
-        // Widget might not be ready
-      }
-    }
-
-    if (!toolbarAudio) {
-      toolbarAudio = new Audio(STREAM_URL);
-    }
-
-    if (isToolbarPlaying) {
-      toolbarAudio.pause();
-      isToolbarPlaying = false;
-      updateToolbarButton();
-    } else {
-      toolbarAudio.play();
-      isToolbarPlaying = true;
-      updateToolbarButton();
+    // Use shared audio from live-stream.js if available
+    if (window.BogFactorLiveStream && window.BogFactorLiveStream.toggleStream) {
+      window.BogFactorLiveStream.toggleStream();
     }
   }
 
-  function updateToolbarButton() {
+  function updateToolbarButton(isPlaying) {
     const btn = document.getElementById('toolbar-live-btn');
     if (btn) {
       const playIcon = btn.querySelector('.toolbar-play-icon');
       if (playIcon) {
-        playIcon.innerHTML = isToolbarPlaying ? '&#9208;&#xFE0E;' : '&#9654;&#xFE0E;';
+        playIcon.innerHTML = isPlaying ? '&#9208;&#xFE0E;' : '&#9654;&#xFE0E;';
       }
     }
   }
@@ -111,16 +89,17 @@
     if (isLiveNow()) {
       createToolbarWidget();
 
+      // Sync initial state with live stream player
+      if (window.BogFactorLiveStream && window.BogFactorLiveStream.getPlayingState) {
+        updateToolbarButton(window.BogFactorLiveStream.getPlayingState());
+      }
+
       // Check every minute if we're still live
       setInterval(() => {
         if (!isLiveNow()) {
           const widget = document.getElementById('toolbar-live-widget');
           if (widget) {
             widget.remove();
-          }
-          if (toolbarAudio) {
-            toolbarAudio.pause();
-            toolbarAudio = null;
           }
         }
       }, 60000);
@@ -133,6 +112,13 @@
       }, 60000);
     }
   }
+
+  // Expose API for other scripts (like live-stream.js)
+  window.BogFactorToolbarWidget = {
+    updateUI(isPlaying) {
+      updateToolbarButton(isPlaying);
+    }
+  };
 
   // Initialize when DOM is ready
   if (document.readyState === 'loading') {
