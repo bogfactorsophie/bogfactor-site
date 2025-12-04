@@ -15,6 +15,17 @@ body.blog-page {
     background-size: cover;
 }
 
+/* Text selection/highlight color */
+::selection {
+    background-color: #2d4a2b;
+    color: wheat;
+}
+
+::-moz-selection {
+    background-color: #2d4a2b;
+    color: wheat;
+}
+
 .main-title a{
     color: rgb(135, 89, 33);
     font-family: "Luminari", fantasy;
