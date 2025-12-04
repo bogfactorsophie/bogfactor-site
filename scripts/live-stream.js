@@ -21,6 +21,17 @@
   let dragOffsetX = 0;
   let dragOffsetY = 0;
 
+  // Physics for throwing
+  let velocityX = 0;
+  let velocityY = 0;
+  let lastX = 0;
+  let lastY = 0;
+  let lastTime = 0;
+  let animationFrameId = null;
+  const FRICTION = 0.98; // Deceleration factor (0.95 = loses 5% per frame)
+  const BOUNCE_DAMPING = 0.5; // Energy retained on bounce (0.6 = loses 40%)
+  const MIN_VELOCITY = 0.5; // Stop animating below this velocity
+
   // Store/restore playing state across page navigation
   function savePlayingState() {
     sessionStorage.setItem('bogFactorLiveStreamPlaying', isPlaying ? 'true' : 'false');
@@ -396,6 +407,13 @@
     }
 
     e.preventDefault();
+
+    // Cancel any ongoing animation
+    if (animationFrameId) {
+      cancelAnimationFrame(animationFrameId);
+      animationFrameId = null;
+    }
+
     isDragging = true;
     mainWidget.style.cursor = 'grabbing';
 
@@ -405,6 +423,13 @@
     const rect = mainWidget.getBoundingClientRect();
     dragOffsetX = clientX - rect.left;
     dragOffsetY = clientY - rect.top;
+
+    // Initialize velocity tracking
+    lastX = clientX;
+    lastY = clientY;
+    lastTime = Date.now();
+    velocityX = 0;
+    velocityY = 0;
 
     document.addEventListener('mousemove', drag);
     document.addEventListener('touchmove', drag, { passive: false });
@@ -418,6 +443,18 @@
 
     const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
     const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+    const currentTime = Date.now();
+
+    // Calculate velocity
+    const deltaTime = currentTime - lastTime;
+    if (deltaTime > 0) {
+      velocityX = (clientX - lastX) / deltaTime * 16; // Normalize to ~60fps
+      velocityY = (clientY - lastY) / deltaTime * 16;
+    }
+
+    lastX = clientX;
+    lastY = clientY;
+    lastTime = currentTime;
 
     // Calculate new position
     let newLeft = clientX - dragOffsetX;
@@ -446,12 +483,92 @@
     if (isDragging && mainWidget) {
       isDragging = false;
       mainWidget.style.cursor = 'grab';
+
+      // Start physics animation if there's significant velocity
+      const speed = Math.sqrt(velocityX * velocityX + velocityY * velocityY);
+      if (speed > MIN_VELOCITY) {
+        animate();
+      }
     }
 
     document.removeEventListener('mousemove', drag);
     document.removeEventListener('touchmove', drag);
     document.removeEventListener('mouseup', stopDrag);
     document.removeEventListener('touchend', stopDrag);
+  }
+
+  function animate() {
+    if (!mainWidget) return;
+
+    // Get current position
+    const rect = mainWidget.getBoundingClientRect();
+    let left = rect.left;
+    let top = rect.top;
+
+    // Apply velocity
+    left += velocityX;
+    top += velocityY;
+
+    // Get viewport and widget dimensions
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const widgetWidth = rect.width;
+    const widgetHeight = rect.height;
+
+    // Get toolbar height
+    const toolbar = document.querySelector('.toolbar');
+    const toolbarHeight = toolbar ? toolbar.offsetHeight : 0;
+
+    // Check for collisions and bounce
+    let bounced = false;
+
+    // Left edge
+    if (left < 0) {
+      left = 0;
+      velocityX = Math.abs(velocityX) * BOUNCE_DAMPING;
+      bounced = true;
+    }
+
+    // Right edge
+    if (left + widgetWidth > viewportWidth) {
+      left = viewportWidth - widgetWidth;
+      velocityX = -Math.abs(velocityX) * BOUNCE_DAMPING;
+      bounced = true;
+    }
+
+    // Top edge (toolbar)
+    if (top < toolbarHeight) {
+      top = toolbarHeight;
+      velocityY = Math.abs(velocityY) * BOUNCE_DAMPING;
+      bounced = true;
+    }
+
+    // Bottom edge
+    if (top + widgetHeight > viewportHeight) {
+      top = viewportHeight - widgetHeight;
+      velocityY = -Math.abs(velocityY) * BOUNCE_DAMPING;
+      bounced = true;
+    }
+
+    // Apply position
+    mainWidget.style.left = `${left}px`;
+    mainWidget.style.top = `${top}px`;
+
+    // Apply friction (deceleration)
+    if (!bounced) {
+      velocityX *= FRICTION;
+      velocityY *= FRICTION;
+    }
+
+    // Check if we should continue animating
+    const speed = Math.sqrt(velocityX * velocityX + velocityY * velocityY);
+    if (speed > MIN_VELOCITY) {
+      animationFrameId = requestAnimationFrame(animate);
+    } else {
+      animationFrameId = null;
+      velocityX = 0;
+      velocityY = 0;
+    }
   }
 
   function createWidget() {
