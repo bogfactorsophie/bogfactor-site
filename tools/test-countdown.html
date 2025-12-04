@@ -149,9 +149,19 @@
         let lastY = 0;
         let lastTime = 0;
         let animationFrameId = null;
-        const FRICTION = 0.95;
-        const BOUNCE_DAMPING = 0.6;
+        const FRICTION = 0.99;
+        const BOUNCE_DAMPING = 0.1;
         const MIN_VELOCITY = 0.5;
+        const MAX_VELOCITY = 25;
+
+        function clampVelocity() {
+          const speed = Math.sqrt(velocityX * velocityX + velocityY * velocityY);
+          if (speed > MAX_VELOCITY) {
+            const scale = MAX_VELOCITY / speed;
+            velocityX *= scale;
+            velocityY *= scale;
+          }
+        }
 
         function makeDraggable(element) {
           element.style.cursor = 'grab';
@@ -211,6 +221,9 @@
             velocityX = (clientX - lastX) / deltaTime * 16;
             velocityY = (clientY - lastY) / deltaTime * 16;
           }
+
+          // Clamp velocity to maximum speed
+          clampVelocity();
 
           lastX = clientX;
           lastY = clientY;

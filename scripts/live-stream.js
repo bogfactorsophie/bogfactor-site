@@ -28,9 +28,10 @@
   let lastY = 0;
   let lastTime = 0;
   let animationFrameId = null;
-  const FRICTION = 0.98; // Deceleration factor (0.95 = loses 5% per frame)
-  const BOUNCE_DAMPING = 0.5; // Energy retained on bounce (0.6 = loses 40%)
+  const FRICTION = 0.99; // Deceleration factor (0.95 = loses 5% per frame)
+  const BOUNCE_DAMPING = 0.1; // Energy retained on bounce (0.6 = loses 40%)
   const MIN_VELOCITY = 0.5; // Stop animating below this velocity
+  const MAX_VELOCITY = 20; // Maximum velocity in pixels per frame
 
   // Store/restore playing state across page navigation
   function savePlayingState() {
@@ -392,6 +393,15 @@
     }
   }
 
+  function clampVelocity() {
+    const speed = Math.sqrt(velocityX * velocityX + velocityY * velocityY);
+    if (speed > MAX_VELOCITY) {
+      const scale = MAX_VELOCITY / speed;
+      velocityX *= scale;
+      velocityY *= scale;
+    }
+  }
+
   function makeDraggable(element) {
     element.style.cursor = 'grab';
 
@@ -451,6 +461,9 @@
       velocityX = (clientX - lastX) / deltaTime * 16; // Normalize to ~60fps
       velocityY = (clientY - lastY) / deltaTime * 16;
     }
+
+    // Clamp velocity to maximum speed
+    clampVelocity();
 
     lastX = clientX;
     lastY = clientY;
