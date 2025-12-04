@@ -682,6 +682,8 @@ html {
     z-index: 500;
     box-sizing: border-box;
     transition: opacity 0.3s ease, transform 0.3s ease;
+    user-select: none;
+    -webkit-user-select: none;
 }
 
 .stream-minimize-btn {
@@ -693,7 +695,7 @@ html {
     font-size: 24px;
     color: rgb(135, 89, 33);
     cursor: pointer;
-    padding: 0;
+    padding: 0;url(https://www.ehfm.live/)
     width: 32px;
     height: 32px;
     line-height: 24px;

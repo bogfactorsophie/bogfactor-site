@@ -16,6 +16,11 @@
   let floatingPlayer = null;
   let mainWidget = null;
 
+  // Drag state for widget
+  let isDragging = false;
+  let dragOffsetX = 0;
+  let dragOffsetY = 0;
+
   // Store/restore playing state across page navigation
   function savePlayingState() {
     sessionStorage.setItem('bogFactorLiveStreamPlaying', isPlaying ? 'true' : 'false');
@@ -376,6 +381,79 @@
     }
   }
 
+  function makeDraggable(element) {
+    element.style.cursor = 'grab';
+
+    element.addEventListener('mousedown', startDrag);
+    element.addEventListener('touchstart', startDrag, { passive: false });
+  }
+
+  function startDrag(e) {
+    // Don't start drag if clicking on interactive elements
+    const target = e.target;
+    if (target.tagName === 'BUTTON' || target.tagName === 'A' || target.closest('button') || target.closest('a')) {
+      return;
+    }
+
+    e.preventDefault();
+    isDragging = true;
+    mainWidget.style.cursor = 'grabbing';
+
+    const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
+    const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
+
+    const rect = mainWidget.getBoundingClientRect();
+    dragOffsetX = clientX - rect.left;
+    dragOffsetY = clientY - rect.top;
+
+    document.addEventListener('mousemove', drag);
+    document.addEventListener('touchmove', drag, { passive: false });
+    document.addEventListener('mouseup', stopDrag);
+    document.addEventListener('touchend', stopDrag);
+  }
+
+  function drag(e) {
+    if (!isDragging || !mainWidget) return;
+    e.preventDefault();
+
+    const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
+    const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
+
+    // Calculate new position
+    let newLeft = clientX - dragOffsetX;
+    let newTop = clientY - dragOffsetY;
+
+    // Get viewport and widget dimensions
+    const viewportWidth = window.innerWidth;
+    const viewportHeight = window.innerHeight;
+    const widgetRect = mainWidget.getBoundingClientRect();
+    const widgetWidth = widgetRect.width;
+    const widgetHeight = widgetRect.height;
+
+    // Get toolbar height to constrain top edge
+    const toolbar = document.querySelector('.toolbar');
+    const toolbarHeight = toolbar ? toolbar.offsetHeight : 0;
+
+    // Constrain to viewport boundaries
+    newLeft = Math.max(0, Math.min(newLeft, viewportWidth - widgetWidth));
+    newTop = Math.max(toolbarHeight, Math.min(newTop, viewportHeight - widgetHeight));
+
+    mainWidget.style.left = `${newLeft}px`;
+    mainWidget.style.top = `${newTop}px`;
+  }
+
+  function stopDrag() {
+    if (isDragging && mainWidget) {
+      isDragging = false;
+      mainWidget.style.cursor = 'grab';
+    }
+
+    document.removeEventListener('mousemove', drag);
+    document.removeEventListener('touchmove', drag);
+    document.removeEventListener('mouseup', stopDrag);
+    document.removeEventListener('touchend', stopDrag);
+  }
+
   function createWidget() {
     const widget = document.createElement('div');
     widget.id = 'stream-widget';
@@ -477,6 +555,9 @@
         document.body.insertBefore(widget, document.body.firstChild);
       }
 
+      // Make widget draggable
+      makeDraggable(widget);
+
       // Attach play button event listener
       const playBtn = document.getElementById('stream-play-btn');
       if (playBtn) {
@@ -529,6 +610,7 @@
 
           const newWidget = createWidget();
           oldWidget.replaceWith(newWidget);
+          mainWidget = newWidget; // Update reference
 
           // If it was minimized, keep the new widget minimized
           if (wasMinimized) {
@@ -537,6 +619,9 @@
             newWidget.style.transform = 'translateY(-20px)';
             // Floating player should remain visible
           }
+
+          // Make new widget draggable
+          makeDraggable(newWidget);
 
           // Reattach play button listener
           const playBtn = document.getElementById('stream-play-btn');
