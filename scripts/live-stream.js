@@ -265,31 +265,6 @@
     }
   }
 
-  function createToolbarLiveLabel() {
-    const label = document.createElement('div');
-    label.className = 'toolbar-live-label';
-    label.innerHTML = '<span class="toolbar-live-dot"></span>Live Now';
-    label.style.cursor = 'pointer';
-    label.addEventListener('click', togglePlay);
-    return label;
-  }
-
-  function updateToolbarLiveLabel() {
-    const toolbar = document.querySelector('.toolbar');
-    if (!toolbar) return;
-
-    const existingLabel = toolbar.querySelector('.toolbar-live-label');
-    const live = isLiveNow();
-
-    if (live && !existingLabel) {
-      // Add label to toolbar
-      const label = createToolbarLiveLabel();
-      toolbar.insertBefore(label, toolbar.firstChild);
-    } else if (!live && existingLabel) {
-      // Remove label if not live
-      existingLabel.remove();
-    }
-  }
 
   function createFloatingPlayer() {
     const isLandingPage = window.location.pathname === '/' || window.location.pathname === '/index.html';
@@ -669,9 +644,6 @@
     updateToolbarHeight();
     window.addEventListener('resize', updateToolbarHeight);
 
-    // Add live label to toolbar if live
-    updateToolbarLiveLabel();
-
     if (isLandingPage) {
       // Landing page: show widget
       const widget = createWidget();
@@ -727,9 +699,6 @@
         const nextShow = getNextShowDate();
         countdownEl.textContent = `Next show in ${getTimeUntilShow(nextShow)}`;
       }
-
-      // Update toolbar live label
-      updateToolbarLiveLabel();
 
       // Check if we should switch to live mode
       if (isLiveNow() && !document.querySelector('.stream-live-indicator')) {
