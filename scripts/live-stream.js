@@ -32,6 +32,12 @@
   const BOUNCE_DAMPING = 0.1; // Energy retained on bounce (0.6 = loses 40%)
   const MIN_VELOCITY = 0.5; // Stop animating below this velocity
   const MAX_VELOCITY = 20; // Maximum velocity in pixels per frame
+  const MOBILE_BREAKPOINT = 768; // Screen width below which to constrain to vertical only
+
+  // Helper function to check if we're on mobile/small screen
+  function isMobileScreen() {
+    return window.innerWidth < MOBILE_BREAKPOINT;
+  }
 
   // Store/restore playing state across page navigation
   function savePlayingState() {
@@ -435,6 +441,11 @@
     if (deltaTime > 0) {
       velocityX = (clientX - lastX) / deltaTime * 16; // Normalize to ~60fps
       velocityY = (clientY - lastY) / deltaTime * 16;
+
+      // On mobile, constrain to vertical movement only
+      if (isMobileScreen()) {
+        velocityX = 0;
+      }
     }
 
     // Clamp velocity to maximum speed
@@ -444,14 +455,21 @@
     lastY = clientY;
     lastTime = currentTime;
 
+    // Get current position
+    const widgetRect = mainWidget.getBoundingClientRect();
+
     // Calculate new position
     let newLeft = clientX - dragOffsetX;
     let newTop = clientY - dragOffsetY;
 
+    // On mobile, lock horizontal position (only allow vertical movement)
+    if (isMobileScreen()) {
+      newLeft = widgetRect.left;
+    }
+
     // Get viewport and widget dimensions
     const viewportWidth = window.innerWidth;
     const viewportHeight = window.innerHeight;
-    const widgetRect = mainWidget.getBoundingClientRect();
     const widgetWidth = widgetRect.width;
     const widgetHeight = widgetRect.height;
 
@@ -488,6 +506,11 @@
   function animate() {
     if (!mainWidget) return;
 
+    // On mobile, zero out horizontal velocity
+    if (isMobileScreen()) {
+      velocityX = 0;
+    }
+
     // Get current position
     const rect = mainWidget.getBoundingClientRect();
     let left = rect.left;
@@ -510,18 +533,21 @@
     // Check for collisions and bounce
     let bounced = false;
 
-    // Left edge
-    if (left < 0) {
-      left = 0;
-      velocityX = Math.abs(velocityX) * BOUNCE_DAMPING;
-      bounced = true;
-    }
+    // Only check horizontal edges on non-mobile screens
+    if (!isMobileScreen()) {
+      // Left edge
+      if (left < 0) {
+        left = 0;
+        velocityX = Math.abs(velocityX) * BOUNCE_DAMPING;
+        bounced = true;
+      }
 
-    // Right edge
-    if (left + widgetWidth > viewportWidth) {
-      left = viewportWidth - widgetWidth;
-      velocityX = -Math.abs(velocityX) * BOUNCE_DAMPING;
-      bounced = true;
+      // Right edge
+      if (left + widgetWidth > viewportWidth) {
+        left = viewportWidth - widgetWidth;
+        velocityX = -Math.abs(velocityX) * BOUNCE_DAMPING;
+        bounced = true;
+      }
     }
 
     // Top edge (toolbar)
@@ -610,6 +636,24 @@
     }
   }
 
+  function resetWidgetPosition() {
+    if (mainWidget && mainWidget.style.display !== 'none') {
+      // Cancel any ongoing animation
+      if (animationFrameId) {
+        cancelAnimationFrame(animationFrameId);
+        animationFrameId = null;
+      }
+
+      // Reset velocities
+      velocityX = 0;
+      velocityY = 0;
+
+      // Clear inline positioning styles to return to CSS default
+      mainWidget.style.left = '';
+      mainWidget.style.top = '';
+    }
+  }
+
   function restoreAudioState() {
     // Check if audio was playing in previous page
     const wasPlaying = getPlayingState();
@@ -642,7 +686,10 @@
 
     // Set toolbar height CSS variable (needed on all pages)
     updateToolbarHeight();
-    window.addEventListener('resize', updateToolbarHeight);
+    window.addEventListener('resize', () => {
+      updateToolbarHeight();
+      resetWidgetPosition();
+    });
 
     if (isLandingPage) {
       // Landing page: show widget
