@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Add New Show - Bog Factor</title>
+    <link href="https://fonts.cdnfonts.com/css/luminari" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/noto-serif-gurmukhi" rel="stylesheet">
+    <style>
+        body {
+            background: url('../assets/vibes-graphic.jpg') no-repeat center center fixed;
+            background-size: cover;
+            font-family: 'Noto Serif Gurmukhi', sans-serif;
+            color: rgb(54, 50, 41);
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            padding: 2rem 1rem;
+            box-sizing: border-box;
+        }
+        .form-container {
+            background: #f7e0c1be;
+            padding: 30px;
+            width: 100%;
+            max-width: 600px;
+            box-sizing: border-box;
+            height: fit-content;
+        }
+        h1 {
+            font-family: 'Luminari', fantasy;
+            color: rgb(135, 89, 33);
+            margin: 0 0 1.5rem 0;
+        }
+        label {
+            display: block;
+            margin-top: 1rem;
+            font-weight: 600;
+        }
+        label span {
+            font-weight: 400;
+            color: rgb(130, 71, 81);
+        }
+        input, textarea {
+            display: block;
+            width: 100%;
+            padding: 0.5rem;
+            margin-top: 0.25rem;
+            border: 1px solid rgba(135, 89, 33, 0.4);
+            border-radius: 4px;
+            font-family: 'Noto Serif Gurmukhi', sans-serif;
+            font-size: inherit;
+            box-sizing: border-box;
+            background: rgba(255, 255, 255, 0.7);
+            color: rgb(54, 50, 41);
+        }
+        input:focus, textarea:focus {
+            outline: 2px solid rgb(135, 89, 33);
+            outline-offset: -1px;
+            border-color: rgb(135, 89, 33);
+        }
+        textarea {
+            resize: vertical;
+        }
+        button {
+            margin-top: 1.5rem;
+            padding: 12px 20px;
+            background-color: rgb(135, 89, 33);
+            color: wheat;
+            border: none;
+            font-family: 'Luminari', fantasy;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: rgb(218, 72, 72);
+        }
+        .error {
+            color: rgb(218, 72, 72);
+            margin-top: 1rem;
+            font-weight: 600;
+        }
+        .success {
+            color: rgb(107, 142, 35);
+            margin-top: 1rem;
+            font-weight: 600;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>Add New Show</h1>
+        <form id="show-form">
+            <label>ID <span>(e.g. feb2026)</span>
+                <input type="text" id="id" required placeholder="feb2026">
+            </label>
+
+            <label>Title
+                <input type="text" id="title" required placeholder="Show Title - February 2026">
+            </label>
+
+            <label>Description
+                <textarea id="description" rows="4" required></textarea>
+            </label>
+
+            <label>Mixcloud Path <span>(e.g. /ehfm/bog-factor-060226/)</span>
+                <input type="text" id="mixcloudPath" required placeholder="/ehfm/bog-factor-060226/">
+            </label>
+
+            <label>Date <span>(YYYY-MM)</span>
+                <input type="text" id="date" required placeholder="2026-02" pattern="\d{4}-\d{2}">
+            </label>
+
+            <label>Image Path <span>(optional, e.g. ../assets/image.jpg)</span>
+                <input type="text" id="image" placeholder="../assets/image.jpg">
+            </label>
+
+            <label>Import from Rekordbox <span>(optional)</span>
+                <input type="file" id="rekordbox-file" accept=".txt">
+            </label>
+
+            <label>Tracklist <span>(one track per line, Track Title - Artist)</span>
+                <textarea id="tracklist" rows="10" required placeholder="Track Title - Artist&#10;Track Title - Artist"></textarea>
+            </label>
+
+            <button type="submit">Add Show &amp; Download shows.json</button>
+        </form>
+        <div id="message"></div>
+    </div>
+
+    <script src="rekordbox-to-tracklist.js"></script>
+    <script>
+        (function () {
+            // Wire up Rekordbox file import
+            rekordboxToTracklist.attach(document.getElementById('rekordbox-file'), function (tracks) {
+                document.getElementById('tracklist').value = tracks.join('\n');
+            });
+            const form = document.getElementById('show-form');
+            const messageEl = document.getElementById('message');
+
+            form.addEventListener('submit', async function (e) {
+                e.preventDefault();
+                messageEl.textContent = '';
+                messageEl.className = '';
+
+                try {
+                    const res = await fetch('../radio/shows.json');
+                    if (!res.ok) throw new Error('Failed to fetch shows.json');
+                    const shows = await res.json();
+
+                    const newShow = {
+                        id: document.getElementById('id').value.trim(),
+                        title: document.getElementById('title').value.trim(),
+                        description: document.getElementById('description').value.trim(),
+                        mixcloudPath: document.getElementById('mixcloudPath').value.trim(),
+                        date: document.getElementById('date').value.trim(),
+                    };
+
+                    const image = document.getElementById('image').value.trim();
+                    if (image) {
+                        newShow.image = image;
+                    }
+
+                    newShow.tracklist = document.getElementById('tracklist').value
+                        .split('\n')
+                        .map(line => line.trim())
+                        .filter(line => line.length > 0);
+
+                    if (newShow.tracklist.length === 0) {
+                        throw new Error('Tracklist must have at least one track');
+                    }
+
+                    shows.unshift(newShow);
+
+                    const json = JSON.stringify(shows, null, 2) + '\n';
+                    const blob = new Blob([json], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'shows.json';
+                    a.click();
+                    URL.revokeObjectURL(url);
+
+                    messageEl.textContent = 'shows.json downloaded. Replace radio/shows.json with the downloaded file.';
+                    messageEl.className = 'success';
+                } catch (err) {
+                    messageEl.textContent = err.message;
+                    messageEl.className = 'error';
+                }
+            });
+        })();
+    </script>
+</body>
+</html>

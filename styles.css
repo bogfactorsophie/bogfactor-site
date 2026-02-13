@@ -40,6 +40,7 @@ body.blog-page {
 p {
     font-family: 'Noto Serif Gurmukhi', sans-serif;
     color: rgb(54, 50, 41);
+    white-space: pre-line;
 }
 
 h2 {
