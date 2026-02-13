@@ -98,24 +98,19 @@
       if (window.BogFactorLiveStream && window.BogFactorLiveStream.getPlayingState) {
         updateToolbarButton(window.BogFactorLiveStream.getPlayingState());
       }
-
-      // Check every second if we're still live
-      setInterval(() => {
-        if (!isLiveNow()) {
-          const widget = document.getElementById('toolbar-live-widget');
-          if (widget) {
-            widget.remove();
-          }
-        }
-      }, 1000);
-    } else {
-      // Check every second if we've gone live
-      setInterval(() => {
-        if (isLiveNow() && !document.getElementById('toolbar-live-widget')) {
-          createToolbarWidget();
-        }
-      }, 1000);
     }
+
+    // Check every second for live/off-air transitions in either direction
+    setInterval(() => {
+      const live = isLiveNow();
+      const widgetExists = !!document.getElementById('toolbar-live-widget');
+
+      if (live && !widgetExists) {
+        createToolbarWidget();
+      } else if (!live && widgetExists) {
+        document.getElementById('toolbar-live-widget').remove();
+      }
+    }, 1000);
   }
 
   // Expose API for other scripts (like live-stream.js)
