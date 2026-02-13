@@ -50,8 +50,20 @@
         });
     }
 
+    /**
+     * Read a File object, parse it, and call the callback with the tracklist.
+     */
+    function readFile(file, callback) {
+        var reader = new FileReader();
+        reader.onload = function (event) {
+            callback(parseRekordboxText(event.target.result));
+        };
+        reader.readAsText(file);
+    }
+
     window.rekordboxToTracklist = {
         parse: parseRekordboxText,
         attach: attachRekordboxInput,
+        readFile: readFile,
     };
 })();

@@ -81,6 +81,28 @@
             margin-top: 1rem;
             font-weight: 600;
         }
+        .drop-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(135, 89, 33, 0.3);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+        }
+        .drop-overlay.visible {
+            display: flex;
+        }
+        .drop-overlay-text {
+            background: #f7e0c1;
+            padding: 20px 40px;
+            font-family: 'Luminari', fantasy;
+            color: rgb(135, 89, 33);
+            font-size: 1.5rem;
+            border: 3px dashed rgb(135, 89, 33);
+            border-radius: 8px;
+        }
         .success {
             color: rgb(107, 142, 35);
             margin-top: 1rem;
@@ -129,12 +151,51 @@
         <div id="message"></div>
     </div>
 
+    <div class="drop-overlay" id="drop-overlay">
+        <div class="drop-overlay-text">Drop Rekordbox file to import tracklist</div>
+    </div>
+
     <script src="rekordbox-to-tracklist.js"></script>
     <script>
         (function () {
             // Wire up Rekordbox file import
-            rekordboxToTracklist.attach(document.getElementById('rekordbox-file'), function (tracks) {
+            function applyTracklist(tracks) {
                 document.getElementById('tracklist').value = tracks.join('\n');
+            }
+
+            rekordboxToTracklist.attach(document.getElementById('rekordbox-file'), applyTracklist);
+
+            // Drag and drop
+            var overlay = document.getElementById('drop-overlay');
+            var dragCounter = 0;
+
+            document.addEventListener('dragenter', function (e) {
+                e.preventDefault();
+                dragCounter++;
+                overlay.classList.add('visible');
+            });
+
+            document.addEventListener('dragleave', function (e) {
+                e.preventDefault();
+                dragCounter--;
+                if (dragCounter <= 0) {
+                    dragCounter = 0;
+                    overlay.classList.remove('visible');
+                }
+            });
+
+            document.addEventListener('dragover', function (e) {
+                e.preventDefault();
+            });
+
+            document.addEventListener('drop', function (e) {
+                e.preventDefault();
+                dragCounter = 0;
+                overlay.classList.remove('visible');
+                var file = e.dataTransfer.files[0];
+                if (file) {
+                    rekordboxToTracklist.readFile(file, applyTracklist);
+                }
             });
             const form = document.getElementById('show-form');
             const messageEl = document.getElementById('message');
