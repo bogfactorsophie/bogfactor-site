@@ -533,20 +533,6 @@ img {
     border-radius: 4px;
 }
 
-.bog-scale-container {
-    display: flex;
-    justify-content: center;
-    margin: 20px 0;
-}
-
-.bog-factor-scale {
-    width: 120px;
-    max-width: 120px;
-    height: auto;
-    transition: width 0.3s ease, max-width 0.3s ease;
-    cursor: pointer;
-}
-
 .about-image-container {
     display: flex;
     justify-content: center;

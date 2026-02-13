@@ -16,29 +16,6 @@
   let floatingPlayer = null;
   let mainWidget = null;
 
-  // Drag state for widget
-  let isDragging = false;
-  let dragOffsetX = 0;
-  let dragOffsetY = 0;
-
-  // Physics for throwing
-  let velocityX = 0;
-  let velocityY = 0;
-  let lastX = 0;
-  let lastY = 0;
-  let lastTime = 0;
-  let animationFrameId = null;
-  const FRICTION = 0.99; // Deceleration factor (0.95 = loses 5% per frame)
-  const BOUNCE_DAMPING = 0.1; // Energy retained on bounce (0.6 = loses 40%)
-  const MIN_VELOCITY = 0.5; // Stop animating below this velocity
-  const MAX_VELOCITY = 20; // Maximum velocity in pixels per frame
-  const MOBILE_BREAKPOINT = 768; // Screen width below which to constrain to vertical only
-
-  // Helper function to check if we're on mobile/small screen
-  function isMobileScreen() {
-    return window.innerWidth < MOBILE_BREAKPOINT;
-  }
-
   // Store/restore playing state across page navigation
   function savePlayingState() {
     sessionStorage.setItem('bogFactorLiveStreamPlaying', isPlaying ? 'true' : 'false');
@@ -374,217 +351,6 @@
     }
   }
 
-  function clampVelocity() {
-    const speed = Math.sqrt(velocityX * velocityX + velocityY * velocityY);
-    if (speed > MAX_VELOCITY) {
-      const scale = MAX_VELOCITY / speed;
-      velocityX *= scale;
-      velocityY *= scale;
-    }
-  }
-
-  function makeDraggable(element) {
-    element.style.cursor = 'grab';
-
-    element.addEventListener('mousedown', startDrag);
-    element.addEventListener('touchstart', startDrag, { passive: false });
-  }
-
-  function startDrag(e) {
-    // Don't start drag if clicking on interactive elements
-    const target = e.target;
-    if (target.tagName === 'BUTTON' || target.tagName === 'A' || target.closest('button') || target.closest('a')) {
-      return;
-    }
-
-    e.preventDefault();
-
-    // Cancel any ongoing animation
-    if (animationFrameId) {
-      cancelAnimationFrame(animationFrameId);
-      animationFrameId = null;
-    }
-
-    isDragging = true;
-    mainWidget.style.cursor = 'grabbing';
-
-    const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
-    const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
-
-    const rect = mainWidget.getBoundingClientRect();
-    dragOffsetX = clientX - rect.left;
-    dragOffsetY = clientY - rect.top;
-
-    // Initialize velocity tracking
-    lastX = clientX;
-    lastY = clientY;
-    lastTime = Date.now();
-    velocityX = 0;
-    velocityY = 0;
-
-    document.addEventListener('mousemove', drag);
-    document.addEventListener('touchmove', drag, { passive: false });
-    document.addEventListener('mouseup', stopDrag);
-    document.addEventListener('touchend', stopDrag);
-  }
-
-  function drag(e) {
-    if (!isDragging || !mainWidget) return;
-    e.preventDefault();
-
-    const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
-    const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
-    const currentTime = Date.now();
-
-    // Calculate velocity
-    const deltaTime = currentTime - lastTime;
-    if (deltaTime > 0) {
-      velocityX = (clientX - lastX) / deltaTime * 16; // Normalize to ~60fps
-      velocityY = (clientY - lastY) / deltaTime * 16;
-
-      // On mobile, constrain to vertical movement only
-      if (isMobileScreen()) {
-        velocityX = 0;
-      }
-    }
-
-    // Clamp velocity to maximum speed
-    clampVelocity();
-
-    lastX = clientX;
-    lastY = clientY;
-    lastTime = currentTime;
-
-    // Get current position
-    const widgetRect = mainWidget.getBoundingClientRect();
-
-    // Calculate new position
-    let newLeft = clientX - dragOffsetX;
-    let newTop = clientY - dragOffsetY;
-
-    // On mobile, lock horizontal position (only allow vertical movement)
-    if (isMobileScreen()) {
-      newLeft = widgetRect.left;
-    }
-
-    // Get viewport and widget dimensions
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    const widgetWidth = widgetRect.width;
-    const widgetHeight = widgetRect.height;
-
-    // Get toolbar height to constrain top edge
-    const toolbar = document.querySelector('.toolbar');
-    const toolbarHeight = toolbar ? toolbar.offsetHeight : 0;
-
-    // Constrain to viewport boundaries
-    newLeft = Math.max(0, Math.min(newLeft, viewportWidth - widgetWidth));
-    newTop = Math.max(toolbarHeight, Math.min(newTop, viewportHeight - widgetHeight));
-
-    mainWidget.style.left = `${newLeft}px`;
-    mainWidget.style.top = `${newTop}px`;
-  }
-
-  function stopDrag() {
-    if (isDragging && mainWidget) {
-      isDragging = false;
-      mainWidget.style.cursor = 'grab';
-
-      // Start physics animation if there's significant velocity
-      const speed = Math.sqrt(velocityX * velocityX + velocityY * velocityY);
-      if (speed > MIN_VELOCITY) {
-        animate();
-      }
-    }
-
-    document.removeEventListener('mousemove', drag);
-    document.removeEventListener('touchmove', drag);
-    document.removeEventListener('mouseup', stopDrag);
-    document.removeEventListener('touchend', stopDrag);
-  }
-
-  function animate() {
-    if (!mainWidget) return;
-
-    // On mobile, zero out horizontal velocity
-    if (isMobileScreen()) {
-      velocityX = 0;
-    }
-
-    // Get current position
-    const rect = mainWidget.getBoundingClientRect();
-    let left = rect.left;
-    let top = rect.top;
-
-    // Apply velocity
-    left += velocityX;
-    top += velocityY;
-
-    // Get viewport and widget dimensions
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    const widgetWidth = rect.width;
-    const widgetHeight = rect.height;
-
-    // Get toolbar height
-    const toolbar = document.querySelector('.toolbar');
-    const toolbarHeight = toolbar ? toolbar.offsetHeight : 0;
-
-    // Check for collisions and bounce
-    let bounced = false;
-
-    // Only check horizontal edges on non-mobile screens
-    if (!isMobileScreen()) {
-      // Left edge
-      if (left < 0) {
-        left = 0;
-        velocityX = Math.abs(velocityX) * BOUNCE_DAMPING;
-        bounced = true;
-      }
-
-      // Right edge
-      if (left + widgetWidth > viewportWidth) {
-        left = viewportWidth - widgetWidth;
-        velocityX = -Math.abs(velocityX) * BOUNCE_DAMPING;
-        bounced = true;
-      }
-    }
-
-    // Top edge (toolbar)
-    if (top < toolbarHeight) {
-      top = toolbarHeight;
-      velocityY = Math.abs(velocityY) * BOUNCE_DAMPING;
-      bounced = true;
-    }
-
-    // Bottom edge
-    if (top + widgetHeight > viewportHeight) {
-      top = viewportHeight - widgetHeight;
-      velocityY = -Math.abs(velocityY) * BOUNCE_DAMPING;
-      bounced = true;
-    }
-
-    // Apply position
-    mainWidget.style.left = `${left}px`;
-    mainWidget.style.top = `${top}px`;
-
-    // Apply friction (deceleration)
-    if (!bounced) {
-      velocityX *= FRICTION;
-      velocityY *= FRICTION;
-    }
-
-    // Check if we should continue animating
-    const speed = Math.sqrt(velocityX * velocityX + velocityY * velocityY);
-    if (speed > MIN_VELOCITY) {
-      animationFrameId = requestAnimationFrame(animate);
-    } else {
-      animationFrameId = null;
-      velocityX = 0;
-      velocityY = 0;
-    }
-  }
-
   function createWidget() {
     const widget = document.createElement('div');
     widget.id = 'stream-widget';
@@ -636,24 +402,6 @@
     }
   }
 
-  function resetWidgetPosition() {
-    if (mainWidget && mainWidget.style.display !== 'none') {
-      // Cancel any ongoing animation
-      if (animationFrameId) {
-        cancelAnimationFrame(animationFrameId);
-        animationFrameId = null;
-      }
-
-      // Reset velocities
-      velocityX = 0;
-      velocityY = 0;
-
-      // Clear inline positioning styles to return to CSS default
-      mainWidget.style.left = '';
-      mainWidget.style.top = '';
-    }
-  }
-
   function restoreAudioState() {
     // Check if audio was playing in previous page
     const wasPlaying = getPlayingState();
@@ -686,10 +434,7 @@
 
     // Set toolbar height CSS variable (needed on all pages)
     updateToolbarHeight();
-    window.addEventListener('resize', () => {
-      updateToolbarHeight();
-      resetWidgetPosition();
-    });
+    window.addEventListener('resize', updateToolbarHeight);
 
     if (isLandingPage) {
       // Landing page: show widget
@@ -703,9 +448,6 @@
       } else {
         document.body.insertBefore(widget, document.body.firstChild);
       }
-
-      // Make widget draggable
-      makeDraggable(widget);
 
       // Attach play button event listener
       const playBtn = document.getElementById('stream-play-btn');
@@ -765,9 +507,6 @@
             newWidget.style.transform = 'translateY(-20px)';
             // Floating player should remain visible
           }
-
-          // Make new widget draggable
-          makeDraggable(newWidget);
 
           // Reattach play button listener
           const playBtn = document.getElementById('stream-play-btn');
