@@ -81,7 +81,25 @@ window.loadShows = async function () {
       title.appendChild(linkIcon);
 
       const description = document.createElement('p');
-      description.textContent = show.description;
+      // Render <a> tags in descriptions while keeping all other content as text
+      if (show.description && show.description.includes('<a ')) {
+        var parts = show.description.split(/(<a\s+href="[^"]*">[^<]*<\/a>)/g);
+        parts.forEach(function (part) {
+          var match = part.match(/^<a\s+href="([^"]*)">(.*)<\/a>$/);
+          if (match) {
+            var a = document.createElement('a');
+            a.href = match[1];
+            a.textContent = match[2];
+            a.target = '_blank';
+            a.rel = 'noopener noreferrer';
+            description.appendChild(a);
+          } else {
+            description.appendChild(document.createTextNode(part));
+          }
+        });
+      } else {
+        description.textContent = show.description;
+      }
 
       showDiv.appendChild(title);
       showDiv.appendChild(description);
