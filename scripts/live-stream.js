@@ -15,6 +15,8 @@
   let isPlaying = false;
   let floatingPlayer = null;
   let mainWidget = null;
+  let updateIntervalId;
+  let currentInterval;
 
   // Store/restore playing state across page navigation
   function savePlayingState() {
@@ -93,6 +95,11 @@
   }
 
   function getNextShowDate() {
+    if (window.BogFactorTestConfig && typeof window.BogFactorTestConfig.getNextShowDate === 'function') {
+      const result = window.BogFactorTestConfig.getNextShowDate();
+      if (result !== null) return result;
+    }
+
     const now = new Date();
     const ukNow = getUKTimeComponents(now);
 
@@ -123,6 +130,11 @@
   }
 
   function isLiveNow() {
+    if (window.BogFactorTestConfig && typeof window.BogFactorTestConfig.isLiveNow === 'function') {
+      const result = window.BogFactorTestConfig.isLiveNow();
+      if (result !== null) return result;
+    }
+
     const now = new Date();
     const ukNow = getUKTimeComponents(now);
 
@@ -191,6 +203,13 @@
     }
   }
 
+  function isLandingPage() {
+    if (window.BogFactorTestConfig && window.BogFactorTestConfig.isLandingPage !== undefined) {
+      return window.BogFactorTestConfig.isLandingPage;
+    }
+    return window.location.pathname === '/' || window.location.pathname === '/index.html';
+  }
+
   function togglePlay() {
     if (!audioElement) {
       audioElement = new Audio(STREAM_URL);
@@ -250,7 +269,7 @@
 
 
   function createFloatingPlayer() {
-    const isLandingPage = window.location.pathname === '/' || window.location.pathname === '/index.html';
+    const onLandingPage = isLandingPage();
 
     const player = document.createElement('div');
     player.className = 'floating-audio-player';
@@ -261,7 +280,7 @@
           <button class="floating-player-pause" aria-label="Pause">&#9208;&#xFE0E;</button>
           <div class="floating-player-mute" title="Live stream paused while show is playing">&#128263;</div>
         </div>
-        ${isLandingPage ? '<button class="floating-player-expand" aria-label="Expand widget">+</button>' : ''}
+        ${onLandingPage ? '<button class="floating-player-expand" aria-label="Expand widget">+</button>' : ''}
       </div>
     `;
 
@@ -304,7 +323,7 @@
     });
 
     // Expand button click - show main widget (only on landing page)
-    if (isLandingPage) {
+    if (onLandingPage) {
       const expandBtn = player.querySelector('.floating-player-expand');
       if (expandBtn) {
         expandBtn.addEventListener('click', (e) => {
@@ -430,13 +449,13 @@
 
   function init() {
     // Check if we're on the landing page or another page
-    const isLandingPage = window.location.pathname === '/' || window.location.pathname === '/index.html';
+    const onLandingPage = isLandingPage();
 
     // Set toolbar height CSS variable (needed on all pages)
     updateToolbarHeight();
     window.addEventListener('resize', updateToolbarHeight);
 
-    if (isLandingPage) {
+    if (onLandingPage) {
       // Landing page: show widget
       const widget = createWidget();
       mainWidget = widget; // Store reference to widget for expand functionality
@@ -481,94 +500,94 @@
     // Save state before page unload
     window.addEventListener('beforeunload', savePlayingState);
 
-    // Function to update countdown and other elements
-    function updateCountdownAndStatus() {
-      const countdownEl = document.querySelector('.countdown');
-      if (countdownEl) {
-        const nextShow = getNextShowDate();
-        countdownEl.textContent = `Next show in ${getTimeUntilShow(nextShow)}`;
-      }
+    currentInterval = getUpdateInterval();
+    startUpdateInterval();
+  }
 
-      // Check if we should switch to live mode
-      if (isLiveNow() && !document.querySelector('.stream-live-indicator')) {
-        const oldWidget = document.getElementById('stream-widget');
-        if (oldWidget) {
-          // Check if widget was minimized
-          const wasMinimized = oldWidget.style.display === 'none';
+  // Update countdown and check for live/off-air transitions
+  function updateCountdownAndStatus() {
+    const countdownEl = document.querySelector('.countdown');
+    if (countdownEl) {
+      const nextShow = getNextShowDate();
+      countdownEl.textContent = `Next show in ${getTimeUntilShow(nextShow)}`;
+    }
 
-          const newWidget = createWidget();
-          oldWidget.replaceWith(newWidget);
-          mainWidget = newWidget; // Update reference
+    // Check if we should switch to live mode or back to countdown
+    const live = isLiveNow();
+    const hasLiveIndicator = !!document.querySelector('.stream-live-indicator');
 
-          // If it was minimized, keep the new widget minimized
-          if (wasMinimized) {
-            newWidget.style.display = 'none';
+    if ((live && !hasLiveIndicator) || (!live && hasLiveIndicator)) {
+      const oldWidget = document.getElementById('stream-widget');
+      if (oldWidget) {
+        // Check if widget was minimized
+        const wasMinimized = oldWidget.style.display === 'none';
+
+        const newWidget = createWidget();
+        oldWidget.replaceWith(newWidget);
+        mainWidget = newWidget; // Update reference
+
+        // If it was minimized, keep the new widget minimized
+        if (wasMinimized) {
+          newWidget.style.display = 'none';
+          newWidget.style.opacity = '0';
+          newWidget.style.transform = 'translateY(-20px)';
+          // Floating player should remain visible
+        }
+
+        // Reattach play button listener
+        const playBtn = document.getElementById('stream-play-btn');
+        if (playBtn) {
+          playBtn.addEventListener('click', togglePlay);
+        }
+
+        // Reattach minimize button listener
+        const minimizeBtn = newWidget.querySelector('.stream-minimize-btn');
+        if (minimizeBtn) {
+          minimizeBtn.addEventListener('click', () => {
+            // Don't stop audio - keep it playing if it was playing
+            // Hide widget with animation
             newWidget.style.opacity = '0';
             newWidget.style.transform = 'translateY(-20px)';
-            // Floating player should remain visible
-          }
-
-          // Reattach play button listener
-          const playBtn = document.getElementById('stream-play-btn');
-          if (playBtn) {
-            playBtn.addEventListener('click', togglePlay);
-          }
-
-          // Reattach minimize button listener
-          const minimizeBtn = newWidget.querySelector('.stream-minimize-btn');
-          if (minimizeBtn) {
-            minimizeBtn.addEventListener('click', () => {
-              // Don't stop audio - keep it playing if it was playing
-              // Hide widget with animation
-              newWidget.style.opacity = '0';
-              newWidget.style.transform = 'translateY(-20px)';
-              setTimeout(() => {
-                newWidget.style.display = 'none';
-                // Show floating player after widget is minimized
-                showFloatingPlayer();
-              }, 300);
-            });
-          }
+            setTimeout(() => {
+              newWidget.style.display = 'none';
+              // Show floating player after widget is minimized
+              showFloatingPlayer();
+            }, 300);
+          });
         }
       }
     }
+  }
 
-    // Determine update interval based on time until show
-    function getUpdateInterval() {
-      const nextShow = getNextShowDate();
-      const now = new Date();
-      const diff = nextShow - now;
-      const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+  // Determine update interval based on time until show
+  function getUpdateInterval() {
+    const nextShow = getNextShowDate();
+    const now = new Date();
+    const diff = nextShow - now;
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
 
-      // Update every second if currently live OR less than 1 day until show
-      // Otherwise, update every minute
-      if (isLiveNow() || days === 0) {
-        return 1000;
-      }
-      return 60000;
+    // Update every second if currently live OR less than 1 day until show
+    // Otherwise, update every minute
+    if (isLiveNow() || days === 0) {
+      return 1000;
     }
+    return 60000;
+  }
 
-    // Start with appropriate interval
-    let updateIntervalId;
-    let currentInterval = getUpdateInterval();
-
-    function startUpdateInterval() {
-      if (updateIntervalId) {
-        clearInterval(updateIntervalId);
-      }
-      updateIntervalId = setInterval(() => {
-        updateCountdownAndStatus();
-
-        // Check if we need to change the update frequency
-        const newInterval = getUpdateInterval();
-        if (newInterval !== currentInterval) {
-          currentInterval = newInterval;
-          startUpdateInterval(); // Restart with new interval
-        }
-      }, currentInterval);
+  function startUpdateInterval() {
+    if (updateIntervalId) {
+      clearInterval(updateIntervalId);
     }
+    updateIntervalId = setInterval(() => {
+      updateCountdownAndStatus();
 
-    startUpdateInterval();
+      // Check if we need to change the update frequency
+      const newInterval = getUpdateInterval();
+      if (newInterval !== currentInterval) {
+        currentInterval = newInterval;
+        startUpdateInterval(); // Restart with new interval
+      }
+    }, currentInterval);
   }
 
   // Expose API for other scripts
@@ -617,6 +636,23 @@
     },
     clearPlayingState() {
       clearPlayingState();
+    },
+    forceUpdate() {
+      updateCountdownAndStatus();
+      const newInterval = getUpdateInterval();
+      if (newInterval !== currentInterval) {
+        currentInterval = newInterval;
+      }
+      startUpdateInterval();
+    },
+    getCurrentInterval() {
+      return currentInterval;
+    },
+    getNextShowDate() {
+      return getNextShowDate();
+    },
+    isLiveNow() {
+      return isLiveNow();
     }
   };
 

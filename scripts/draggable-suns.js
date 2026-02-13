@@ -84,10 +84,7 @@
       sunContainer.style.left = `${left}%`;
 
       const img = document.createElement('img');
-      // Detect if we're in a subfolder by checking if path contains /radio/, /about/, or /blog/
-      const pathname = window.location.pathname;
-      const isSubfolder = pathname.includes('/radio/') || pathname.includes('/about/') || pathname.includes('/blog/');
-      img.src = isSubfolder ? '../assets/sun_image.png' : 'assets/sun_image.png';
+      img.src = '/assets/sun_image.png';
       img.className = 'rotating-image';
       img.alt = 'Rotating Sun';
       img.style.width = `${size}px`;

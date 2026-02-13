@@ -22,6 +22,11 @@
   }
 
   function isLiveNow() {
+    if (window.BogFactorTestConfig && typeof window.BogFactorTestConfig.isLiveNow === 'function') {
+      const result = window.BogFactorTestConfig.isLiveNow();
+      if (result !== null) return result;
+    }
+
     const now = new Date();
     const ukNow = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/London' }));
 
@@ -94,7 +99,7 @@
         updateToolbarButton(window.BogFactorLiveStream.getPlayingState());
       }
 
-      // Check every minute if we're still live
+      // Check every second if we're still live
       setInterval(() => {
         if (!isLiveNow()) {
           const widget = document.getElementById('toolbar-live-widget');
@@ -102,14 +107,14 @@
             widget.remove();
           }
         }
-      }, 60000);
+      }, 1000);
     } else {
-      // Check every minute if we've gone live
+      // Check every second if we've gone live
       setInterval(() => {
         if (isLiveNow() && !document.getElementById('toolbar-live-widget')) {
           createToolbarWidget();
         }
-      }, 60000);
+      }, 1000);
     }
   }
 

@@ -7,6 +7,41 @@
     <link href="https://fonts.cdnfonts.com/css/luminari" rel="stylesheet">
     <link href="https://fonts.cdnfonts.com/css/noto-serif-gurmukhi" rel="stylesheet">
     <link rel="stylesheet" href="../styles.css">
+    <!-- Configure test overrides BEFORE loading main scripts -->
+    <script>
+      // Test state - modified by test controls below
+      var testNextShowDate = null;
+
+      window.BogFactorTestConfig = {
+        isLandingPage: true,
+        getNextShowDate: function() {
+          if (!testNextShowDate) return null; // fall through to real logic
+          var now = new Date();
+          var showEnd = new Date(testNextShowDate.getTime() + 60 * 60 * 1000);
+          // If test show has ended, return a date far in the future so countdown resets
+          if (now >= showEnd) {
+            var nextMonth = new Date(testNextShowDate);
+            nextMonth.setMonth(nextMonth.getMonth() + 1);
+            nextMonth.setDate(1);
+            // Find first Friday of next month
+            while (nextMonth.getDay() !== 5) {
+              nextMonth.setDate(nextMonth.getDate() + 1);
+            }
+            nextMonth.setHours(13, 0, 0, 0);
+            return nextMonth;
+          }
+          return testNextShowDate;
+        },
+        isLiveNow: function() {
+          if (!testNextShowDate) return null; // fall through to real logic
+          var now = new Date();
+          var showEnd = new Date(testNextShowDate.getTime() + 60 * 60 * 1000);
+          return now >= testNextShowDate && now < showEnd;
+        }
+      };
+    </script>
+    <script src="../scripts/live-stream.js"></script>
+    <script src="../scripts/toolbar-live-widget.js"></script>
   </head>
 
   <body>
@@ -120,794 +155,89 @@
     </div>
 
     <script>
-      // Test version of live stream script with override capability
+      // Test controls - only UI logic, all stream/widget/countdown handled by main scripts
       (function() {
         'use strict';
 
-        const STREAM_URL = 'https://ehfm.out.airtime.pro/ehfm_a';
-        const SHOW_START_HOUR = 13;
-        const SHOW_END_HOUR = 14;
-        const EHFM_LOGO = 'https://thumbnailer.mixcloud.com/unsafe/640x640/profile/4/5/d/0/f256-daaa-4954-86cc-aa43b7af4e6e';
-
-        let testNextShowDate = null;
-        let audioElement = null;
-        let isPlaying = false;
-        let updateIntervalId = null;
-        let currentInterval = 60000;
-        let floatingPlayer = null;
-
-        // Drag state for widget
-        let isDragging = false;
-        let dragOffsetX = 0;
-        let dragOffsetY = 0;
-        let mainWidget = null;
-
-        // Physics for throwing
-        let velocityX = 0;
-        let velocityY = 0;
-        let lastX = 0;
-        let lastY = 0;
-        let lastTime = 0;
-        let animationFrameId = null;
-        const FRICTION = 0.99;
-        const BOUNCE_DAMPING = 0.1;
-        const MIN_VELOCITY = 0.5;
-        const MAX_VELOCITY = 25;
-
-        function clampVelocity() {
-          const speed = Math.sqrt(velocityX * velocityX + velocityY * velocityY);
-          if (speed > MAX_VELOCITY) {
-            const scale = MAX_VELOCITY / speed;
-            velocityX *= scale;
-            velocityY *= scale;
-          }
-        }
-
-        function makeDraggable(element) {
-          element.style.cursor = 'grab';
-          element.addEventListener('mousedown', startDrag);
-          element.addEventListener('touchstart', startDrag, { passive: false });
-        }
-
-        function startDrag(e) {
-          // Don't start drag if clicking on interactive elements
-          const target = e.target;
-          if (target.tagName === 'BUTTON' || target.tagName === 'A' || target.closest('button') || target.closest('a')) {
-            return;
-          }
-
-          e.preventDefault();
-
-          // Cancel any ongoing animation
-          if (animationFrameId) {
-            cancelAnimationFrame(animationFrameId);
-            animationFrameId = null;
-          }
-
-          isDragging = true;
-          mainWidget.style.cursor = 'grabbing';
-
-          const clientX = e.type === 'touchstart' ? e.touches[0].clientX : e.clientX;
-          const clientY = e.type === 'touchstart' ? e.touches[0].clientY : e.clientY;
-
-          const rect = mainWidget.getBoundingClientRect();
-          dragOffsetX = clientX - rect.left;
-          dragOffsetY = clientY - rect.top;
-
-          // Initialize velocity tracking
-          lastX = clientX;
-          lastY = clientY;
-          lastTime = Date.now();
-          velocityX = 0;
-          velocityY = 0;
-
-          document.addEventListener('mousemove', drag);
-          document.addEventListener('touchmove', drag, { passive: false });
-          document.addEventListener('mouseup', stopDrag);
-          document.addEventListener('touchend', stopDrag);
-        }
-
-        function drag(e) {
-          if (!isDragging || !mainWidget) return;
-          e.preventDefault();
-
-          const clientX = e.type === 'touchmove' ? e.touches[0].clientX : e.clientX;
-          const clientY = e.type === 'touchmove' ? e.touches[0].clientY : e.clientY;
-          const currentTime = Date.now();
-
-          // Calculate velocity
-          const deltaTime = currentTime - lastTime;
-          if (deltaTime > 0) {
-            velocityX = (clientX - lastX) / deltaTime * 16;
-            velocityY = (clientY - lastY) / deltaTime * 16;
-          }
-
-          // Clamp velocity to maximum speed
-          clampVelocity();
-
-          lastX = clientX;
-          lastY = clientY;
-          lastTime = currentTime;
-
-          // Calculate new position
-          let newLeft = clientX - dragOffsetX;
-          let newTop = clientY - dragOffsetY;
-
-          // Get viewport and widget dimensions
-          const viewportWidth = window.innerWidth;
-          const viewportHeight = window.innerHeight;
-          const widgetRect = mainWidget.getBoundingClientRect();
-          const widgetWidth = widgetRect.width;
-          const widgetHeight = widgetRect.height;
-
-          // Get toolbar height to constrain top edge
-          const toolbar = document.querySelector('.toolbar');
-          const toolbarHeight = toolbar ? toolbar.offsetHeight : 0;
-
-          // Constrain to viewport boundaries
-          newLeft = Math.max(0, Math.min(newLeft, viewportWidth - widgetWidth));
-          newTop = Math.max(toolbarHeight, Math.min(newTop, viewportHeight - widgetHeight));
-
-          mainWidget.style.left = `${newLeft}px`;
-          mainWidget.style.top = `${newTop}px`;
-        }
-
-        function stopDrag() {
-          if (isDragging && mainWidget) {
-            isDragging = false;
-            mainWidget.style.cursor = 'grab';
-
-            // Start physics animation if there's significant velocity
-            const speed = Math.sqrt(velocityX * velocityX + velocityY * velocityY);
-            if (speed > MIN_VELOCITY) {
-              animate();
-            }
-          }
-
-          document.removeEventListener('mousemove', drag);
-          document.removeEventListener('touchmove', drag);
-          document.removeEventListener('mouseup', stopDrag);
-          document.removeEventListener('touchend', stopDrag);
-        }
-
-        function animate() {
-          if (!mainWidget) return;
-
-          // Get current position
-          const rect = mainWidget.getBoundingClientRect();
-          let left = rect.left;
-          let top = rect.top;
-
-          // Apply velocity
-          left += velocityX;
-          top += velocityY;
-
-          // Get viewport and widget dimensions
-          const viewportWidth = window.innerWidth;
-          const viewportHeight = window.innerHeight;
-          const widgetWidth = rect.width;
-          const widgetHeight = rect.height;
-
-          // Get toolbar height
-          const toolbar = document.querySelector('.toolbar');
-          const toolbarHeight = toolbar ? toolbar.offsetHeight : 0;
-
-          // Check for collisions and bounce
-          let bounced = false;
-
-          // Left edge
-          if (left < 0) {
-            left = 0;
-            velocityX = Math.abs(velocityX) * BOUNCE_DAMPING;
-            bounced = true;
-          }
-
-          // Right edge
-          if (left + widgetWidth > viewportWidth) {
-            left = viewportWidth - widgetWidth;
-            velocityX = -Math.abs(velocityX) * BOUNCE_DAMPING;
-            bounced = true;
-          }
-
-          // Top edge (toolbar)
-          if (top < toolbarHeight) {
-            top = toolbarHeight;
-            velocityY = Math.abs(velocityY) * BOUNCE_DAMPING;
-            bounced = true;
-          }
-
-          // Bottom edge
-          if (top + widgetHeight > viewportHeight) {
-            top = viewportHeight - widgetHeight;
-            velocityY = -Math.abs(velocityY) * BOUNCE_DAMPING;
-            bounced = true;
-          }
-
-          // Apply position
-          mainWidget.style.left = `${left}px`;
-          mainWidget.style.top = `${top}px`;
-
-          // Apply friction (deceleration)
-          if (!bounced) {
-            velocityX *= FRICTION;
-            velocityY *= FRICTION;
-          }
-
-          // Check if we should continue animating
-          const speed = Math.sqrt(velocityX * velocityX + velocityY * velocityY);
-          if (speed > MIN_VELOCITY) {
-            animationFrameId = requestAnimationFrame(animate);
-          } else {
-            animationFrameId = null;
-            velocityX = 0;
-            velocityY = 0;
-          }
-        }
-
-        function getFirstFridayOfMonth(year, month) {
-          const firstDay = new Date(year, month, 1);
-          const dayOfWeek = firstDay.getDay();
-          let daysUntilFriday = (5 - dayOfWeek + 7) % 7;
-          if (daysUntilFriday === 0 && firstDay.getDate() !== 1) {
-            daysUntilFriday = 7;
-          }
-          const firstFriday = new Date(year, month, 1 + daysUntilFriday);
-          return firstFriday;
-        }
-
-        function getNextShowDate() {
-          const now = new Date();
-
-          // In test mode, check if test show has ended
-          if (testNextShowDate) {
-            const showEnd = new Date(testNextShowDate.getTime() + 60 * 60 * 1000); // 1 hour after start
-
-            // If show has ended, calculate next month's show
-            if (now >= showEnd) {
-              const testDate = new Date(testNextShowDate);
-              let year = testDate.getFullYear();
-              let month = testDate.getMonth() + 1; // Next month
-              if (month > 11) {
-                month = 0;
-                year++;
-              }
-              const nextShow = getFirstFridayOfMonth(year, month);
-              nextShow.setHours(SHOW_START_HOUR, 0, 0, 0);
-              return nextShow;
-            } else {
-              return testNextShowDate;
-            }
-          }
-
-          // Normal production logic
-          const ukNow = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/London' }));
-
-          let year = ukNow.getFullYear();
-          let month = ukNow.getMonth();
-
-          let nextShow = getFirstFridayOfMonth(year, month);
-          nextShow.setHours(SHOW_START_HOUR, 0, 0, 0);
-          const nextShowUK = new Date(nextShow.toLocaleString('en-US', { timeZone: 'Europe/London' }));
-
-          if (ukNow > new Date(nextShowUK.getTime() + 60 * 60 * 1000)) {
-            month++;
-            if (month > 11) {
-              month = 0;
-              year++;
-            }
-            nextShow = getFirstFridayOfMonth(year, month);
-            nextShow.setHours(SHOW_START_HOUR, 0, 0, 0);
-          }
-
-          return nextShow;
-        }
-
-        function getTimeUntilShow(nextShow) {
-          const now = new Date();
-          const diff = nextShow - now;
-
-          // If we've passed the show time (negative diff), return "Starting now..."
-          if (diff < 0) {
-            return 'Starting now...';
-          }
-
-          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-          const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
-          const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-          const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-
-          // If less than 1 day, show detailed textual format with seconds
-          if (days === 0) {
-            const parts = [];
-
-            if (hours > 0) {
-              parts.push(`${hours} hour${hours !== 1 ? 's' : ''}`);
-            }
-            if (minutes > 0) {
-              parts.push(`${minutes} minute${minutes !== 1 ? 's' : ''}`);
-            }
-            if (seconds > 0 || parts.length === 0) {
-              parts.push(`${seconds} second${seconds !== 1 ? 's' : ''}`);
-            }
-
-            return parts.join(' ');
-          }
-
-          // If more than 1 day, show original format
-          if (days > 0) {
-            return `${days} day${days !== 1 ? 's' : ''}, ${hours} hour${hours !== 1 ? 's' : ''}`;
-          }
-        }
-
-        function isLiveNow() {
-          // In test mode, simulate going live when countdown reaches zero
-          if (testNextShowDate) {
-            const now = new Date();
-            const showEnd = new Date(testNextShowDate.getTime() + 60 * 60 * 1000); // 1 hour after start
-            return now >= testNextShowDate && now < showEnd;
-          }
-          return false;
-        }
-
-        function togglePlay() {
-          if (!audioElement) {
-            audioElement = new Audio(STREAM_URL);
-          }
-
-          if (isPlaying) {
-            audioElement.pause();
-            isPlaying = false;
-            updatePlayButton();
-            updateFloatingPlayer();
-          } else {
-            audioElement.play();
-            isPlaying = true;
-            updatePlayButton();
-            updateFloatingPlayer();
-          }
-        }
-
-        function updatePlayButton() {
-          const playBtn = document.getElementById('stream-play-btn');
-          if (playBtn) {
-            playBtn.innerHTML = isPlaying ? '&#9208;&#xFE0E;' : '&#9654;&#xFE0E;';
-            playBtn.setAttribute('aria-label', isPlaying ? 'Pause' : 'Play');
-          }
-
-          // Update toolbar button icon
-          const toolbarPlayIcon = document.querySelector('.toolbar-play-icon');
-          if (toolbarPlayIcon) {
-            toolbarPlayIcon.innerHTML = isPlaying ? '&#9208;&#xFE0E;' : '&#9654;&#xFE0E;';
-          }
-        }
-
-        function updateFloatingPlayer() {
-          if (!floatingPlayer) return;
-
-          const logo = floatingPlayer.querySelector('.floating-player-logo');
-          const pauseBtn = floatingPlayer.querySelector('.floating-player-pause');
-
-          if (isPlaying) {
-            logo.style.display = 'none';
-            pauseBtn.style.display = 'flex';
-          } else {
-            logo.style.display = 'block';
-            pauseBtn.style.display = 'none';
-          }
-        }
-
-        function createFloatingPlayer() {
-          const player = document.createElement('div');
-          player.className = 'floating-audio-player';
-          player.innerHTML = `
-            <div class="floating-player-wrapper">
-              <div class="floating-player-circle">
-                <img src="${EHFM_LOGO}" alt="Play EHFM Live" class="floating-player-logo" />
-                <button class="floating-player-pause" aria-label="Pause">&#9208;&#xFE0E;</button>
-              </div>
-              <button class="floating-player-expand" aria-label="Expand widget">+</button>
-            </div>
-          `;
-
-          // Logo click - start playing
-          const logo = player.querySelector('.floating-player-logo');
-          logo.addEventListener('click', () => {
-            if (!audioElement) {
-              audioElement = new Audio(STREAM_URL);
-            }
-            audioElement.play();
-            isPlaying = true;
-            updateFloatingPlayer();
-            updatePlayButton();
-          });
-
-          // Pause button click - stop playing
-          const pauseBtn = player.querySelector('.floating-player-pause');
-          pauseBtn.addEventListener('click', () => {
-            if (audioElement) {
-              audioElement.pause();
-            }
-            isPlaying = false;
-            updateFloatingPlayer();
-            updatePlayButton();
-          });
-
-          // Expand button click - show main widget
-          const expandBtn = player.querySelector('.floating-player-expand');
-          if (expandBtn) {
-            expandBtn.addEventListener('click', (e) => {
-              e.stopPropagation();
-              const widget = document.getElementById('stream-widget');
-              if (widget) {
-                // Set initial hidden state
-                widget.style.display = 'block';
-                widget.style.opacity = '0';
-                widget.style.transform = 'translateY(-20px)';
-
-                // Force reflow to ensure initial state is rendered
-                widget.offsetHeight;
-
-                // Animate to visible state
-                requestAnimationFrame(() => {
-                  widget.style.opacity = '1';
-                  widget.style.transform = 'translateY(0)';
-                });
-
-                updatePlayButton();
-              }
-              hideFloatingPlayer();
-            });
-          }
-
-          return player;
-        }
-
-        function showFloatingPlayer() {
-          if (!floatingPlayer) {
-            floatingPlayer = createFloatingPlayer();
-            document.body.appendChild(floatingPlayer);
-            updateFloatingPlayer();
-          } else {
-            floatingPlayer.style.display = 'flex';
-            updateFloatingPlayer();
-          }
-        }
-
-        function hideFloatingPlayer() {
-          if (floatingPlayer) {
-            floatingPlayer.style.display = 'none';
-          }
-        }
-
-        function createToolbarLiveWidget() {
-          const liveWidget = document.createElement('div');
-          liveWidget.id = 'toolbar-live-widget';
-          liveWidget.className = 'toolbar-live-widget';
-
-          liveWidget.innerHTML = `
-            <button id="toolbar-live-btn" class="toolbar-live-btn">
-              <span class="toolbar-live-dot"></span>
-              <span class="toolbar-live-text">LIVE NOW</span>
-              <span class="toolbar-play-icon">&#9654;&#xFE0E;</span>
-            </button>
-            <a href="https://www.ehfm.live/chat" target="_blank" rel="noopener noreferrer" class="toolbar-chat-btn">
-              <span class="toolbar-chat-icon">🗨</span>
-              <span class="toolbar-chat-text">Chat</span>
-            </a>
-          `;
-
-          // Attach click handler
-          const btn = liveWidget.querySelector('#toolbar-live-btn');
-          if (btn) {
-            btn.addEventListener('click', togglePlay);
-          }
-
-          return liveWidget;
-        }
-
-        function updateToolbarLiveLabel() {
-          const toolbar = document.querySelector('.toolbar');
-          if (!toolbar) return;
-
-          const existingWidget = toolbar.querySelector('#toolbar-live-widget');
-          const live = isLiveNow();
-
-          if (live && !existingWidget) {
-            // Add widget to toolbar
-            const widget = createToolbarLiveWidget();
-            toolbar.appendChild(widget);
-          } else if (!live && existingWidget) {
-            // Remove widget if not live
-            existingWidget.remove();
-          }
-        }
-
-        function createWidget() {
-          const widget = document.createElement('div');
-          widget.id = 'stream-widget';
-          widget.className = 'stream-widget';
-
-          const live = isLiveNow();
-          const nextShow = getNextShowDate();
-
-          if (live) {
-            // We're live!
-            widget.innerHTML = `
-              <button class="stream-minimize-btn" aria-label="Minimize widget">&#9866;</button>
-              <div class="stream-live-indicator">
-                <span class="live-dot"></span>
-                <span class="live-text">LIVE NOW!</span>
-              </div>
-              <div class="stream-player">
-                <button id="stream-play-btn" class="stream-play-button" aria-label="Play">&#9654;&#xFE0E;</button>
-                <a href="https://www.ehfm.live/" target="_blank" rel="noopener noreferrer">
-                  <img src="${EHFM_LOGO}" alt="EHFM Logo" class="ehfm-logo">
-                </a>
-              </div>
-              <p class="stream-subtitle">Broadcasting from the bog &#8226; 1-2pm UK</p>
-            `;
-          } else {
-            // Off-air
-            widget.innerHTML = `
-              <button class="stream-minimize-btn" aria-label="Minimize widget">&#9866;</button>
-              <div class="stream-header">
-                <p class="countdown">Next show in ${getTimeUntilShow(nextShow)}</p>
-              </div>
-              <div class="stream-player">
-                <button id="stream-play-btn" class="stream-play-button" aria-label="Play">&#9654;&#xFE0E;</button>
-                <a href="https://www.ehfm.live/" target="_blank" rel="noopener noreferrer">
-                  <img src="${EHFM_LOGO}" alt="EHFM Logo" class="ehfm-logo">
-                </a>
-              </div>
-            `;
-          }
-
-          return widget;
-        }
-
-        function updateCountdownAndStatus() {
-          const countdownEl = document.querySelector('.countdown');
-          const nextShow = getNextShowDate();
-          const timeUntil = getTimeUntilShow(nextShow);
-
-          if (countdownEl) {
-            countdownEl.textContent = `Next show in ${timeUntil}`;
-          }
-
-          // Update test info
-          const now = new Date();
-          const diff = nextShow - now;
-          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-          document.getElementById('current-countdown').textContent = timeUntil;
+        function updateTestInfo() {
+          var api = window.BogFactorLiveStream;
+          if (!api) return;
+
+          var nextShow = api.getNextShowDate();
+          var now = new Date();
+          var diff = nextShow - now;
+          var days = Math.floor(diff / (1000 * 60 * 60 * 24));
+          var interval = api.getCurrentInterval();
+
+          // Compute the countdown text the same way as the main script
+          var countdownEl = document.querySelector('.countdown');
+          var countdownText = countdownEl ? countdownEl.textContent : '-';
+
+          document.getElementById('current-countdown').textContent = countdownText;
           document.getElementById('time-format').textContent = days === 0 ? 'Textual with seconds (< 1 day)' : 'Days, Hours (> 1 day)';
-          document.getElementById('update-interval').textContent = currentInterval === 1000 ? 'Every second' : 'Every minute';
-          document.getElementById('live-status').textContent = isLiveNow() ? 'LIVE NOW! 🔴' : 'Off-air (countdown mode)';
-
-          // Update toolbar live label
-          updateToolbarLiveLabel();
-
-          // Check if we should switch to live mode
-          if (isLiveNow() && !document.querySelector('.stream-live-indicator')) {
-            const oldWidget = document.getElementById('stream-widget');
-            if (oldWidget) {
-              // Check if widget was minimized
-              const wasMinimized = oldWidget.style.display === 'none';
-
-              const newWidget = createWidget();
-              oldWidget.replaceWith(newWidget);
-              mainWidget = newWidget; // Update reference
-
-              // If it was minimized, keep the new widget minimized
-              if (wasMinimized) {
-                newWidget.style.display = 'none';
-                newWidget.style.opacity = '0';
-                newWidget.style.transform = 'translateY(-20px)';
-                // Floating player should remain visible
-              }
-
-              // Make new widget draggable
-              makeDraggable(newWidget);
-
-              // Reattach play button listener
-              const playBtn = document.getElementById('stream-play-btn');
-              if (playBtn) {
-                playBtn.addEventListener('click', togglePlay);
-              }
-
-              // Reattach minimize button listener
-              const minimizeBtn = newWidget.querySelector('.stream-minimize-btn');
-              if (minimizeBtn) {
-                minimizeBtn.addEventListener('click', () => {
-                  newWidget.style.opacity = '0';
-                  newWidget.style.transform = 'translateY(-20px)';
-                  setTimeout(() => {
-                    newWidget.style.display = 'none';
-                    // Show floating player after widget is minimized
-                    showFloatingPlayer();
-                  }, 300);
-                });
-              }
-            }
-          }
-          // Check if we should switch back to countdown mode (when live ends)
-          else if (!isLiveNow() && document.querySelector('.stream-live-indicator')) {
-            const oldWidget = document.getElementById('stream-widget');
-            if (oldWidget) {
-              // Check if widget was minimized
-              const wasMinimized = oldWidget.style.display === 'none';
-
-              const newWidget = createWidget();
-              oldWidget.replaceWith(newWidget);
-              mainWidget = newWidget; // Update reference
-
-              // If it was minimized, keep the new widget minimized
-              if (wasMinimized) {
-                newWidget.style.display = 'none';
-                newWidget.style.opacity = '0';
-                newWidget.style.transform = 'translateY(-20px)';
-                // Floating player should remain visible
-              }
-
-              // Make new widget draggable
-              makeDraggable(newWidget);
-
-              // Reattach play button listener
-              const playBtn = document.getElementById('stream-play-btn');
-              if (playBtn) {
-                playBtn.addEventListener('click', togglePlay);
-              }
-
-              // Reattach minimize button listener
-              const minimizeBtn = newWidget.querySelector('.stream-minimize-btn');
-              if (minimizeBtn) {
-                minimizeBtn.addEventListener('click', () => {
-                  newWidget.style.opacity = '0';
-                  newWidget.style.transform = 'translateY(-20px)';
-                  setTimeout(() => {
-                    newWidget.style.display = 'none';
-                    // Show floating player after widget is minimized
-                    showFloatingPlayer();
-                  }, 300);
-                });
-              }
-            }
-          }
+          document.getElementById('update-interval').textContent = interval === 1000 ? 'Every second' : 'Every minute';
+          document.getElementById('live-status').textContent = api.isLiveNow() ? 'LIVE NOW!' : 'Off-air (countdown mode)';
         }
 
-        function getUpdateInterval() {
-          const nextShow = getNextShowDate();
-          const now = new Date();
-          const diff = nextShow - now;
-          const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        // Update test info display every second
+        setInterval(updateTestInfo, 1000);
 
-          // Update every second if currently live OR less than 1 day until show
-          if (isLiveNow() || days === 0) {
-            return 1000;
+        // Preset selector
+        document.getElementById('test-preset').addEventListener('change', function(e) {
+          if (!e.target.value) return;
+
+          var now = new Date();
+          var testDate = new Date(now);
+
+          switch(e.target.value) {
+            case '1min':
+              testDate.setMinutes(testDate.getMinutes() + 1);
+              break;
+            case '59min-ago':
+              testDate.setMinutes(testDate.getMinutes() - 59);
+              break;
+            case '30min':
+              testDate.setMinutes(testDate.getMinutes() + 30);
+              break;
+            case '2hours':
+              testDate.setHours(testDate.getHours() + 2);
+              break;
+            case '12hours':
+              testDate.setHours(testDate.getHours() + 12);
+              break;
+            case '23hours':
+              testDate.setHours(testDate.getHours() + 23);
+              break;
+            case '2days':
+              testDate.setDate(testDate.getDate() + 2);
+              break;
           }
-          return 60000;
-        }
 
-        function startUpdateInterval() {
-          if (updateIntervalId) {
-            clearInterval(updateIntervalId);
-          }
-          updateIntervalId = setInterval(() => {
-            updateCountdownAndStatus();
+          var dateString = testDate.toISOString().slice(0, 16);
+          document.getElementById('test-datetime').value = dateString;
+        });
 
-            const newInterval = getUpdateInterval();
-            if (newInterval !== currentInterval) {
-              currentInterval = newInterval;
-              startUpdateInterval();
-            }
-          }, currentInterval);
-        }
-
-        function init() {
-          const widget = createWidget();
-          mainWidget = widget; // Store reference for drag functionality
-
-          const toolbar = document.querySelector('.toolbar');
-          if (toolbar) {
-            toolbar.insertAdjacentElement('afterend', widget);
+        document.getElementById('apply-test').addEventListener('click', function() {
+          var dateInput = document.getElementById('test-datetime').value;
+          if (dateInput) {
+            testNextShowDate = new Date(dateInput);
+            window.BogFactorLiveStream.forceUpdate();
+            updateTestInfo();
           } else {
-            document.body.appendChild(widget);
+            alert('Please select a date/time first.');
           }
+        });
 
-          // Make widget draggable
-          makeDraggable(widget);
+        document.getElementById('reset-test').addEventListener('click', function() {
+          testNextShowDate = null;
+          document.getElementById('test-datetime').value = '';
+          document.getElementById('test-preset').value = '';
+          window.BogFactorLiveStream.forceUpdate();
+          updateTestInfo();
+        });
 
-          // Update toolbar live label on init
-          updateToolbarLiveLabel();
-
-          const playBtn = document.getElementById('stream-play-btn');
-          if (playBtn) {
-            playBtn.addEventListener('click', togglePlay);
-          }
-
-          // Attach minimize button listener
-          const minimizeBtn = widget.querySelector('.stream-minimize-btn');
-          if (minimizeBtn) {
-            minimizeBtn.addEventListener('click', () => {
-              widget.style.opacity = '0';
-              widget.style.transform = 'translateY(-20px)';
-              setTimeout(() => {
-                widget.style.display = 'none';
-                // Show floating player after widget is minimized
-                showFloatingPlayer();
-              }, 300);
-            });
-          }
-
-          // Test controls
-          document.getElementById('test-preset').addEventListener('change', function(e) {
-            if (!e.target.value) return;
-
-            const now = new Date();
-            let testDate = new Date(now);
-
-            switch(e.target.value) {
-              case '1min':
-                testDate.setMinutes(testDate.getMinutes() + 1);
-                break;
-              case '59min-ago':
-                testDate.setMinutes(testDate.getMinutes() - 59);
-                break;
-              case '30min':
-                testDate.setMinutes(testDate.getMinutes() + 30);
-                break;
-              case '2hours':
-                testDate.setHours(testDate.getHours() + 2);
-                break;
-              case '12hours':
-                testDate.setHours(testDate.getHours() + 12);
-                break;
-              case '23hours':
-                testDate.setHours(testDate.getHours() + 23);
-                break;
-              case '2days':
-                testDate.setDate(testDate.getDate() + 2);
-                break;
-            }
-
-            const dateString = testDate.toISOString().slice(0, 16);
-            document.getElementById('test-datetime').value = dateString;
-          });
-
-          document.getElementById('apply-test').addEventListener('click', function() {
-            const dateInput = document.getElementById('test-datetime').value;
-            if (dateInput) {
-              testNextShowDate = new Date(dateInput);
-              currentInterval = getUpdateInterval();
-              startUpdateInterval();
-              updateCountdownAndStatus();
-              alert('Test date applied! Countdown will now update.');
-            } else {
-              alert('Please select a date/time first.');
-            }
-          });
-
-          document.getElementById('reset-test').addEventListener('click', function() {
-            testNextShowDate = null;
-            currentInterval = getUpdateInterval();
-            startUpdateInterval();
-            updateCountdownAndStatus();
-            document.getElementById('test-datetime').value = '';
-            document.getElementById('test-preset').value = '';
-            alert('Reset to real next show date.');
-          });
-
-          currentInterval = getUpdateInterval();
-          startUpdateInterval();
-          updateCountdownAndStatus();
-        }
-
-        if (document.readyState === 'loading') {
-          document.addEventListener('DOMContentLoaded', init);
-        } else {
-          init();
-        }
-
+        // Initial info update
+        updateTestInfo();
       })();
     </script>
   </body>

@@ -5,6 +5,8 @@
 - **test-live.html** - Test the live streaming widget in "LIVE NOW!" mode
 - **test-countdown.html** - Test countdown timer with presets to simulate different times before/during/after show and transitions from not live to live back to not live
 
+Both test pages load the real production scripts (`scripts/live-stream.js` and `scripts/toolbar-live-widget.js`) and override their behaviour using a `window.BogFactorTestConfig` mechanism. This means the test pages always exercise the same code that runs on the live site — no duplicated logic that can drift out of sync.
+
 ### Test Live
 
 This page is a convenience tool so that you don't need to configure the page and wait for it to go live, instead you can immediately see it.
@@ -13,15 +15,77 @@ There should be toolbar icons directing the user to "Listen Live" and "Chat" vis
 
 The "Listen Live" feature should start the same live player that is controlled on the main and floating players.
 
-The "Chat" feature should send users to a Chatango chatroom hosted by EHFM
+The "Chat" feature should send users to a Chatango chatroom hosted by EHFM.
 
 ### Test Countdown
 
-As the show is only scheduled for once a month, it is convenient to be able to simulate what it looks like in the moments leading up to the start and the end of the show. This ensures that the site transitions cleanly and looks good throughout. Even the Bog Factor is only live for an hour, EHFM broadcasts 24/7 and so the user should be able to listen to our friend's shows through our site.
+As the show is only scheduled for once a month, it is convenient to be able to simulate what it looks like in the moments leading up to the start and the end of the show. This ensures that the site transitions cleanly and looks good throughout. Even though Bog Factor is only live for an hour, EHFM broadcasts 24/7 and so the user should be able to listen to our friend's shows through our site.
 
 Typically this test page is used by setting the start of the show to be a minute from now, waiting until the next minute, and watching and listening for any transitions.
 
 Then, the user can set the end of the show to be in a minute and do the same.
+
+---
+
+## Test Override Hooks (`window.BogFactorTestConfig`)
+
+The production scripts check for a `window.BogFactorTestConfig` object at runtime. When it is not present (i.e. on the real site), nothing changes. When it is present (i.e. on the test pages), the scripts use the provided overrides instead of their real logic.
+
+The config object is set in a `<script>` tag **before** the production scripts are loaded, so the overrides are in place by the time the scripts initialise.
+
+### Available overrides
+
+| Property | Type | Used by | Description |
+|---|---|---|---|
+| `isLiveNow` | `function` | `live-stream.js`, `toolbar-live-widget.js` | Returns `true`/`false` to override live detection, or `null` to fall through to real logic |
+| `getNextShowDate` | `function` | `live-stream.js` | Returns a `Date` for the next show start, or `null` to fall through to real logic |
+| `isLandingPage` | `boolean` | `live-stream.js` | When `true`, the script treats the page as the landing page (shows the main widget instead of just the floating player) |
+
+### How each test page uses them
+
+**test-live.html** sets a simple static config:
+
+```javascript
+window.BogFactorTestConfig = {
+  isLiveNow: () => true,
+  isLandingPage: true
+};
+```
+
+This makes the page always appear in the live state.
+
+**test-countdown.html** sets a config with dynamic overrides tied to a `testNextShowDate` variable that the test controls modify:
+
+```javascript
+var testNextShowDate = null;
+
+window.BogFactorTestConfig = {
+  isLandingPage: true,
+  getNextShowDate: function() {
+    if (!testNextShowDate) return null; // fall through to real logic
+    // ... return testNextShowDate or calculate next month's show if this one ended
+  },
+  isLiveNow: function() {
+    if (!testNextShowDate) return null; // fall through to real logic
+    // ... return true if now is between testNextShowDate and testNextShowDate + 1 hour
+  }
+};
+```
+
+When no test date is set, both functions return `null` and the real scheduling logic runs. When a test date is applied, the overrides simulate the show starting and ending at the configured time.
+
+The test controls call `window.BogFactorLiveStream.forceUpdate()` after changing `testNextShowDate` to immediately re-evaluate the countdown, widget state, and update interval.
+
+### API methods used by test pages
+
+The `window.BogFactorLiveStream` object exposes these methods that the test pages use:
+
+| Method | Description |
+|---|---|
+| `forceUpdate()` | Re-evaluates countdown, widget state, and restarts the update interval |
+| `getCurrentInterval()` | Returns the current update interval in ms (1000 or 60000) |
+| `getNextShowDate()` | Returns the computed next show `Date` |
+| `isLiveNow()` | Returns whether the show is currently live |
 
 ---
 

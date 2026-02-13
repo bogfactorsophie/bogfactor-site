@@ -61,7 +61,6 @@ The landing page (`index.html`) has a minimal layout with the background image, 
 
 The site uses vanilla JavaScript modules for interactive features:
 
-- `scripts/bog-scale.js` - Interactive hover effect for the bog factor scale image
 - `scripts/draggable-suns.js` - Creates draggable sun elements that float across the page
 - `scripts/live-stream.js` - Manages the live stream player and widget on the landing page
 - `scripts/mixcloud-player.js` - Fixed player at bottom of page for Mixcloud show playback
