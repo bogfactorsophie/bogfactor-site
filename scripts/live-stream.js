@@ -6,7 +6,11 @@
 (function() {
   'use strict';
 
-  const STREAM_URL = 'https://ehfm.out.airtime.pro/ehfm_a';
+  const STREAM_URLS = [
+    'https://ehfm.out.airtime.pro/ehfm_a',
+    'https://ehfm.out.airtime.pro/ehfm_b',
+  ];
+  const STREAM_URL = STREAM_URLS[Math.floor(Math.random() * STREAM_URLS.length)];
   const SHOW_START_HOUR = 13; // 1pm UK time (24h format)
   const SHOW_END_HOUR = 14;   // 2pm UK time
   const EHFM_LOGO = 'https://thumbnailer.mixcloud.com/unsafe/640x640/profile/4/5/d/0/f256-daaa-4954-86cc-aa43b7af4e6e';

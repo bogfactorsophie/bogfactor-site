@@ -323,6 +323,9 @@ img {
     text-decoration: none;
     color: #333;
     font-family: "Luminari", fantasy;
+    background-color: rgba(245, 222, 179, 0.95);
+    padding: 8px 16px;
+    border-radius: 20px;
 }
 
 .footer a:hover {
