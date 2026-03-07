@@ -1,5 +1,32 @@
 [
   {
+    "id": "march2026",
+    "title": "Bog Factor w/ Still Life Painter",
+    "description": "We were joined by Still Life Painter to celebrate the release of his single Gold and to talk a little about the making of his upcoming album. There is Folk, Americana, and Soft Country that SLP brought along for the show.",
+    "mixcloudPath": "/ehfm/bog-factor-w-still-life-painter-060326/",
+    "image": "../assets/cheese-chutney.jpg",
+    "date": "2026-03",
+    "tracklist": [
+      "Sharing Orb - Björk",
+      "Ships in Harbour - Jeanette",
+      "Apricity - Conor Heafey",
+      "Broken Door - The Horse",
+      "Oh brother - Still Life Painter",
+      "Better Off Alone - Midwife",
+      "When I get home - caroline",
+      "I Couldn't Say It To Your Face - Arthur Russell",
+      "Star Game - @",
+      "Reach - Lomelda",
+      "Mean Girls Give Pleasure - Daniel Johnston",
+      "Make It Known - Foxygen",
+      "Slurf Song - Michael Hurley",
+      "Joe By the Book - Buck Meek",
+      "The Great Out There - Greg Simon",
+      "Honk If You're Lonely - Silver Jews",
+      "Gold - Still Life Painter"
+    ]
+  },
+  {
     "id": "feb2026",
     "title": "Red Hot Nordic Bangers - February 2026",
     "description": "We're taking you on a tour of Denmark, Sweden, Norway, Finland and Iceland. It was Up Helly Aa in Lerwick this week and it turns out they invented the festival because they just loved a book and started dressing as Vikings, so we've done a bit of the same. We had a lot of fun with this, and found hours and hours of rare grooves, freaky pop tunes, and some questionable hip hop. Keep it Nordic",
@@ -7,24 +34,24 @@
     "date": "2026-02",
     "image": "../assets/february_2026.jpg",
     "tracklist": [
-    "I See Red - Frida",
-    "Gånglåt från Ovanåker - Merit Hemmingson",
-    "Kold kold fisk - Shit & Chanel",
-    "Idag - Daniel Ögren",
-    "Undantag (Exception) - Dina Ögon",
-    "Carolina - Zandra",
-    "Aivoton - Hedningarna",
-    "Egyptian reggae - Dag Vag",
-    "Bellevue - CV Jørgensen",
-    "We Have A Map Of The Piano - múm",
-    "Horrorscope - Ralph Lundsten",
-    "Polska från Medelpad - Jan Johansson",
-    "En Häst Utan Namn - Family Four",
-    "Älska dig - Zandra",
-    "Takin Ova - Tommy Lee",
-    "Kolla Kolla - Nationalteatern",
-    "Hit - The Sugarcubes"
-  ]
+      "I See Red - Frida",
+      "Gånglåt från Ovanåker - Merit Hemmingson",
+      "Kold kold fisk - Shit & Chanel",
+      "Idag - Daniel Ögren",
+      "Undantag (Exception) - Dina Ögon",
+      "Carolina - Zandra",
+      "Aivoton - Hedningarna",
+      "Egyptian reggae - Dag Vag",
+      "Bellevue - CV Jørgensen",
+      "We Have A Map Of The Piano - múm",
+      "Horrorscope - Ralph Lundsten",
+      "Polska från Medelpad - Jan Johansson",
+      "En Häst Utan Namn - Family Four",
+      "Älska dig - Zandra",
+      "Takin Ova - Tommy Lee",
+      "Kolla Kolla - Nationalteatern",
+      "Hit - The Sugarcubes"
+    ]
   },
   {
     "id": "dec2025",
@@ -61,24 +88,25 @@
     "mixcloudPath": "/ehfm/bog-fav/",
     "date": "2025-11",
     "image": "../assets/the-stranglers.jpg",
-    "tracklist": ["Easy Girls (acoustic clubbing) - Les Negresses Vertes",
-                  "As the Day Grows Tired - Will & James Ragar",
-                  "Love You Every Day - Dan Lacksman",
-                  "Pulse - Todd Rundgren",
-                  "Strange Little Girl - The Stranglers",
-                  "Midnight Round Mekines - Javier Bergia",
-                  "Peg - Steely Dan",
-                  "Baby - Ariel Pink's Haunted Graffiti",
-                  "From the Beginning - Emerson, Lake & Palmer",
-                  "House On the Rock - Rob Mehl",
-                  "Just for a Moment - Ronnie Wood & Ronnie Lane",
-                  "I Knew You Well - Art Lown",
-                  "Video Life - Chris Spedding",
-                  "Never Gonna Let You Go - Michael Miglio",
-                  "Get Me - Everything But The Girl",
-                  "Babylon - David Gray",
-                  "Seabird - Alessi Brothers"
-                ]
+    "tracklist": [
+      "Easy Girls (acoustic clubbing) - Les Negresses Vertes",
+      "As the Day Grows Tired - Will & James Ragar",
+      "Love You Every Day - Dan Lacksman",
+      "Pulse - Todd Rundgren",
+      "Strange Little Girl - The Stranglers",
+      "Midnight Round Mekines - Javier Bergia",
+      "Peg - Steely Dan",
+      "Baby - Ariel Pink's Haunted Graffiti",
+      "From the Beginning - Emerson, Lake & Palmer",
+      "House On the Rock - Rob Mehl",
+      "Just for a Moment - Ronnie Wood & Ronnie Lane",
+      "I Knew You Well - Art Lown",
+      "Video Life - Chris Spedding",
+      "Never Gonna Let You Go - Michael Miglio",
+      "Get Me - Everything But The Girl",
+      "Babylon - David Gray",
+      "Seabird - Alessi Brothers"
+    ]
   },
   {
     "id": "oct2025",
@@ -137,7 +165,7 @@
       "Que No Salga la Luna - Rosalía",
       "A Place In The Sun - Marine Girls",
       "Please Do Not Go - Violent Femmes"
-    ]  
+    ]
   },
   {
     "id": "aug2025",
@@ -146,27 +174,28 @@
     "mixcloudPath": "/ehfm/bog-factor-010825/",
     "date": "2025-08",
     "image": "../assets/crop-circle-pic.jpg",
-    "tracklist": ["Space Flight - I Roy",
-                  "I Hear A New World - Joe Meek & The Blue Men",
-                  "Touareg Spaceship - Mamman Sani & Tropikal Camel",
-                  "Po D'Terra - João Cirilo",
-                  "Frog Bog - Moondog",
-                  "Conspiracy on Neptune - Prince Jammy",
-                  "Intergalactic Love Song (feat. Paige Douglas) - The Diddys",
-                  "Space Traveler",
-                  "Love in Outer Space [Vocal] - Sun Ra and His Arkestra",
-                  "UFO - ESG",
-                  "Le Bracelet - Alain Goraguer",
-                  "Be Thankful for What You Got - The Space Lady",
-                  "U.F.O. - Jim Sullivan",
-                  "2001 - Gilberto Gil",
-                  "From \"Visiting Friends\" - Vernon Elliott",
-                  "Numbers / Computer World (3-D) - Kraftwerk",
-                  "Nuclear Si - Aviador Dro",
-                  "Space Is The Place - Sun Ra and his Arkestra",
-                  "Door To The Cosmos - Motor City Drum Ensemble",
-                  "Female Of The Species - Space"
-      ]
+    "tracklist": [
+      "Space Flight - I Roy",
+      "I Hear A New World - Joe Meek & The Blue Men",
+      "Touareg Spaceship - Mamman Sani & Tropikal Camel",
+      "Po D'Terra - João Cirilo",
+      "Frog Bog - Moondog",
+      "Conspiracy on Neptune - Prince Jammy",
+      "Intergalactic Love Song (feat. Paige Douglas) - The Diddys",
+      "Space Traveler",
+      "Love in Outer Space [Vocal] - Sun Ra and His Arkestra",
+      "UFO - ESG",
+      "Le Bracelet - Alain Goraguer",
+      "Be Thankful for What You Got - The Space Lady",
+      "U.F.O. - Jim Sullivan",
+      "2001 - Gilberto Gil",
+      "From \"Visiting Friends\" - Vernon Elliott",
+      "Numbers / Computer World (3-D) - Kraftwerk",
+      "Nuclear Si - Aviador Dro",
+      "Space Is The Place - Sun Ra and his Arkestra",
+      "Door To The Cosmos - Motor City Drum Ensemble",
+      "Female Of The Species - Space"
+    ]
   },
   {
     "id": "july2025",
@@ -194,7 +223,7 @@
       "Jay - Grace Slick",
       "Ces P`Tits Je T`aime - Daniel Forestal Et Sa Guitare",
       "Qualquer Coisa A Haver Com O Paraíso - Flávio Venturini"
-    ]  
+    ]
   },
   {
     "id": "june2025",
@@ -219,7 +248,7 @@
       "La Rue - Cortex",
       "Questo amore e un motore - Pino D'Angio",
       "Bullitt (Main Title) - Lalo Schifrin"
-    ]  
+    ]
   },
   {
     "id": "may2025",
@@ -309,6 +338,8 @@
     "description": "The primordial \"first ever\" show. The good folks of EHFM invited us down to the Summerhall studio for their open decks day to celebrate International Women's Day. We played only women, we're pretty sure, and had a really lovely time.",
     "mixcloudPath": "/ehfm/iwd-24-open-decks-bog-factor/",
     "date": "2024-03",
-    "tracklist": ["That's a secret we'll never tell"]
+    "tracklist": [
+      "That's a secret we'll never tell"
+    ]
   }
 ]
