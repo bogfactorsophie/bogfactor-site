@@ -1,0 +1,36 @@
+name: Sync Playlists
+
+on:
+  push:
+    branches: [main]
+    paths: ['radio/shows.json']
+  workflow_dispatch:
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install dependencies
+        run: pip install -r tools/requirements.txt
+
+      - name: Sync playlists
+        run: |
+          output=$(python tools/sync-playlists.py 2>&1)
+          echo "$output"
+          new_token=$(echo "$output" | grep 'TIDAL_REFRESH_TOKEN_ROTATED=' | cut -d= -f2-)
+          if [ -n "$new_token" ]; then
+            echo "$new_token" | gh secret set TIDAL_REFRESH_TOKEN
+            echo "Updated TIDAL_REFRESH_TOKEN with rotated token"
+          fi
+        env:
+          SPOTIFY_CLIENT_ID: ${{ secrets.SPOTIFY_CLIENT_ID }}
+          SPOTIFY_CLIENT_SECRET: ${{ secrets.SPOTIFY_CLIENT_SECRET }}
+          SPOTIFY_REFRESH_TOKEN: ${{ secrets.SPOTIFY_REFRESH_TOKEN }}
+          TIDAL_REFRESH_TOKEN: ${{ secrets.TIDAL_REFRESH_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
