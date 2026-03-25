@@ -374,24 +374,22 @@ def tidal_sync(tracks, dry_run=False):
 
     session = tidalapi.Session()
 
-    token_type = os.environ.get("TIDAL_TOKEN_TYPE", "Bearer")
-    access_token = os.environ.get("TIDAL_ACCESS_TOKEN", "")
-    expiry_time = os.environ.get("TIDAL_EXPIRY_TIME")
-
-    # Try loading from saved session data, falling back to refresh
+    # Refresh the access token first, then load the session.
+    # We must set is_pkce before refreshing so it uses the correct client credentials.
+    session.is_pkce = True
     try:
-        from datetime import datetime
-        exp = datetime.fromisoformat(expiry_time) if expiry_time else datetime.min
-        session.load_oauth_session(token_type, access_token, refresh_token, exp)
-    except Exception:
-        # If loading fails, try just the refresh token
-        try:
-            session.load_oauth_session("Bearer", "", refresh_token)
-        except Exception as e:
-            print(f"Tidal: authentication failed: {e}", file=sys.stderr)
-            return
+        session.token_refresh(refresh_token)
+    except Exception as e:
+        print(f"Tidal: token refresh failed: {e}", file=sys.stderr)
+        print("Try running: python tools/sync-playlists.py --setup tidal", file=sys.stderr)
+        return
 
-    if not session.check_login():
+    logged_in = session.load_oauth_session(
+        session.token_type, session.access_token, session.refresh_token,
+        session.expiry_time, is_pkce=True,
+    )
+
+    if not logged_in or not session.check_login():
         print("Tidal: session not valid, try running --setup tidal again", file=sys.stderr)
         return
 

@@ -22,8 +22,12 @@ jobs:
       - name: Sync playlists
         run: |
           output=$(python tools/sync-playlists.py 2>&1)
-          echo "$output"
+          # Mask and extract rotated token before printing output
           new_token=$(echo "$output" | grep 'TIDAL_REFRESH_TOKEN_ROTATED=' | cut -d= -f2-)
+          if [ -n "$new_token" ]; then
+            echo "::add-mask::$new_token"
+          fi
+          echo "$output"
           if [ -n "$new_token" ]; then
             echo "$new_token" | gh secret set TIDAL_REFRESH_TOKEN
             echo "Updated TIDAL_REFRESH_TOKEN with rotated token"
