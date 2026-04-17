@@ -153,6 +153,70 @@ The tracklist will automatically appear in the modal popup when you click "View 
 - The page loads instantly - all show data is fetched and rendered client-side
 - No build process needed - just edit the JSON and refresh!
 
+---
+
+## Playlist Sync (`sync-playlists.py`)
+
+Automatically syncs all tracks from `shows.json` to a "Bog Factor" playlist on Spotify and/or Tidal. Runs automatically via GitHub Actions whenever `shows.json` is updated on main.
+
+### First-Time Setup
+
+Install the Python dependencies:
+
+```bash
+pip install -r tools/requirements.txt
+```
+
+#### Spotify
+
+1. Go to [developer.spotify.com/dashboard](https://developer.spotify.com/dashboard) and create a new app
+2. Set the redirect URI to `http://localhost:8888/callback`
+3. Note your Client ID and Client Secret
+4. Run the setup wizard:
+
+```bash
+python tools/sync-playlists.py --setup spotify
+```
+
+5. Follow the prompts to authorise in your browser
+6. Add the output values to a `.env` file in the repo root (for local use) and as GitHub Actions secrets (for automation)
+
+#### Tidal
+
+1. Run the setup wizard:
+
+```bash
+python tools/sync-playlists.py --setup tidal
+```
+
+2. Open the URL shown and log in to authorise
+3. Add the output values to `.env` and GitHub Actions secrets
+
+### Usage
+
+```bash
+# Sync all configured services
+python tools/sync-playlists.py
+
+# Preview what would be synced (no changes made)
+python tools/sync-playlists.py --dry-run
+
+# Sync only one service
+python tools/sync-playlists.py --service spotify
+python tools/sync-playlists.py --service tidal
+```
+
+### GitHub Actions
+
+The workflow at `.github/workflows/sync-playlists.yml` runs automatically when `radio/shows.json` is pushed to main. It can also be triggered manually from the Actions tab.
+
+Required GitHub Actions secrets:
+- `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, `SPOTIFY_REFRESH_TOKEN`
+- `TIDAL_REFRESH_TOKEN`
+- `GH_PAT` (a GitHub Personal Access Token with `secrets` read/write permission, used to rotate the Tidal refresh token)
+
+Any tracks that can't be found on a service are logged in the Actions output for manual review.
+
 
 
 

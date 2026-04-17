@@ -101,7 +101,39 @@ The radio page dynamically generates show cards and tracklist modals from this J
 The `tools/` directory contains:
 - `test-live.html` - Test page for live streaming widget functionality
 - `rekordbox-to-json.py` - Python utility to convert Rekordbox DJ playlist exports to JSON format
-- `README.md` - Instructions for adding new radio shows to the site
+- `sync-playlists.py` - Syncs all tracks from `shows.json` to "Bog Factor" playlists on Spotify and Tidal
+- `requirements.txt` - Python dependencies for `sync-playlists.py` (tidalapi, spotipy, python-dotenv)
+- `README.md` - Instructions for adding new radio shows and using the playlist sync tool
+
+## Playlist Sync
+
+`tools/sync-playlists.py` automatically syncs every track from `radio/shows.json` to a "Bog Factor" playlist on Spotify and Tidal. It uses fuzzy matching to find tracks, handling quirks like curly quotes, feat. suffixes, and swapped artist/title fields.
+
+### GitHub Actions
+
+The workflow at `.github/workflows/sync-playlists.yml` runs automatically when `radio/shows.json` is pushed to `main`, or manually via workflow_dispatch.
+
+Required GitHub Actions secrets:
+- `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, `SPOTIFY_REFRESH_TOKEN` - Spotify OAuth credentials
+- `TIDAL_REFRESH_TOKEN` - Tidal OAuth refresh token (obtained via `--setup tidal`)
+- `GH_PAT` - GitHub Personal Access Token with `secrets` read/write permission, used to rotate the Tidal refresh token after each run
+
+### Local Usage
+
+Python dependencies are in `tools/requirements.txt` with a venv at `tools/.venv`:
+
+```bash
+source tools/.venv/bin/activate
+python tools/sync-playlists.py --dry-run          # preview changes
+python tools/sync-playlists.py --service tidal     # sync only Tidal
+python tools/sync-playlists.py --setup tidal       # interactive first-time auth
+```
+
+Local credentials are stored in a `.env` file in the repo root (gitignored).
+
+### Tidal Auth Notes
+
+Tidal uses PKCE OAuth. The access token is short-lived (~24 hours) but the refresh token is used to obtain new access tokens automatically. The script calls `token_refresh()` explicitly before loading the session, since tidalapi's built-in refresh only triggers on "token expired" errors, not missing tokens. After each CI run, if the refresh token rotates, the workflow updates the `TIDAL_REFRESH_TOKEN` secret via `gh secret set`.
 
 ## Development
 
@@ -127,6 +159,7 @@ The site is actively being worked on with recent enhancements:
 - Fixed Mixcloud player for radio archive with slide-up/down animations
 - Draggable sun elements for interactive experience
 - Tracklist modals with YouTube search integration
+- Automated playlist sync to Spotify and Tidal via GitHub Actions
 - Clean, optimized codebase with unused files removed
 
 ### Best Practices
