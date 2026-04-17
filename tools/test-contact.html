@@ -1,0 +1,155 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bog Factor - CONTACT FORM TEST</title>
+    <link href="https://fonts.cdnfonts.com/css/luminari" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/noto-serif-gurmukhi" rel="stylesheet">
+    <link rel="stylesheet" href="../styles.css">
+    <script src="../scripts/contact-form.js"></script>
+  </head>
+
+  <body>
+
+    <style>
+      body {
+        background: url('../assets/vibes-graphic.jpg') no-repeat center center fixed;
+        background-size: cover;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        margin: 0;
+      }
+      .test-controls {
+        background: rgba(247, 224, 193, 0.95);
+        padding: 20px;
+        margin: 20px auto;
+        max-width: 600px;
+        border-radius: 8px;
+        font-family: 'Noto Serif Gurmukhi', sans-serif;
+        color: rgb(54, 50, 41);
+      }
+      .test-controls h2 {
+        font-family: 'MedievalSharp', cursive;
+        color: rgb(135, 89, 33);
+        margin-top: 0;
+      }
+      .test-controls button {
+        background-color: rgb(135, 89, 33);
+        color: wheat;
+        border: none;
+        padding: 10px 20px;
+        font-family: 'MedievalSharp', cursive;
+        font-size: 16px;
+        cursor: pointer;
+        border-radius: 4px;
+        margin: 5px;
+        transition: background-color 0.3s;
+      }
+      .test-controls button:hover {
+        background-color: rgb(218, 72, 72);
+      }
+      .test-log {
+        background: rgba(255,255,255,0.5);
+        padding: 10px;
+        margin-top: 15px;
+        border-radius: 4px;
+        font-family: monospace;
+        font-size: 13px;
+        max-height: 200px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+      }
+    </style>
+
+    <!-- SVG filter for wavy borders -->
+    <svg style="position: absolute; width: 0; height: 0;">
+      <defs>
+        <filter id="wavy2">
+          <feTurbulence x="0" y="0" baseFrequency="0.02" numOctaves="5" seed="1" />
+          <feDisplacementMap in="SourceGraphic" scale="6" />
+        </filter>
+        <filter id="wavy-smooth">
+          <feTurbulence x="0" y="0" baseFrequency="0.01" numOctaves="2" seed="1" />
+          <feDisplacementMap in="SourceGraphic" scale="3" />
+        </filter>
+      </defs>
+    </svg>
+
+    <div class="toolbar">
+      <a href="../index.html">Home</a>
+      <a href="../radio/index.html">Radio</a>
+      <a href="../about/index.html">About</a>
+    </div>
+
+    <div class="test-controls">
+      <h2>Contact Form Test</h2>
+      <p>Use these controls to test the contact form modal.</p>
+
+      <button id="btn-open-form">Open Contact Form</button>
+      <button id="btn-test-mock-success">Test with Mock (Success)</button>
+      <button id="btn-test-mock-fail">Test with Mock (Failure)</button>
+
+      <div class="test-log" id="test-log">Test log ready...\n</div>
+    </div>
+
+    <footer class="footer">
+      <a href="https://www.instagram.com/bog_factor/" target="_blank">Instagram</a>
+      <a href="mailto:hello@bogfactor.co.uk" data-contact>Email</a>
+    </footer>
+
+    <script>
+      var log = document.getElementById('test-log');
+      function addLog(msg) {
+        log.textContent += new Date().toLocaleTimeString() + ' - ' + msg + '\n';
+        log.scrollTop = log.scrollHeight;
+      }
+
+      // Open the real form
+      document.getElementById('btn-open-form').addEventListener('click', function() {
+        var modal = document.getElementById('contact-modal');
+        if (modal) {
+          modal.style.display = 'flex';
+          addLog('Opened contact modal');
+        } else {
+          addLog('ERROR: contact modal not found in DOM');
+        }
+      });
+
+      // Mock a successful fetch
+      document.getElementById('btn-test-mock-success').addEventListener('click', function() {
+        addLog('Installing mock fetch (200 OK)...');
+        var realFetch = window.fetch;
+        window.fetch = function(url, opts) {
+          if (url.includes('bog-contact')) {
+            addLog('Mock intercepted POST to worker - returning 200');
+            addLog('Payload: ' + opts.body);
+            return Promise.resolve(new Response(JSON.stringify({ success: true }), { status: 200 }));
+          }
+          return realFetch(url, opts);
+        };
+        var modal = document.getElementById('contact-modal');
+        modal.style.display = 'flex';
+        addLog('Form opened - fill it in and submit to test success path');
+      });
+
+      // Mock a failed fetch
+      document.getElementById('btn-test-mock-fail').addEventListener('click', function() {
+        addLog('Installing mock fetch (500 error)...');
+        var realFetch = window.fetch;
+        window.fetch = function(url, opts) {
+          if (url.includes('bog-contact')) {
+            addLog('Mock intercepted POST to worker - returning 500');
+            addLog('Payload: ' + opts.body);
+            return Promise.resolve(new Response(JSON.stringify({ error: 'Simulated failure' }), { status: 500 }));
+          }
+          return realFetch(url, opts);
+        };
+        var modal = document.getElementById('contact-modal');
+        modal.style.display = 'flex';
+        addLog('Form opened - fill it in and submit to test error path');
+      });
+    </script>
+  </body>
+</html>

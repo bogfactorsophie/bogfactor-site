@@ -1028,6 +1028,94 @@ body.mixcloud-player-active .floating-player-circle:hover {
     font-style: italic;
 }
 
+/* Contact Form Modal */
+#contact-modal {
+    align-items: center;
+    justify-content: center;
+}
+
+#contact-modal .modal-content {
+    margin: 0;
+    max-width: 500px;
+}
+
+.contact-field {
+    margin-bottom: 16px;
+}
+
+.contact-field label {
+    display: block;
+    font-family: 'MedievalSharp', cursive;
+    color: rgb(135, 89, 33);
+    font-size: 16px;
+    margin-bottom: 6px;
+}
+
+.contact-field input,
+.contact-field textarea {
+    width: 100%;
+    padding: 10px 12px;
+    font-family: 'Noto Serif Gurmukhi', sans-serif;
+    font-size: 15px;
+    color: rgb(54, 50, 41);
+    background-color: rgba(255, 255, 255, 0.6);
+    border: 2px solid rgba(135, 89, 33, 0.4);
+    border-radius: 4px;
+    box-sizing: border-box;
+    transition: border-color 0.3s ease;
+}
+
+.contact-field input:focus,
+.contact-field textarea:focus {
+    outline: none;
+    border-color: rgb(135, 89, 33);
+}
+
+.contact-field textarea {
+    resize: vertical;
+    min-height: 100px;
+}
+
+.contact-submit-btn {
+    display: block;
+    width: 100%;
+    padding: 12px 20px;
+    background-color: rgb(135, 89, 33);
+    color: wheat;
+    border: none;
+    font-family: 'MedievalSharp', cursive;
+    font-size: 18px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+    margin-top: 8px;
+}
+
+.contact-submit-btn:hover {
+    background-color: rgb(218, 72, 72);
+}
+
+.contact-submit-btn:disabled {
+    background-color: rgba(135, 89, 33, 0.5);
+    cursor: not-allowed;
+}
+
+.contact-status {
+    font-family: 'Noto Serif Gurmukhi', sans-serif;
+    font-size: 14px;
+    text-align: center;
+    margin-top: 12px;
+    min-height: 20px;
+}
+
+.contact-status-success {
+    color: rgb(45, 74, 43);
+}
+
+.contact-status-error {
+    color: rgb(218, 72, 72);
+}
+
 /* Mobile Responsive Styles */
 @media screen and (max-width: 768px) {
     /* Increase base text size for better accessibility on mobile */
@@ -1094,6 +1182,19 @@ body.mixcloud-player-active .floating-player-circle:hover {
     .sun-container img {
         width: 80px !important;
         height: 80px !important;
+    }
+
+    /* Contact form mobile adjustments */
+    .contact-field input,
+    .contact-field textarea {
+        font-size: 16px;
+        padding: 12px;
+    }
+
+    .contact-submit-btn {
+        padding: 14px 24px;
+        font-size: 20px;
+        min-height: 48px;
     }
 
     /* Make tracklist modal take up more screen */
