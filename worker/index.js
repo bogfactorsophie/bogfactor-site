@@ -2,10 +2,13 @@ export default {
   async fetch(request, env) {
     // Handle CORS preflight
     if (request.method === 'OPTIONS') {
+      const preflightOrigin = request.headers.get('Origin') || '';
+      const preflightAllowed = ['https://bogfactor.co.uk', 'https://www.bogfactor.co.uk'].includes(preflightOrigin)
+        || preflightOrigin.endsWith('.pages.dev');
       return new Response(null, {
         status: 204,
         headers: {
-          'Access-Control-Allow-Origin': 'https://bogfactor.co.uk',
+          'Access-Control-Allow-Origin': preflightAllowed ? preflightOrigin : 'https://bogfactor.co.uk',
           'Access-Control-Allow-Methods': 'POST, OPTIONS',
           'Access-Control-Allow-Headers': 'Content-Type',
         }
@@ -18,7 +21,8 @@ export default {
 
     const origin = request.headers.get('Origin') || '';
     const allowedOrigins = ['https://bogfactor.co.uk', 'https://www.bogfactor.co.uk'];
-    const corsOrigin = allowedOrigins.includes(origin) ? origin : allowedOrigins[0];
+    const isAllowed = allowedOrigins.includes(origin) || origin.endsWith('.pages.dev');
+    const corsOrigin = isAllowed ? origin : allowedOrigins[0];
 
     try {
       const { name, email, message } = await request.json();
