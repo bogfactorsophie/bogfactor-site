@@ -348,6 +348,16 @@ img {
     background-color: rgb(218, 72, 72);
 }
 
+.show-description a:link,
+.show-description a:hover {
+    color: rgb(135, 89, 33);
+}
+
+.show-description a:visited,
+.show-description a:active {
+    color: wheat;
+}
+
 .modal {
     display: none;
     position: fixed;

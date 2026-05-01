@@ -81,6 +81,7 @@ window.loadShows = async function () {
       title.appendChild(linkIcon);
 
       const description = document.createElement('p');
+      description.className = 'show-description';
       // Render <a> tags in descriptions while keeping all other content as text
       if (show.description && show.description.includes('<a ')) {
         var parts = show.description.split(/(<a\s+href="[^"]*">[^<]*<\/a>)/g);
