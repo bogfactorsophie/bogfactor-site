@@ -3,3 +3,5 @@ wrangler-account.json
 __pycache__/
 *.pyc
 tools/.venv/
+tools/out/
+worker-shows/.wrangler/

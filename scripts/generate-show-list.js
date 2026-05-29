@@ -27,7 +27,7 @@ document.addEventListener('keydown', function (event) {
 // Generate shows from JSON
 window.loadShows = async function () {
   try {
-    const response = await fetch('shows.json');
+    const response = await fetch('/api/shows');
     const shows = await response.json();
 
     const container = document.getElementById('shows-container');
