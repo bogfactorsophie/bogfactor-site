@@ -1,0 +1,29 @@
+name = "bog-shows"
+main = "index.js"
+compatibility_date = "2025-01-01"
+
+# Public API routes. Admin routes under /api/admin/* should be gated by a
+# Cloudflare Access policy configured in the dashboard (Zero Trust > Access >
+# Applications). The Worker also verifies the Cf-Access-Jwt-Assertion header
+# as defence-in-depth.
+routes = [
+  { pattern = "bogfactor.co.uk/api/*", zone_name = "bogfactor.co.uk" },
+  { pattern = "www.bogfactor.co.uk/api/*", zone_name = "bogfactor.co.uk" },
+]
+
+# Set these via `wrangler d1 create bogfactor` and `wrangler r2 bucket create bogfactor-show-images`,
+# then paste the resulting database_id below.
+[[d1_databases]]
+binding = "DB"
+database_name = "bogfactor"
+database_id = "2299c2e1-6f11-4f09-a5e6-b3bd3990c55f"
+
+[[r2_buckets]]
+binding = "IMAGES"
+bucket_name = "bogfactor-show-images"
+
+[vars]
+# Cloudflare Access team domain (e.g. "bogfactor.cloudflareaccess.com") and the
+# Application Audience (AUD) tag from the Access app. Both are non-secret.
+ACCESS_TEAM_DOMAIN = "bogfactor.cloudflareaccess.com"
+ACCESS_AUD = "7024a20823a323100bf68001fbd0d91738c268de8fbebc9c05fec2810ca478e5"
