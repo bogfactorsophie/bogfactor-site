@@ -1,0 +1,162 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Manage Show Info - Bog Factor Admin</title>
+<link href="https://fonts.cdnfonts.com/css/luminari" rel="stylesheet">
+<link href="https://fonts.cdnfonts.com/css/noto-serif-gurmukhi" rel="stylesheet">
+<style>
+  :root {
+    --brown: rgb(135, 89, 33);
+    --red: rgb(218, 72, 72);
+    --green: rgb(107, 142, 35);
+    --text: rgb(54, 50, 41);
+    --panel: #f7e0c1be;
+  }
+  body {
+    background: url('../../assets/vibes-graphic.jpg') no-repeat center center fixed;
+    background-size: cover;
+    font-family: 'Noto Serif Gurmukhi', sans-serif;
+    color: var(--text);
+    margin: 0;
+    min-height: 100vh;
+    padding: 2rem 1rem 6rem;
+    box-sizing: border-box;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; display: grid; gap: 2rem; }
+  .panel { background: var(--panel); padding: 1.5rem; box-sizing: border-box; }
+  h1, h2 { font-family: 'Luminari', fantasy; color: var(--brown); margin: 0 0 1rem; }
+  .back-link { color: var(--brown); text-decoration: none; font-size: 0.9rem; font-weight: 600; }
+  .back-link:hover { color: var(--red); }
+  h1 { font-size: 2rem; }
+  h2 { font-size: 1.3rem; }
+  label { display: block; margin-top: 0.9rem; font-weight: 600; }
+  label .hint { font-weight: 400; color: rgb(130, 71, 81); }
+  input, textarea, select {
+    display: block;
+    width: 100%;
+    padding: 0.5rem;
+    margin-top: 0.25rem;
+    border: 1px solid rgba(135, 89, 33, 0.4);
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: inherit;
+    box-sizing: border-box;
+    background: rgba(255, 255, 255, 0.7);
+    color: var(--text);
+  }
+  input:focus, textarea:focus, select:focus { outline: 2px solid var(--brown); outline-offset: -1px; }
+  textarea { resize: vertical; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+  @media (max-width: 600px) { .row { grid-template-columns: 1fr; } }
+  button {
+    margin-top: 1rem;
+    padding: 10px 18px;
+    background: var(--brown);
+    color: wheat;
+    border: none;
+    font-family: 'Luminari', fantasy;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  button:hover { background: var(--red); }
+  button.secondary { background: transparent; color: var(--brown); border: 1px solid var(--brown); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .status { margin-top: 0.5rem; font-weight: 600; min-height: 1.4em; }
+  .status.error { color: var(--red); }
+  .status.success { color: var(--green); }
+  .image-preview {
+    display: block;
+    max-width: 240px;
+    max-height: 180px;
+    margin-top: 0.5rem;
+    border: 1px solid rgba(135, 89, 33, 0.4);
+  }
+  .actions-bar { display: flex; gap: 0.5rem; margin-top: 1rem; }
+  .actions-bar button { margin: 0; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="panel">
+    <p><a href="/admin/index.html" class="back-link">← Admin tools</a></p>
+    <h1>Manage Show Info</h1>
+    <p>Add a new show or edit an existing one. Changes go live within ~60 seconds.</p>
+    <div id="auth-status" class="status"></div>
+  </div>
+
+  <div class="panel">
+    <h2 id="form-title">New Show</h2>
+    <form id="show-form">
+      <input type="hidden" id="editing-id">
+
+      <div class="row">
+        <label>ID <span class="hint">(slug, e.g. feb2026)</span>
+          <input type="text" id="id" required>
+        </label>
+        <label>Aired at <span class="hint">(local datetime)</span>
+          <input type="datetime-local" id="airedAt" required>
+        </label>
+      </div>
+
+      <label>Title
+        <input type="text" id="title" required>
+      </label>
+
+      <label>Description <span class="hint">(HTML &lt;a&gt; tags allowed)</span>
+        <textarea id="description" rows="4" required></textarea>
+      </label>
+
+      <div class="row">
+        <label>Mixcloud path <span class="hint">(e.g. /ehfm/bog-factor-060226/)</span>
+          <input type="text" id="mixcloudPath" required>
+        </label>
+        <label>SoundCloud URL <span class="hint">(optional)</span>
+          <input type="url" id="soundcloudUrl">
+        </label>
+      </div>
+
+      <div class="row">
+        <label>Duration (minutes) <span class="hint">(optional)</span>
+          <input type="number" id="durationMin" min="0" step="1">
+        </label>
+        <label>Producer <span class="hint">(optional)</span>
+          <input type="text" id="producer">
+        </label>
+      </div>
+
+      <label>Image <span class="hint">(optional)</span>
+        <input type="file" id="image-file" accept="image/*">
+        <input type="hidden" id="imageKey">
+        <img id="image-preview" class="image-preview" style="display:none" alt="">
+      </label>
+
+      <label>Import tracklist from Rekordbox <span class="hint">(optional)</span>
+        <input type="file" id="rekordbox-file" accept=".txt">
+      </label>
+
+      <label>Tracklist <span class="hint">(one per line, "Title - Artist")</span>
+        <textarea id="tracklist" rows="10" placeholder="Track Title - Artist"></textarea>
+      </label>
+
+      <label>
+        <input type="checkbox" id="isPublished" checked style="width:auto;display:inline-block;margin-right:6px">
+        Published
+      </label>
+
+      <div class="actions-bar">
+        <button type="submit" id="save-btn">Save</button>
+        <button type="button" id="reset-btn" class="secondary">Reset form</button>
+      </div>
+      <div id="form-status" class="status"></div>
+    </form>
+  </div>
+
+</div>
+
+<script src="../../tools/rekordbox-to-tracklist.js"></script>
+<script src="../../scripts/admin-shows.js"></script>
+</body>
+</html>

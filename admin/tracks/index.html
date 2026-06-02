@@ -1,0 +1,250 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Check for Repeats - Bog Factor Admin</title>
+<link href="https://fonts.cdnfonts.com/css/luminari" rel="stylesheet">
+<link href="https://fonts.cdnfonts.com/css/noto-serif-gurmukhi" rel="stylesheet">
+<style>
+  :root {
+    --brown: rgb(135, 89, 33);
+    --red: rgb(218, 72, 72);
+    --green: rgb(107, 142, 35);
+    --amber: rgb(184, 134, 11);
+    --text: rgb(54, 50, 41);
+    --panel: #f7e0c1be;
+  }
+  body {
+    background: url('../../assets/vibes-graphic.jpg') no-repeat center center fixed;
+    background-size: cover;
+    font-family: 'Noto Serif Gurmukhi', sans-serif;
+    color: var(--text);
+    margin: 0;
+    min-height: 100vh;
+    padding: 2rem 1rem 6rem;
+    box-sizing: border-box;
+  }
+  .wrap { max-width: 900px; margin: 0 auto; display: grid; gap: 1.5rem; }
+  .panel { background: var(--panel); padding: 1.5rem; box-sizing: border-box; }
+  h1 { font-family: 'Luminari', fantasy; color: var(--brown); margin: 0 0 0.5rem; font-size: 2rem; }
+  h2 { font-family: 'Luminari', fantasy; color: var(--brown); margin: 0 0 1rem; font-size: 1.3rem; }
+  .back-link { color: var(--brown); text-decoration: none; font-size: 0.9rem; font-weight: 600; }
+  .back-link:hover { color: var(--red); }
+  label { display: block; margin-top: 0.5rem; font-weight: 600; }
+  label .hint { font-weight: 400; color: rgb(130, 71, 81); }
+  textarea {
+    display: block;
+    width: 100%;
+    padding: 0.6rem;
+    margin-top: 0.4rem;
+    border: 1px solid rgba(135, 89, 33, 0.4);
+    border-radius: 4px;
+    font-family: inherit;
+    font-size: inherit;
+    box-sizing: border-box;
+    background: rgba(255, 255, 255, 0.7);
+    color: var(--text);
+    resize: vertical;
+  }
+  textarea:focus { outline: 2px solid var(--brown); outline-offset: -1px; }
+  input[type="file"] { display: block; margin-top: 0.4rem; font-family: inherit; color: var(--text); }
+  button {
+    margin-top: 1rem;
+    padding: 10px 18px;
+    background: var(--brown);
+    color: wheat;
+    border: none;
+    font-family: 'Luminari', fantasy;
+    font-size: 1rem;
+    cursor: pointer;
+  }
+  button:hover { background: var(--red); }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .status { margin-top: 0.5rem; font-weight: 600; min-height: 1.4em; }
+  .status.error { color: var(--red); }
+
+  .summary { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
+  .summary .tally { font-size: 0.95rem; }
+  .summary .tally strong { font-size: 1.3rem; font-family: 'Luminari', fantasy; }
+  .dot { display: inline-block; width: 0.7em; height: 0.7em; border-radius: 50%; margin-right: 0.3em; vertical-align: middle; }
+  .dot.new { background: var(--green); }
+  .dot.played { background: var(--red); }
+  .dot.artist { background: var(--amber); }
+
+  .result-list { list-style: none; margin: 0; padding: 0; }
+  .result-list li {
+    padding: 0.6rem 0;
+    border-bottom: 1px solid rgba(135, 89, 33, 0.2);
+  }
+  .result-list li.played { border-left: 4px solid var(--red); padding-left: 0.8rem; }
+  .result-list li.artist { border-left: 4px solid var(--amber); padding-left: 0.8rem; }
+  .result-list li.new { border-left: 4px solid var(--green); padding-left: 0.8rem; }
+  .result-list li.bad { border-left: 4px solid #999; padding-left: 0.8rem; opacity: 0.7; }
+  .r-line { font-weight: 600; }
+  .r-note { font-size: 0.85rem; color: rgb(130, 71, 81); margin-top: 0.15rem; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="panel">
+    <p><a href="/admin/index.html" class="back-link">← Admin tools</a></p>
+    <h1>Check for Repeats</h1>
+    <p>Paste a proposed tracklist to see what Bog Factor has played before.
+       Matching covers every show, including unpublished drafts.</p>
+    <div id="auth-status" class="status"></div>
+  </div>
+
+  <div class="panel">
+    <h2>Check a tracklist</h2>
+    <label>Import tracklist from Rekordbox <span class="hint">(optional)</span>
+      <input type="file" id="rekordbox-file" accept=".txt">
+    </label>
+    <label>Tracklist <span class="hint">(one per line, "Title - Artist")</span>
+      <textarea id="input" rows="12" placeholder="Golden Brown - The Stranglers&#10;Wuthering Heights - Kate Bush"></textarea>
+    </label>
+    <button type="button" id="check-btn" disabled>Check</button>
+    <div id="form-status" class="status"></div>
+  </div>
+
+  <div class="panel" id="results-panel" style="display:none">
+    <h2>Results</h2>
+    <div id="summary" class="summary"></div>
+    <ul id="results" class="result-list"></ul>
+  </div>
+
+</div>
+
+<script src="../../scripts/track-utils.js"></script>
+<script src="../../tools/rekordbox-to-tracklist.js"></script>
+<script>
+(function () {
+  const T = window.BogTracks;
+  const API = '/api/admin';
+  const $ = (id) => document.getElementById(id);
+  const authEl = $('auth-status');
+  const statusEl = $('form-status');
+
+  let index = []; // flattened track occurrences across all shows
+
+  function setStatus(el, msg, kind) {
+    el.textContent = msg || '';
+    el.className = 'status' + (kind ? ' ' + kind : '');
+  }
+
+  function formatDate(value) {
+    if (!value) return '';
+    const d = new Date(value);
+    if (isNaN(d)) return String(value);
+    return d.toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
+  }
+
+  // Distinct shows (by id) from a list of occurrences, as "Title (date)" strings.
+  function distinctShows(occurrences) {
+    const seen = new Map();
+    occurrences.forEach((e) => {
+      if (!seen.has(e.showId)) seen.set(e.showId, e);
+    });
+    return Array.from(seen.values()).map((e) => {
+      const date = formatDate(e.date);
+      return e.showTitle + (date ? ' (' + date + ')' : '');
+    });
+  }
+
+  async function loadShows() {
+    const res = await fetch(API + '/shows', { credentials: 'include' });
+    if (res.status === 401 || res.status === 403) {
+      throw new Error('Not authenticated. Refresh to log in via Cloudflare Access.');
+    }
+    if (!res.ok) throw new Error('Failed to load shows (' + res.status + ')');
+    const shows = await res.json();
+    index = T.flatten(shows);
+    return shows.length;
+  }
+
+  function check() {
+    const lines = $('input').value.split('\n').map((l) => l.trim()).filter(Boolean);
+    const resultsEl = $('results');
+    const summaryEl = $('summary');
+    resultsEl.innerHTML = '';
+    summaryEl.innerHTML = '';
+    $('results-panel').style.display = lines.length ? 'block' : 'none';
+    if (!lines.length) return;
+
+    let nNew = 0, nPlayed = 0, nArtist = 0;
+
+    lines.forEach((line) => {
+      const r = T.lookup(index, line);
+      const li = document.createElement('li');
+
+      const lineEl = document.createElement('div');
+      lineEl.className = 'r-line';
+      const note = document.createElement('div');
+      note.className = 'r-note';
+
+      if (!r.parsed.title && !r.parsed.artist) {
+        li.className = 'bad';
+        lineEl.textContent = line;
+        note.textContent = "Couldn't read this line — expected \"Title - Artist\".";
+      } else {
+        lineEl.textContent = (r.parsed.title || '(untitled)') +
+          (r.parsed.artist ? ' — ' + r.parsed.artist : '');
+
+        if (r.played.length) {
+          nPlayed++;
+          li.className = 'played';
+          note.textContent = '🔴 Played before on ' + distinctShows(r.played).join(', ');
+        } else if (r.artistPlays.length) {
+          nArtist++;
+          li.className = 'artist';
+          const shows = distinctShows(r.artistPlays);
+          const plays = r.artistPlays.length;
+          note.textContent = '🟡 New track, but you\'ve played ' + r.parsed.artist + ' ' +
+            plays + (plays === 1 ? ' time' : ' times') + ' before (' + shows.join(', ') + ')';
+        } else {
+          nNew++;
+          li.className = 'new';
+          note.textContent = '🟢 New — never played.';
+        }
+      }
+
+      li.append(lineEl, note);
+      resultsEl.appendChild(li);
+    });
+
+    summaryEl.innerHTML =
+      tally('new', nNew, 'new') +
+      tally('played', nPlayed, 'played before') +
+      tally('artist', nArtist, 'known artist');
+  }
+
+  function tally(cls, n, label) {
+    return '<span class="tally"><span class="dot ' + cls + '"></span>' +
+      '<strong>' + n + '</strong> ' + label + '</span>';
+  }
+
+  async function init() {
+    setStatus(authEl, 'Loading played tracks…');
+    try {
+      const count = await loadShows();
+      setStatus(authEl, 'Ready — checking against ' + count + ' shows (' + index.length + ' track plays).');
+      $('check-btn').disabled = false;
+      $('check-btn').addEventListener('click', check);
+
+      // Same Rekordbox importer the "Add a Show" tool uses: fill the box and
+      // run the check straight away.
+      window.rekordboxToTracklist.attach($('rekordbox-file'), (tracks) => {
+        $('input').value = tracks.join('\n');
+        check();
+      });
+    } catch (err) {
+      setStatus(authEl, err.message, 'error');
+    }
+  }
+
+  init();
+})();
+</script>
+</body>
+</html>
