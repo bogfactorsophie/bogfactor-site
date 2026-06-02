@@ -1,0 +1,166 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Tracks - Bog Factor</title>
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
+    <link href="https://fonts.cdnfonts.com/css/luminari" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/noto-serif-gurmukhi" rel="stylesheet">
+    <link rel="stylesheet" href="../../styles.css">
+    <script src="../../scripts/draggable-suns.js"></script>
+    <script src="../../scripts/live-stream.js"></script>
+    <script src="../../scripts/toolbar-live-widget.js"></script>
+    <script src="../../scripts/track-utils.js"></script>
+    <script src="../../scripts/tracks-page.js" defer></script>
+    <script src="../../scripts/contact-form.js"></script>
+
+    <!-- Tracks-page styling lives here so the look is easy to iterate on
+         without disturbing the shared stylesheet. -->
+    <style>
+      .tracks-intro h1 {
+        font-family: 'Luminari', fantasy;
+        color: rgb(135, 89, 33);
+        font-size: 2.2rem;
+        margin: 0 0 0.3rem;
+      }
+      .tracks-intro p { margin: 0; }
+
+      /* Search */
+      .track-search-input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: 0.7rem 0.9rem;
+        font-family: inherit;
+        font-size: 1.1rem;
+        color: rgb(54, 50, 41);
+        background: rgba(255, 255, 255, 0.65);
+        border: 1px solid rgba(135, 89, 33, 0.5);
+        border-radius: 4px;
+      }
+      .track-search-input:focus { outline: 2px solid rgb(135, 89, 33); outline-offset: -1px; }
+      .search-meta { margin: 0.6rem 0 0; font-size: 0.9rem; color: rgb(130, 71, 81); }
+
+      .track-list { list-style: none; margin: 0.8rem 0 0; padding: 0; }
+      .track-list li {
+        padding: 0.5rem 0;
+        border-bottom: 1px solid rgba(135, 89, 33, 0.2);
+      }
+      .track-line { font-weight: 600; }
+      .track-line .by { font-weight: 400; color: rgb(130, 71, 81); }
+      .track-where { font-size: 0.85rem; color: rgb(54, 50, 41); opacity: 0.8; }
+      .track-where a { color: rgb(135, 89, 33); text-decoration: none; }
+      .track-where a:hover { color: rgb(218, 72, 72); text-decoration: underline; }
+      .play-count {
+        display: inline-block;
+        min-width: 1.4em;
+        text-align: center;
+        margin-right: 0.5rem;
+        padding: 0 0.4em;
+        background: rgb(135, 89, 33);
+        color: wheat;
+        border-radius: 10px;
+        font-size: 0.8rem;
+      }
+
+      /* Bog-metrics */
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: 1rem;
+        margin-top: 0.5rem;
+      }
+      .metric-tile { text-align: center; }
+      .metric-num {
+        font-family: 'Luminari', fantasy;
+        font-size: 2rem;
+        color: rgb(218, 72, 72);
+        line-height: 1.1;
+      }
+      .metric-label { font-size: 0.85rem; color: rgb(54, 50, 41); }
+
+      /* Spin the wheel */
+      .spin-btn {
+        font-family: 'Luminari', fantasy;
+        font-size: 1.1rem;
+        padding: 0.6rem 1.2rem;
+        background: rgb(135, 89, 33);
+        color: wheat;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+      }
+      .spin-btn:hover { background: rgb(218, 72, 72); }
+      .spin-result { margin-top: 1rem; min-height: 1.4em; }
+      .spin-result.spinning .track-line { opacity: 0.5; }
+
+      /* clickable artist names in the charts */
+      .artist-link { cursor: pointer; color: rgb(135, 89, 33); }
+      .artist-link:hover { color: rgb(218, 72, 72); text-decoration: underline; }
+    </style>
+  </head>
+
+  <body class="radio-page">
+    <!-- SVG filter for wavy borders -->
+    <svg style="position: absolute; width: 0; height: 0;">
+      <defs>
+        <filter id="wavy2">
+          <feTurbulence x="0" y="0" baseFrequency="0.02" numOctaves="5" seed="1" />
+          <feDisplacementMap in="SourceGraphic" scale="6" />
+        </filter>
+        <filter id="wavy-smooth">
+          <feTurbulence x="0" y="0" baseFrequency="0.01" numOctaves="2" seed="1" />
+          <feDisplacementMap in="SourceGraphic" scale="3" />
+        </filter>
+      </defs>
+    </svg>
+
+    <div class="toolbar">
+      <a href="/index.html">Home</a>
+      <a href="/radio/index.html">Radio</a>
+      <a href="/about/index.html">About</a>
+    </div>
+
+    <div class="textbox tracks-intro">
+      <h1>All the Tracks</h1>
+      <p>Everything Bog Factor has ever played, dug up and laid out. Search it, see what we spin most, or let the wheel decide.</p>
+    </div>
+
+    <div class="textbox">
+      <h2>Search the bog</h2>
+      <input type="search" id="track-search" class="track-search-input"
+             placeholder="Search by track or artist…" autocomplete="off" aria-label="Search tracks">
+      <p id="search-meta" class="search-meta"></p>
+      <ul id="search-results" class="track-list"></ul>
+    </div>
+
+    <div class="textbox">
+      <h2>Bog-metrics</h2>
+      <div id="metrics" class="metrics-grid"></div>
+    </div>
+
+    <div class="textbox">
+      <h2>Spin the Bog Wheel 🌀</h2>
+      <button type="button" id="spin-btn" class="spin-btn">Spin</button>
+      <div id="spin-result" class="spin-result"></div>
+    </div>
+
+    <div class="textbox">
+      <h2>Most played tracks</h2>
+      <ul id="top-tracks" class="track-list"></ul>
+    </div>
+
+    <div class="textbox">
+      <h2>Most played artists</h2>
+      <ul id="top-artists" class="track-list"></ul>
+    </div>
+
+    <footer class="footer">
+      <a href="https://www.instagram.com" target="_blank">Instagram</a>
+      <a href="mailto:hello@bogfactor.co.uk" target="_blank">Email</a>
+      <a href="#" data-contact>Contact</a>
+    </footer>
+  </body>
+</html>

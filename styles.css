@@ -526,6 +526,18 @@ img {
     background-color: rgb(218, 72, 72);
 }
 
+/* "Search all tracks" link at the top of the radio page */
+.tracks-link-bar {
+    text-align: center;
+    margin: 20px auto 0;
+}
+
+.tracks-link-bar .play-btn {
+    display: inline-block;
+    color: wheat;
+    text-decoration: none;
+}
+
 .button-container {
     display: flex;
     justify-content: center;
