@@ -7,41 +7,10 @@
 (function() {
   'use strict';
 
-  const SHOW_START_HOUR = 13; // 1pm UK time (24h format)
-  const SHOW_END_HOUR = 14;   // 2pm UK time
-
-  function getFirstFridayOfMonth(year, month) {
-    const firstDay = new Date(year, month, 1);
-    const dayOfWeek = firstDay.getDay();
-    let daysUntilFriday = (5 - dayOfWeek + 7) % 7;
-    if (daysUntilFriday === 0 && firstDay.getDate() !== 1) {
-      daysUntilFriday = 7;
-    }
-    const firstFriday = new Date(year, month, 1 + daysUntilFriday);
-    return firstFriday;
-  }
-
+  // Live state comes from the DB-backed schedule (scripts/schedule.js), which
+  // also honours window.BogFactorTestConfig for the test pages.
   function isLiveNow() {
-    if (window.BogFactorTestConfig && typeof window.BogFactorTestConfig.isLiveNow === 'function') {
-      const result = window.BogFactorTestConfig.isLiveNow();
-      if (result !== null) return result;
-    }
-
-    const now = new Date();
-    const ukNow = new Date(now.toLocaleString('en-US', { timeZone: 'Europe/London' }));
-
-    const year = ukNow.getFullYear();
-    const month = ukNow.getMonth();
-    const firstFriday = getFirstFridayOfMonth(year, month);
-
-    const isFirstFriday = ukNow.getDate() === firstFriday.getDate() &&
-                          ukNow.getMonth() === firstFriday.getMonth() &&
-                          ukNow.getFullYear() === firstFriday.getFullYear();
-
-    const hour = ukNow.getHours();
-    const isShowTime = hour >= SHOW_START_HOUR && hour < SHOW_END_HOUR;
-
-    return isFirstFriday && isShowTime;
+    return window.BogFactorSchedule ? window.BogFactorSchedule.isLiveNow() : false;
   }
 
   function toggleToolbarPlay() {

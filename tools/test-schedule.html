@@ -1,0 +1,175 @@
+<!doctype html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Schedule - Bog Factor</title>
+    <link href="https://fonts.cdnfonts.com/css/luminari" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/noto-serif-gurmukhi" rel="stylesheet">
+    <link rel="stylesheet" href="../styles.css">
+    <!-- Configure test overrides BEFORE loading main scripts. These are the same
+         hooks scripts/schedule.js honours, so the whole site (live widget,
+         countdown, toolbar, town-crier cards) reacts without touching the API. -->
+    <script>
+      // Occurrence images use a relative path so the cards render even when this
+      // file is opened directly (file://), not just under a server.
+      var CRIER = '../assets/town-crier.png';
+
+      var testState = {
+        live: false,        // BogFactorSchedule.isLiveNow() result
+        nextDate: null,     // Date or null
+        upcoming: []        // array of occurrence objects for the cards
+      };
+
+      window.BogFactorTestConfig = {
+        isLandingPage: true,
+        isLiveNow: function () { return testState.live; },
+        getNextShowDate: function () { return testState.nextDate; },
+        getUpcoming: function () { return testState.upcoming; }
+      };
+
+      // Helper to (re)render everything after changing testState.
+      function applyTestState() {
+        if (window.BogFactorLiveStream) window.BogFactorLiveStream.forceUpdate();
+        document.dispatchEvent(new CustomEvent('bogfactor:schedule-updated'));
+        updateTestInfo();
+      }
+
+      function occ(offsetMinutes, durationMin, title, description, link) {
+        var start = new Date(Date.now() + offsetMinutes * 60000);
+        var end = new Date(start.getTime() + durationMin * 60000);
+        return {
+          title: title, description: description || '',
+          startsAt: start.toISOString(), endsAt: end.toISOString(),
+          image: CRIER, link: link || null, kind: 'oneoff'
+        };
+      }
+    </script>
+    <script src="../scripts/schedule.js"></script>
+    <script src="../scripts/live-stream.js"></script>
+    <script src="../scripts/toolbar-live-widget.js"></script>
+    <script src="../scripts/upcoming-shows.js"></script>
+  </head>
+
+  <body>
+    <style>
+      body {
+        background: url('../assets/vibes-graphic.jpg') no-repeat center center fixed;
+        background-size: cover;
+        display: flex;
+        flex-direction: column;
+        min-height: 100vh;
+        margin: 0;
+      }
+      .test-controls {
+        background: #f7e0c1;
+        padding: 20px;
+        margin: 20px auto;
+        max-width: 640px;
+        border-radius: 8px;
+      }
+      .test-controls h2 { margin-top: 0; font-family: 'Luminari', fantasy; color: rgb(135, 89, 33); }
+      .test-controls button {
+        background-color: rgb(135, 89, 33); color: wheat; border: none;
+        padding: 10px 16px; font-family: 'MedievalSharp', cursive; font-size: 15px;
+        cursor: pointer; margin: 6px 6px 0 0;
+      }
+      .test-controls button:hover { background-color: rgb(218, 72, 72); }
+      .test-info {
+        margin-top: 15px; padding: 10px; background: rgba(135, 89, 33, 0.1);
+        border-radius: 4px; font-family: 'Noto Serif Gurmukhi', sans-serif; font-size: 14px;
+      }
+    </style>
+
+    <div class="toolbar">
+      <a href="../index.html">Home</a>
+      <a href="../radio/index.html">Radio</a>
+      <a href="../about/index.html">About</a>
+    </div>
+
+    <!-- The cards render inside the live-stream widget (built by live-stream.js),
+         exactly as on the real landing page — no standalone container here. -->
+
+    <div class="test-controls">
+      <h2>Schedule Test Controls</h2>
+      <p>Each preset sets a fake schedule and re-renders the live widget, toolbar and
+         town-crier cards — no API needed.</p>
+
+      <div>
+        <button data-scenario="live">Live now (+ 2 upcoming)</button>
+        <button data-scenario="soon">Show in 1 minute</button>
+        <button data-scenario="week">Specials this week</button>
+        <button data-scenario="empty">Nothing upcoming</button>
+        <button data-scenario="reset">Reset to real schedule</button>
+      </div>
+
+      <div class="test-info">
+        <strong>isLiveNow:</strong> <span id="i-live">-</span><br>
+        <strong>Next show:</strong> <span id="i-next">-</span><br>
+        <strong>Upcoming cards:</strong> <span id="i-count">-</span><br>
+        <strong>Countdown text:</strong> <span id="i-countdown">-</span>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <a href="https://www.instagram.com/bog_factor/" target="_blank">Instagram</a>
+      <a href="mailto:hello@bogfactor.co.uk" target="_blank">Email</a>
+    </footer>
+
+    <script>
+      function updateTestInfo() {
+        var s = window.BogFactorSchedule;
+        document.getElementById('i-live').textContent = s ? s.isLiveNow() : '-';
+        var next = s ? s.getNextShowDate() : null;
+        document.getElementById('i-next').textContent = next ? next.toLocaleString('en-GB') : 'none';
+        document.getElementById('i-count').textContent = (s ? s.getUpcoming() : []).length;
+        var cd = document.querySelector('.countdown');
+        document.getElementById('i-countdown').textContent = cd ? cd.textContent : '(live / hidden)';
+      }
+      setInterval(updateTestInfo, 1000);
+
+      var scenarios = {
+        live: function () {
+          testState.live = true;
+          testState.nextDate = new Date(Date.now() + 32 * 24 * 60 * 60000);
+          testState.upcoming = [
+            occ(-20, 60, 'Bog Factor', 'On air right now — psychedelic folk from the bog.'),
+            occ(3 * 24 * 60, 120, 'Morning Show Cover', 'We are taking over the morning show!'),
+          ];
+        },
+        soon: function () {
+          testState.live = false;
+          testState.nextDate = new Date(Date.now() + 60000);
+          testState.upcoming = [occ(1, 60, 'Bog Factor', 'Starting in a minute — tune in!')];
+        },
+        week: function () {
+          testState.live = false;
+          testState.nextDate = new Date(Date.now() + 2 * 24 * 60 * 60000);
+          testState.upcoming = [
+            occ(2 * 24 * 60, 60, 'Bog Factor', 'The usual monthly dose of bog.'),
+            occ(4 * 24 * 60, 90, 'Neolithic Special', 'A deep dive for the Rhynie Man.', 'https://bogfactor.co.uk'),
+          ];
+        },
+        empty: function () {
+          testState.live = false;
+          testState.nextDate = new Date(Date.now() + 20 * 24 * 60 * 60000);
+          testState.upcoming = [];
+        },
+        reset: function () {
+          testState.live = false;
+          testState.nextDate = null;
+          testState.upcoming = [];
+        }
+      };
+
+      document.querySelectorAll('.test-controls button').forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          (scenarios[btn.dataset.scenario] || scenarios.reset)();
+          applyTestState();
+        });
+      });
+
+      updateTestInfo();
+    </script>
+  </body>
+</html>
