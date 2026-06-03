@@ -43,6 +43,18 @@
       by.textContent = ' by ' + track.artist;
       span.appendChild(by);
     }
+    const query = [track.artist, track.title].filter(Boolean).join(' ');
+    if (query) {
+      const yt = document.createElement('a');
+      yt.className = 'youtube-search-btn track-yt-btn';
+      yt.textContent = '🔍';
+      yt.title = 'Search "' + query + '" on YouTube';
+      yt.href = 'https://www.youtube.com/results?search_query=' +
+        encodeURIComponent(query);
+      yt.target = '_blank';
+      yt.rel = 'noopener noreferrer';
+      span.appendChild(yt);
+    }
     return span;
   }
 
@@ -72,12 +84,10 @@
     const shows = window.__bogShows || [];
     const m = T.metrics(index, shows);
     const tiles = [
-      { num: m.totalPlays, label: 'tracks spun' },
       { num: m.uniqueTracks, label: 'unique tracks' },
-      { num: m.uniqueArtists, label: 'artists aired' },
+      { num: m.uniqueArtists, label: 'artists' },
       { num: m.showCount, label: 'shows' },
       { num: Math.round(m.hours) + 'h', label: 'on air' },
-      { num: m.avgPerShow.toFixed(1), label: 'avg per show' },
     ];
     const grid = $('metrics');
     grid.innerHTML = '';
@@ -184,12 +194,42 @@
     }
   }
 
+  let spinAngle = 0;
+  let spinning = false;
+
   function renderSpin() {
+    if (spinning) return;
     const result = $('spin-result');
     const pick = T.randomTrack(index);
     if (!pick) { result.textContent = 'Nothing to spin yet.'; return; }
-    result.innerHTML = '';
-    result.append(trackLineEl(pick), whereEl([pick]));
+
+    const wheel = $('bog-wheel');
+    const btn = $('spin-btn');
+
+    // No wheel element (or animations disabled) — reveal immediately.
+    if (!wheel) {
+      result.innerHTML = '';
+      result.append(trackLineEl(pick), whereEl([pick]));
+      return;
+    }
+
+    spinning = true;
+    btn.disabled = true;
+    result.classList.add('spinning');
+
+    // Spin several full turns plus a random landing offset.
+    spinAngle += 360 * (4 + Math.floor(Math.random() * 4)) + Math.floor(Math.random() * 360);
+    wheel.style.transform = 'rotate(' + spinAngle + 'deg)';
+
+    function reveal() {
+      wheel.removeEventListener('transitionend', reveal);
+      result.classList.remove('spinning');
+      result.innerHTML = '';
+      result.append(trackLineEl(pick), whereEl([pick]));
+      btn.disabled = false;
+      spinning = false;
+    }
+    wheel.addEventListener('transitionend', reveal);
   }
 
   // ---- boot ----

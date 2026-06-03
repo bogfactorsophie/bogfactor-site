@@ -174,12 +174,10 @@
     });
     const showCount = (shows || []).length;
     return {
-      totalPlays: index.length,
       uniqueTracks: tracks.length,
       uniqueArtists: artists.length,
       showCount: showCount,
       hours: minutes / 60,
-      avgPerShow: showCount ? index.length / showCount : 0,
     };
   }
 

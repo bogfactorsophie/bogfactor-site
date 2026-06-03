@@ -50,6 +50,16 @@
       }
       .track-line { font-weight: 600; }
       .track-line .by { font-weight: 400; color: rgb(130, 71, 81); }
+      /* Compact, muted YouTube search button beside the artist name */
+      .track-yt-btn {
+        background: none;
+        padding: 0;
+        margin-left: 0.4rem;
+        font-size: 0.8rem;
+        opacity: 0.45;
+        vertical-align: baseline;
+      }
+      .track-yt-btn:hover { background: none; opacity: 1; transform: scale(1.15); }
       .track-where { font-size: 0.85rem; color: rgb(54, 50, 41); opacity: 0.8; }
       .track-where a { color: rgb(135, 89, 33); text-decoration: none; }
       .track-where a:hover { color: rgb(218, 72, 72); text-decoration: underline; }
@@ -93,8 +103,44 @@
         cursor: pointer;
       }
       .spin-btn:hover { background: rgb(218, 72, 72); }
+      .spin-btn:disabled { opacity: 0.6; cursor: default; }
       .spin-result { margin-top: 1rem; min-height: 1.4em; }
-      .spin-result.spinning .track-line { opacity: 0.5; }
+
+      .wheel-wrap {
+        position: relative;
+        width: 220px;
+        height: 220px;
+        margin: 0.5rem auto 1.2rem;
+      }
+      .bog-wheel {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: url('/assets/bog-wheel.jpg') center / 118% no-repeat;
+        box-shadow: 0 4px 14px rgba(54, 50, 41, 0.45),
+                    inset 0 0 0 4px rgba(135, 89, 33, 0.5);
+        transform: rotate(0deg);
+        transition: transform 4s cubic-bezier(0.17, 0.67, 0.18, 1);
+      }
+      .wheel-pointer {
+        position: absolute;
+        top: -8px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: rgb(218, 72, 72);
+        font-size: 1.7rem;
+        line-height: 1;
+        filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
+        pointer-events: none;
+        z-index: 2;
+      }
+      .spin-result.spinning { opacity: 0.4; }
+
+      .spin-section { text-align: center; }
+      .spin-section .spin-result {
+        font-size: 1.15rem;
+        line-height: 1.5;
+      }
 
       /* clickable artist names in the charts */
       .artist-link { cursor: pointer; color: rgb(135, 89, 33); }
@@ -103,19 +149,6 @@
   </head>
 
   <body class="radio-page">
-    <!-- SVG filter for wavy borders -->
-    <svg style="position: absolute; width: 0; height: 0;">
-      <defs>
-        <filter id="wavy2">
-          <feTurbulence x="0" y="0" baseFrequency="0.02" numOctaves="5" seed="1" />
-          <feDisplacementMap in="SourceGraphic" scale="6" />
-        </filter>
-        <filter id="wavy-smooth">
-          <feTurbulence x="0" y="0" baseFrequency="0.01" numOctaves="2" seed="1" />
-          <feDisplacementMap in="SourceGraphic" scale="3" />
-        </filter>
-      </defs>
-    </svg>
 
     <div class="toolbar">
       <a href="/index.html">Home</a>
@@ -124,12 +157,12 @@
     </div>
 
     <div class="textbox tracks-intro">
-      <h1>All the Tracks</h1>
-      <p>Everything Bog Factor has ever played, dug up and laid out. Search it, see what we spin most, or let the wheel decide.</p>
+      <h1>The Vault</h1>
+      <p>Everything Bog Factor has ever played, carefully dug up and laid out. Search it, see what we play most, or let the spinning wheel decide.</p>
     </div>
 
     <div class="textbox">
-      <h2>Search the bog</h2>
+      <h2>Search the Archives</h2>
       <input type="search" id="track-search" class="track-search-input"
              placeholder="Search by track or artist…" autocomplete="off" aria-label="Search tracks">
       <p id="search-meta" class="search-meta"></p>
@@ -141,8 +174,12 @@
       <div id="metrics" class="metrics-grid"></div>
     </div>
 
-    <div class="textbox">
-      <h2>Spin the Bog Wheel 🌀</h2>
+    <div class="textbox spin-section">
+      <h2>Spin the Wheel 🌀</h2>
+      <div class="wheel-wrap">
+        <div class="wheel-pointer">▼</div>
+        <div id="bog-wheel" class="bog-wheel"></div>
+      </div>
       <button type="button" id="spin-btn" class="spin-btn">Spin</button>
       <div id="spin-result" class="spin-result"></div>
     </div>

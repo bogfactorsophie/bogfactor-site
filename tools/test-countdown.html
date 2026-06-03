@@ -60,7 +60,6 @@
         margin: 20px auto;
         max-width: 600px;
         border-radius: 8px;
-        filter: url(#wavy-smooth);
       }
       .test-controls h2 {
         margin-top: 0;
@@ -105,15 +104,6 @@
       }
     </style>
 
-    <!-- SVG filter for wavy borders -->
-    <svg style="position: absolute; width: 0; height: 0;">
-      <defs>
-        <filter id="wavy-smooth">
-          <feTurbulence x="0" y="0" baseFrequency="0.01" numOctaves="2" seed="1" />
-          <feDisplacementMap in="SourceGraphic" scale="3" />
-        </filter>
-      </defs>
-    </svg>
 
     <div class="toolbar">
       <a href="../index.html">Home</a>
