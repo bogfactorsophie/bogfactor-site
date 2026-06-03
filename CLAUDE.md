@@ -155,6 +155,9 @@ npx wrangler d1 execute bogfactor --local --file=worker-shows/schema.sql -c work
 # Generate + load seed data from radio/shows.json
 node tools/migrate-json-to-d1.mjs
 npx wrangler d1 execute bogfactor --local --file=tools/out/migration.sql -c worker-shows/wrangler.dev.toml
+
+# Seed the default broadcast schedule (1st Friday monthly, 13:00–14:00 Europe/London)
+npx wrangler d1 execute bogfactor --local --file=tools/seed-schedule.sql -c worker-shows/wrangler.dev.toml
 ```
 
 Then, to run the site:

@@ -2,6 +2,7 @@
 //
 // Public:
 //   GET  /api/shows            -> archive, newest first
+//   GET  /api/schedule         -> { now, live, next, upcoming } from the schedule
 //   GET  /api/images/:key      -> R2-backed image
 //
 // Admin (gated by Cloudflare Access on /api/admin/*):
@@ -10,6 +11,10 @@
 //   PUT    /api/admin/shows/:id
 //   DELETE /api/admin/shows/:id
 //   POST   /api/admin/images   (multipart, field "file") -> { key }
+//   GET    /api/admin/schedule
+//   POST   /api/admin/schedule
+//   PUT    /api/admin/schedule/:id
+//   DELETE /api/admin/schedule/:id
 
 const PUBLIC_CACHE_SECONDS = 60;
 const IMAGE_CACHE_SECONDS = 60 * 60 * 24 * 30; // 30d
@@ -25,6 +30,10 @@ export default {
 
       if (pathname === '/api/shows' && method === 'GET') {
         return await listShows(env, { includeUnpublished: false });
+      }
+
+      if (pathname === '/api/schedule' && method === 'GET') {
+        return await getSchedule(env);
       }
 
       const imageMatch = pathname.match(/^\/api\/images\/([^/]+)$/);
@@ -51,6 +60,20 @@ export default {
         }
         if (pathname === '/api/admin/images' && method === 'POST') {
           return await uploadImage(request, env);
+        }
+
+        if (pathname === '/api/admin/schedule' && method === 'GET') {
+          return await listSchedule(env);
+        }
+        if (pathname === '/api/admin/schedule' && method === 'POST') {
+          return await createScheduleEvent(request, env);
+        }
+        const adminSchedMatch = pathname.match(/^\/api\/admin\/schedule\/([^/]+)$/);
+        if (adminSchedMatch && method === 'PUT') {
+          return await updateScheduleEvent(request, env, adminSchedMatch[1]);
+        }
+        if (adminSchedMatch && method === 'DELETE') {
+          return await deleteScheduleEvent(env, adminSchedMatch[1]);
         }
       }
 
@@ -119,6 +142,323 @@ async function serveImage(env, key) {
   headers.set('Cache-Control', `public, max-age=${IMAGE_CACHE_SECONDS}, immutable`);
   headers.set('ETag', obj.httpEtag);
   return new Response(obj.body, { headers });
+}
+
+// ---------- Public: schedule ----------
+
+const TOWN_CRIER_IMAGE = '/assets/town-crier.png';
+const SCHEDULE_WINDOW_BACK_MS = 2 * 60 * 60 * 1000;        // 2h before now
+const SCHEDULE_WINDOW_FWD_MS = 90 * 24 * 60 * 60 * 1000;   // 90d ahead (find next monthly show)
+const UPCOMING_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;        // landing cards: next 7 days
+
+async function getSchedule(env) {
+  const events = (await env.DB.prepare(
+    `SELECT * FROM schedule_events WHERE is_active = 1`
+  ).all()).results;
+  const skipsByEvent = await loadSkips(env, events.map((e) => e.id));
+
+  const now = new Date();
+  const nowMs = now.getTime();
+  const windowStart = new Date(nowMs - SCHEDULE_WINDOW_BACK_MS);
+  const windowEnd = new Date(nowMs + SCHEDULE_WINDOW_FWD_MS);
+  const occ = expandOccurrences(events, skipsByEvent, windowStart, windowEnd);
+
+  const live = occ.find((o) => o.startMs <= nowMs && o.endMs > nowMs) || null;
+  const next = occ.find((o) => o.startMs > nowMs) || null;
+  const upcomingCutoff = nowMs + UPCOMING_WINDOW_MS;
+  const upcoming = occ.filter((o) => o.endMs > nowMs && o.startMs <= upcomingCutoff);
+
+  return json({
+    now: now.toISOString(),
+    live: cleanOccurrence(live),
+    next: cleanOccurrence(next),
+    upcoming: upcoming.map(cleanOccurrence),
+  }, 200, {
+    'Cache-Control': `public, max-age=${PUBLIC_CACHE_SECONDS}, s-maxage=${PUBLIC_CACHE_SECONDS}`,
+  });
+}
+
+async function loadSkips(env, ids) {
+  const map = new Map(ids.map((id) => [id, new Set()]));
+  if (!ids.length) return map;
+  const placeholders = ids.map(() => '?').join(',');
+  const res = await env.DB.prepare(
+    `SELECT event_id, skip_date FROM schedule_skips WHERE event_id IN (${placeholders})`
+  ).bind(...ids).all();
+  for (const r of res.results) {
+    if (!map.has(r.event_id)) map.set(r.event_id, new Set());
+    map.get(r.event_id).add(r.skip_date);
+  }
+  return map;
+}
+
+// Expand active events into concrete occurrences within [windowStart, windowEnd).
+function expandOccurrences(events, skipsByEvent, windowStart, windowEnd) {
+  const out = [];
+  for (const e of events) {
+    if (!e.is_active) continue;
+    if (e.kind === 'oneoff') {
+      if (!e.starts_at) continue;
+      const start = new Date(e.starts_at);
+      if (isNaN(start)) continue;
+      const end = new Date(start.getTime() + (e.duration_min || 60) * 60000);
+      if (end > windowStart && start < windowEnd) out.push(makeOccurrence(e, start, end));
+    } else if (e.kind === 'recurring') {
+      out.push(...expandRecurring(e, skipsByEvent.get(e.id) || new Set(), windowStart, windowEnd));
+    }
+  }
+  out.sort((a, b) => a.startMs - b.startMs);
+  return out;
+}
+
+function expandRecurring(e, skips, windowStart, windowEnd) {
+  const tz = e.timezone || 'Europe/London';
+  const [h, m] = String(e.rec_time || '13:00').split(':').map((n) => parseInt(n, 10));
+  const durMs = (e.duration_min || 60) * 60000;
+  const from = e.rec_from ? new Date(e.rec_from + 'T00:00:00Z') : null;
+  const until = e.rec_until ? new Date(e.rec_until + 'T23:59:59Z') : null;
+  const out = [];
+
+  const emit = (y, mo, day) => {
+    if (day == null) return;
+    const start = localToUtc(y, mo, day, h, m, tz);
+    const end = new Date(start.getTime() + durMs);
+    const localDate = `${y}-${pad2(mo + 1)}-${pad2(day)}`;
+    if (from && start < from) return;
+    if (until && start > until) return;
+    if (skips.has(localDate)) return;
+    if (end > windowStart && start < windowEnd) out.push(makeOccurrence(e, start, end, localDate));
+  };
+
+  if (e.rec_freq === 'monthly') {
+    // Step back a month so an occurrence landing just before windowStart is considered.
+    let y = windowStart.getUTCFullYear();
+    let mo = windowStart.getUTCMonth() - 1;
+    if (mo < 0) { mo = 11; y--; }
+    for (;;) {
+      emit(y, mo, nthWeekdayOfMonth(y, mo, e.rec_weekday, e.rec_week));
+      mo++;
+      if (mo > 11) { mo = 0; y++; }
+      if (new Date(Date.UTC(y, mo, 1)) > windowEnd) break;
+    }
+  } else if (e.rec_freq === 'weekly') {
+    const cursor = new Date(Date.UTC(
+      windowStart.getUTCFullYear(), windowStart.getUTCMonth(), windowStart.getUTCDate()
+    ));
+    while (cursor <= windowEnd) {
+      if (cursor.getUTCDay() === e.rec_weekday) {
+        emit(cursor.getUTCFullYear(), cursor.getUTCMonth(), cursor.getUTCDate());
+      }
+      cursor.setUTCDate(cursor.getUTCDate() + 1);
+    }
+  }
+  return out;
+}
+
+// nth (1..5) weekday (0=Sun..6=Sat) of a 0-indexed month; null if it doesn't exist.
+function nthWeekdayOfMonth(year, month, weekday, nth) {
+  if (weekday == null || nth == null) return null;
+  const firstDow = new Date(Date.UTC(year, month, 1)).getUTCDay();
+  const day = 1 + ((weekday - firstDow + 7) % 7) + (nth - 1) * 7;
+  if (new Date(Date.UTC(year, month, day)).getUTCMonth() !== month) return null;
+  return day;
+}
+
+// Convert a local wall-clock time in `timeZone` to the corresponding UTC instant.
+// Mirrors the trick formerly in scripts/live-stream.js, parameterised by timezone.
+function localToUtc(year, month, day, hour, minute, timeZone) {
+  const noonUtc = new Date(Date.UTC(year, month, day, 12, 0, 0));
+  const localHourAtNoon = parseInt(new Intl.DateTimeFormat('en-GB', {
+    timeZone, hour: '2-digit', hour12: false,
+  }).format(noonUtc), 10);
+  const offsetHours = localHourAtNoon - 12; // +1 during BST, 0 during GMT
+  return new Date(Date.UTC(year, month, day, hour - offsetHours, minute, 0));
+}
+
+function makeOccurrence(e, start, end, localDate) {
+  return {
+    id: e.id,
+    title: e.title,
+    description: e.description || '',
+    kind: e.kind,
+    startsAt: start.toISOString(),
+    endsAt: end.toISOString(),
+    image: e.image_key ? `/api/images/${encodeURIComponent(e.image_key)}` : TOWN_CRIER_IMAGE,
+    link: e.link_url || null,
+    startMs: start.getTime(),
+    endMs: end.getTime(),
+    localDate: localDate || null,
+  };
+}
+
+function cleanOccurrence(o) {
+  if (!o) return null;
+  const { startMs, endMs, localDate, ...rest } = o;
+  return rest;
+}
+
+function pad2(n) {
+  return String(n).padStart(2, '0');
+}
+
+// ---------- Admin: schedule ----------
+
+async function listSchedule(env) {
+  const events = (await env.DB.prepare(
+    `SELECT * FROM schedule_events ORDER BY kind, COALESCE(starts_at, ''), title`
+  ).all()).results;
+  const skipsByEvent = await loadSkips(env, events.map((e) => e.id));
+  return json(
+    events.map((e) => toAdminEvent(e, skipsByEvent.get(e.id))),
+    200,
+    { 'Cache-Control': 'no-store' }
+  );
+}
+
+function toAdminEvent(e, skips) {
+  return {
+    id: e.id,
+    kind: e.kind,
+    title: e.title,
+    description: e.description || '',
+    timezone: e.timezone,
+    durationMin: e.duration_min,
+    isActive: Boolean(e.is_active),
+    startsAt: e.starts_at || null,
+    recFreq: e.rec_freq || null,
+    recWeek: e.rec_week ?? null,
+    recWeekday: e.rec_weekday ?? null,
+    recTime: e.rec_time || null,
+    recFrom: e.rec_from || null,
+    recUntil: e.rec_until || null,
+    imageKey: e.image_key || null,
+    image: e.image_key ? `/api/images/${encodeURIComponent(e.image_key)}` : null,
+    linkUrl: e.link_url || null,
+    skips: skips ? Array.from(skips).sort() : [],
+  };
+}
+
+async function createScheduleEvent(request, env) {
+  const body = await request.json();
+  const err = validateSchedulePayload(body);
+  if (err) return json({ error: err }, 400);
+  const id = body.id && String(body.id).trim() ? String(body.id).trim() : crypto.randomUUID();
+  const existing = await env.DB.prepare('SELECT id FROM schedule_events WHERE id = ?').bind(id).first();
+  if (existing) return json({ error: `Schedule id "${id}" already exists` }, 409);
+  await writeScheduleEvent(env, { ...body, id }, { mode: 'insert' });
+  return json({ ok: true, id }, 201);
+}
+
+async function updateScheduleEvent(request, env, id) {
+  const body = await request.json();
+  body.id = id;
+  const err = validateSchedulePayload(body);
+  if (err) return json({ error: err }, 400);
+  const existing = await env.DB.prepare('SELECT id FROM schedule_events WHERE id = ?').bind(id).first();
+  if (!existing) return json({ error: 'Not found' }, 404);
+  await writeScheduleEvent(env, body, { mode: 'update' });
+  return json({ ok: true, id });
+}
+
+async function deleteScheduleEvent(env, id) {
+  const existing = await env.DB.prepare('SELECT id FROM schedule_events WHERE id = ?').bind(id).first();
+  if (!existing) return json({ error: 'Not found' }, 404);
+  await env.DB.batch([
+    env.DB.prepare('DELETE FROM schedule_skips WHERE event_id = ?').bind(id),
+    env.DB.prepare('DELETE FROM schedule_events WHERE id = ?').bind(id),
+  ]);
+  return json({ ok: true });
+}
+
+async function writeScheduleEvent(env, body, { mode }) {
+  const now = new Date().toISOString();
+  const isOneoff = body.kind === 'oneoff';
+  const stmts = [];
+
+  const vals = {
+    kind: body.kind,
+    title: body.title.trim(),
+    description: (body.description || '').trim() || null,
+    timezone: (body.timezone || 'Europe/London').trim(),
+    durationMin: body.durationMin != null ? Number(body.durationMin) : 60,
+    isActive: body.isActive === false ? 0 : 1,
+    startsAt: isOneoff ? body.startsAt : null,
+    recFreq: isOneoff ? null : body.recFreq,
+    recWeek: isOneoff ? null : (body.recWeek ?? null),
+    recWeekday: isOneoff ? null : (body.recWeekday ?? null),
+    recTime: isOneoff ? null : (body.recTime || null),
+    recFrom: isOneoff ? null : (body.recFrom || null),
+    recUntil: isOneoff ? null : (body.recUntil || null),
+    imageKey: body.imageKey || null,
+    linkUrl: body.linkUrl || null,
+  };
+
+  if (mode === 'insert') {
+    stmts.push(env.DB.prepare(
+      `INSERT INTO schedule_events
+         (id, kind, title, description, timezone, duration_min, is_active,
+          starts_at, rec_freq, rec_week, rec_weekday, rec_time, rec_from, rec_until,
+          image_key, link_url, created_at, updated_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    ).bind(
+      body.id, vals.kind, vals.title, vals.description, vals.timezone, vals.durationMin,
+      vals.isActive, vals.startsAt, vals.recFreq, vals.recWeek, vals.recWeekday, vals.recTime,
+      vals.recFrom, vals.recUntil, vals.imageKey, vals.linkUrl, now, now
+    ));
+  } else {
+    stmts.push(
+      env.DB.prepare(
+        `UPDATE schedule_events
+            SET kind = ?, title = ?, description = ?, timezone = ?, duration_min = ?,
+                is_active = ?, starts_at = ?, rec_freq = ?, rec_week = ?, rec_weekday = ?,
+                rec_time = ?, rec_from = ?, rec_until = ?, image_key = ?, link_url = ?,
+                updated_at = ?
+          WHERE id = ?`
+      ).bind(
+        vals.kind, vals.title, vals.description, vals.timezone, vals.durationMin,
+        vals.isActive, vals.startsAt, vals.recFreq, vals.recWeek, vals.recWeekday, vals.recTime,
+        vals.recFrom, vals.recUntil, vals.imageKey, vals.linkUrl, now, body.id
+      ),
+      env.DB.prepare('DELETE FROM schedule_skips WHERE event_id = ?').bind(body.id)
+    );
+  }
+
+  const skips = Array.isArray(body.skips) ? [...new Set(body.skips)] : [];
+  for (const d of skips) {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+      stmts.push(env.DB.prepare(
+        'INSERT OR IGNORE INTO schedule_skips (event_id, skip_date) VALUES (?, ?)'
+      ).bind(body.id, d));
+    }
+  }
+
+  await env.DB.batch(stmts);
+}
+
+function validateSchedulePayload(body) {
+  if (!body || typeof body !== 'object') return 'Body must be JSON object';
+  if (body.kind !== 'recurring' && body.kind !== 'oneoff') return "kind must be 'recurring' or 'oneoff'";
+  if (!body.title || !String(body.title).trim()) return 'title required';
+  if (body.durationMin != null && (!Number.isInteger(Number(body.durationMin)) || Number(body.durationMin) <= 0)) {
+    return 'durationMin must be a positive integer';
+  }
+  if (body.kind === 'oneoff') {
+    if (!body.startsAt) return 'startsAt required for one-off';
+    if (Number.isNaN(Date.parse(body.startsAt))) return 'startsAt must be ISO 8601';
+  } else {
+    if (body.recFreq !== 'monthly' && body.recFreq !== 'weekly') return "recFreq must be 'monthly' or 'weekly'";
+    if (!Number.isInteger(Number(body.recWeekday)) || body.recWeekday < 0 || body.recWeekday > 6) {
+      return 'recWeekday must be 0..6';
+    }
+    if (body.recFreq === 'monthly' && (!Number.isInteger(Number(body.recWeek)) || body.recWeek < 1 || body.recWeek > 5)) {
+      return 'recWeek must be 1..5 for monthly';
+    }
+    if (!/^\d{2}:\d{2}$/.test(String(body.recTime || ''))) return 'recTime must be HH:MM';
+    if (body.recFrom && !/^\d{4}-\d{2}-\d{2}$/.test(body.recFrom)) return 'recFrom must be YYYY-MM-DD';
+    if (body.recUntil && !/^\d{4}-\d{2}-\d{2}$/.test(body.recUntil)) return 'recUntil must be YYYY-MM-DD';
+  }
+  if (body.skips != null && !Array.isArray(body.skips)) return 'skips must be an array';
+  return null;
 }
 
 // ---------- Admin: shows ----------

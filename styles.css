@@ -1524,3 +1524,110 @@ body.mixcloud-player-active .floating-player-circle:hover {
         transform: scale(0.95);
     }
 }
+/* ============================================================
+   Upcoming Shows — "town crier" cards
+   Rendered by scripts/upcoming-shows.js inside the live-stream widget
+   (the "Next show in…" / "LIVE NOW" panel), so the schedule announcement
+   shares that panel rather than floating separately.
+   ============================================================ */
+.upcoming-shows {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(135, 89, 33, 0.3);
+    text-align: left;
+    max-height: 45vh;
+    overflow-y: auto;
+}
+
+.crier-heading {
+    margin: 0;
+    font-family: 'Luminari', fantasy;
+    color: rgb(135, 89, 33);
+    font-size: 1.1rem;
+    letter-spacing: 0.02em;
+    text-shadow: 0 1px 0 rgba(245, 222, 179, 0.8);
+}
+
+.crier-card {
+    display: flex;
+    align-items: stretch;
+    gap: 10px;
+    background: #f7e0c1ee;
+    border: 1px solid rgba(135, 89, 33, 0.45);
+    border-left: 4px solid rgb(135, 89, 33);
+    padding: 10px 12px 10px 8px;
+    text-decoration: none;
+    color: rgb(54, 50, 41);
+    box-shadow: 0 2px 6px rgba(54, 50, 41, 0.18);
+    transition: transform 0.12s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+a.crier-card:hover {
+    transform: translateY(-2px);
+    border-left-color: rgb(218, 72, 72);
+    box-shadow: 0 4px 10px rgba(54, 50, 41, 0.28);
+}
+
+.crier-card__crier {
+    width: 48px;
+    flex: 0 0 48px;
+    object-fit: contain;
+    object-position: bottom;
+    align-self: flex-end;
+    filter: sepia(0.25);
+}
+
+.crier-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+}
+
+.crier-card__when {
+    margin: 0;
+    font-family: 'Noto Serif Gurmukhi', sans-serif;
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: rgb(135, 89, 33);
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.crier-card__title {
+    margin: 0;
+    font-family: 'Luminari', fantasy;
+    font-size: 1.05rem;
+    line-height: 1.15;
+    color: rgb(54, 50, 41);
+}
+
+.crier-card__desc {
+    margin: 2px 0 0;
+    font-family: 'Noto Serif Gurmukhi', sans-serif;
+    font-size: 0.82rem;
+    line-height: 1.3;
+    opacity: 0.85;
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+}
+
+/* Currently on air — warm red accent + gentle pulse */
+.crier-card--live {
+    border-left-color: rgb(218, 72, 72);
+    animation: crierPulse 2s ease-in-out infinite;
+}
+
+.crier-card--live .crier-card__when {
+    color: rgb(218, 72, 72);
+}
+
+@keyframes crierPulse {
+    0%, 100% { box-shadow: 0 2px 6px rgba(218, 72, 72, 0.25); }
+    50% { box-shadow: 0 2px 14px rgba(218, 72, 72, 0.55); }
+}
