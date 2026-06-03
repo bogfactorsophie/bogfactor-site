@@ -19,24 +19,17 @@
   </head>
 
   <body class="radio-page">
-    <!-- SVG filter for wavy borders -->
-    <svg style="position: absolute; width: 0; height: 0;">
-      <defs>
-        <filter id="wavy2">
-          <feTurbulence x="0" y="0" baseFrequency="0.02" numOctaves="5" seed="1" />
-          <feDisplacementMap in="SourceGraphic" scale="6" />
-        </filter>
-        <filter id="wavy-smooth">
-          <feTurbulence x="0" y="0" baseFrequency="0.01" numOctaves="2" seed="1" />
-          <feDisplacementMap in="SourceGraphic" scale="3" />
-        </filter>
-      </defs>
-    </svg>
 
     <div class="toolbar">
       <a href="/index.html">Home</a>
       <a href="/radio/index.html">Radio</a>
       <a href="/about/index.html">About</a>
+    </div>
+
+    <div class="textbox archive-card">
+      <h2 class="archive-card-title">✶ The Bog Archive ✶</h2>
+      <p class="archive-card-text">Every track we've ever dug up — search it, sort it, spin the wheel.</p>
+      <a href="/radio/tracks/index.html" class="play-btn">🔍 Search the Tracks</a>
     </div>
 
     <div id="shows-container"></div>

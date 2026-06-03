@@ -26,4 +26,4 @@ bucket_name = "bogfactor-show-images"
 # Cloudflare Access team domain (e.g. "bogfactor.cloudflareaccess.com") and the
 # Application Audience (AUD) tag from the Access app. Both are non-secret.
 ACCESS_TEAM_DOMAIN = "bogfactor.cloudflareaccess.com"
-ACCESS_AUD = "7024a20823a323100bf68001fbd0d91738c268de8fbebc9c05fec2810ca478e5"
+ACCESS_AUD = "66908c011423c17373ecd8914f5e2383a20fdfa1c6f0ab627c3a9754e5e56395"

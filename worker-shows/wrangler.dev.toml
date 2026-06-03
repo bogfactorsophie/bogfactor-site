@@ -1,0 +1,28 @@
+# Local-dev-only config. Serves the whole static site AND the /api worker on a
+# single origin (http://127.0.0.1:8787) against a LOCAL D1 database, so the
+# pages work without editing any fetch() URLs.
+#
+# Not used in production — the live site is Pages + the bog-shows worker route.
+# Run with:  npx wrangler dev -c worker-shows/wrangler.dev.toml
+name = "bog-shows-dev"
+main = "index.js"
+compatibility_date = "2025-01-01"
+
+# Serve the repo root as static assets. Any path that isn't a file (e.g.
+# /api/shows) falls through to the worker's fetch handler.
+[assets]
+directory = ".."
+
+[[d1_databases]]
+binding = "DB"
+database_name = "bogfactor"
+database_id = "2299c2e1-6f11-4f09-a5e6-b3bd3990c55f"
+
+[[r2_buckets]]
+binding = "IMAGES"
+bucket_name = "bogfactor-show-images"
+
+# ACCESS_* deliberately omitted: local admin JWT verification is skipped.
+# Open the admin API locally (no Cloudflare Access in dev). Never set in prod.
+[vars]
+DEV_BYPASS_ACCESS = "true"

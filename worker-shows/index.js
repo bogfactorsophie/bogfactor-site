@@ -314,6 +314,13 @@ function extFromMime(mime) {
 // ---------- Auth ----------
 
 async function requireAccess(request, env) {
+  // Dev-only escape hatch. Cloudflare Access doesn't exist in local dev, so the
+  // Cf-Access-Jwt-Assertion header is never present and admin routes would 401.
+  // worker-shows/wrangler.dev.toml sets DEV_BYPASS_ACCESS so the admin pages can
+  // be exercised locally. This MUST NOT be set in production (the prod
+  // wrangler.toml does not define it).
+  if (env.DEV_BYPASS_ACCESS === 'true') return null;
+
   const jwt = request.headers.get('Cf-Access-Jwt-Assertion');
   if (!jwt) return json({ error: 'Unauthorized' }, 401);
 

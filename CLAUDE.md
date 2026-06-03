@@ -1,26 +1,22 @@
-# CLAUDE.md
-
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 ## Project Overview
 
-Bog Factor is a monthly radio show hosted by Sophie and Emily on EHFM, a community radio station broadcasting from Edinburgh. The girls play music of all genres but with a particular bent for psychedelic, folk, and sleazy music. They are inspired by nature and the neolithic, and have a particular fondness for the Rhynie Man, who they want to free from his shackles.
+Bog Factor is a monthly radio show hosted by Sophie and Emily on EHFM, a community radio station broadcasting from Edinburgh. The girls play psychedelic, folk, and sleazy music. They are inspired by nature and the neolithic, and have a particular fondness for the Rhynie Man, who they want to free from his shackles.
 
 The show is live from 1pm-2pm UK time on the first Friday of every month.
 
 ## Web Design Principles
 
-As much as is practical the site is built with vanilla HTML, CSS, and JavaScript with no build process or dependencies.
-
-The website is intended to be quirky and fun with playful elements.
-
-When the show is live on air the site should transform and encourage users to listen and chat with the hosts.
-
-The colour pallette should use warm earthy tones, and avoid hard blacks and whites. Folksy motifs should be used, with design inspired by folk art, old guide books, and other old world ephemera.
+* Quirky and fun with playful elements
+* When Live on Air - the site encourage users to listen and join the chat
+* The colour pallette should use warm earthy tones
+* Avoid hard blacks and whites
+* Folksy motifs should be used, with design inspired by folk art, old guide books, and other old world ephemera.
 
 ## Hosting
 
 The website is hosted on Cloudflare Pages, and the domain [bogfactor.co.uk](https://bogfactor.co.uk) is connected with the `main` branch of this repository.
+
+A Cloudflare worker automatically builds preview versions of the site on PR commits
 
 ## Architecture
 
@@ -137,10 +133,52 @@ Tidal uses PKCE OAuth. The access token is short-lived (~24 hours) but the refre
 
 ## Development
 
-This is a static site with no build process. To develop:
+There is no build step — edit HTML, CSS, or JS files directly. Static-only
+pages (e.g. `about/`) can be opened straight in a browser. However, any page
+that calls the API — `radio/`, `tracks/`, and `admin/` all `fetch('/api/...')`
+— needs the `worker-shows` worker running on the **same origin**, so a bare
+`python3 -m http.server` is not enough for those.
 
-1. Edit HTML, CSS, or JS files directly
-2. Open files in browser or serve with any static server (e.g., `python3 -m http.server`)
+### Local dev with the API (recommended)
+
+`worker-shows/wrangler.dev.toml` is a dev-only config that serves the whole
+static site **and** the `/api/*` worker from one origin
+(`http://127.0.0.1:8787`) against a **local** D1 database, so no `fetch()` URLs
+need editing. It is never used in production (live = Pages + the worker route).
+
+First time only — create and seed the local database:
+
+```bash
+# Apply the schema to the LOCAL D1
+npx wrangler d1 execute bogfactor --local --file=worker-shows/schema.sql -c worker-shows/wrangler.dev.toml
+
+# Generate + load seed data from radio/shows.json
+node tools/migrate-json-to-d1.mjs
+npx wrangler d1 execute bogfactor --local --file=tools/out/migration.sql -c worker-shows/wrangler.dev.toml
+```
+
+Then, to run the site:
+
+```bash
+npx wrangler dev -c worker-shows/wrangler.dev.toml --port 8787
+# Site + API on http://127.0.0.1:8787  (e.g. /radio/tracks/, /radio/, /api/shows)
+```
+
+Local D1 lives under `.wrangler/` (gitignored); re-run the seed step to refresh
+it. Show images are not seeded into local R2, so `/api/images/*` will 404
+locally — harmless for everything except previewing show artwork.
+
+Note: `/api/admin/*` still requires a `Cf-Access-Jwt-Assertion` header (injected
+by Cloudflare Access in production), so the admin page's write actions won't
+work against local dev as-is.
+
+### Static-only quick look
+
+For pages that don't touch the API, you can still serve statically:
+
+```bash
+python3 -m http.server 3000   # http://127.0.0.1:3000
+```
 
 ### Path Conventions
 
@@ -172,7 +210,10 @@ The site is actively being worked on with recent enhancements:
 
 ## Testing
 
-Usually in active development we will spin up a local web server, this will host the site at `http://127.0.0.1:3000`
+Usually in active development we spin up the local dev server (see **Local dev
+with the API** above) which hosts the full site and API at
+`http://127.0.0.1:8787`. Use this for anything that loads shows or tracks. A
+plain static server at `http://127.0.0.1:3000` is fine only for API-free pages.
 
 Any new feature that affects the website when Bog Factor is live on air (or the transitions between live and not live) should be added in an identical manner to the test pages at `tools\test-live.html` and `tools\test-countdown.html`. Testing is a very important part of development and should be considered whenever making any changes.
 
