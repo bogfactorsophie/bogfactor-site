@@ -18,7 +18,7 @@
             <input type="text" id="contact-name" name="name" required>
           </div>
           <div class="contact-field">
-            <label for="contact-email">Email</label>
+            <label for="contact-email">Your Email</label>
             <input type="email" id="contact-email" name="email" required>
           </div>
           <div class="contact-field">
