@@ -120,6 +120,12 @@
 
       // Add padding to body to prevent content from being hidden
       document.body.style.paddingBottom = '140px';
+
+      // Expose the player's height so modals can shrink to fit above it
+      document.documentElement.style.setProperty(
+        '--player-height',
+        player.offsetHeight + 'px'
+      );
     },
 
     hidePlayer() {
@@ -137,6 +143,7 @@
 
       // Remove body padding
       document.body.style.paddingBottom = '0';
+      document.documentElement.style.setProperty('--player-height', '0px');
     }
   };
 

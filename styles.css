@@ -2,6 +2,13 @@
 @import url('https://fonts.cdnfonts.com/css/noto-serif-gurmukhi');
 @import url('https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap');
 
+:root {
+    /* Height of the fixed Mixcloud player; set by scripts/mixcloud-player.js */
+    --player-height: 0px;
+    /* Space left above and below a modal */
+    --modal-gutter: 5vh;
+}
+
 body {
     background-color: wheat;
     width: 100%;
@@ -364,7 +371,7 @@ img {
 
 .modal-content {
     background-color: #f7e0c1;
-    margin: 5% auto;
+    margin: var(--modal-gutter) auto;
     padding: 30px;
     width: 80%;
     max-width: 600px;
@@ -373,6 +380,19 @@ img {
     border-radius: 8px;
     border: 3px solid rgb(135, 89, 33);
     box-sizing: border-box;
+    /* Never taller than the space left above the Mixcloud player */
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - (2 * var(--modal-gutter)) - var(--player-height));
+    overflow: hidden;
+}
+
+/* Inner content scrolls; the heading and close button stay put */
+.tracklist-content,
+.modal-content > form {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
 }
 
 .modal-content h3 {
@@ -1223,9 +1243,9 @@ body.mixcloud-player-active .floating-player-circle:hover {
 
     /* Make tracklist modal take up more screen */
     .modal-content {
+        --modal-gutter: 10px;
         width: 95%;
         max-width: none;
-        margin: 10px auto;
         padding: 25px 20px;
         box-sizing: border-box;
     }
