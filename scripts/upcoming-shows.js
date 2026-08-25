@@ -1,5 +1,5 @@
 /**
- * Upcoming Shows — landing-page "town crier" cards
+ * Upcoming Shows: the landing-page "town crier" cards
  *
  * Renders a little list of cards for anything on the schedule within the next
  * 7 days (the recurring show plus any ad-hoc specials). Data comes from
@@ -71,16 +71,21 @@
     const container = document.getElementById(CONTAINER_ID);
     if (!container || !window.BogFactorSchedule) return;
 
+    // The cards now live in their own section below the hero rather than inside
+    // the old fixed widget, so an empty schedule has to hide the whole section
+    // (heading included) and not just the list.
+    const section = container.closest('.upcoming-section');
     const upcoming = window.BogFactorSchedule.getUpcoming() || [];
+
     if (!upcoming.length) {
       container.innerHTML = '';
-      container.style.display = 'none';
+      if (section) section.hidden = true;
       return;
     }
 
     const now = Date.now();
-    container.style.display = '';
-    container.innerHTML = '<p class="crier-heading">Hear ye! Coming up…</p>';
+    if (section) section.hidden = false;
+    container.innerHTML = '<p class="crier-heading">Hear ye! Coming up...</p>';
     upcoming.forEach((occ) => container.appendChild(buildCard(occ, now)));
   }
 

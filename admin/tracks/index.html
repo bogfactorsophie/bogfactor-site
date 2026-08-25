@@ -186,10 +186,10 @@
       if (!r.parsed.title && !r.parsed.artist) {
         li.className = 'bad';
         lineEl.textContent = line;
-        note.textContent = "Couldn't read this line — expected \"Title - Artist\".";
+        note.textContent = "Couldn't read this line. Expected \"Title - Artist\".";
       } else {
         lineEl.textContent = (r.parsed.title || '(untitled)') +
-          (r.parsed.artist ? ' — ' + r.parsed.artist : '');
+          (r.parsed.artist ? ' - ' + r.parsed.artist : '');
 
         if (r.played.length) {
           nPlayed++;
@@ -205,7 +205,7 @@
         } else {
           nNew++;
           li.className = 'new';
-          note.textContent = '🟢 New — never played.';
+          note.textContent = '🟢 New, never played.';
         }
       }
 
@@ -228,7 +228,7 @@
     setStatus(authEl, 'Loading played tracks…');
     try {
       const count = await loadShows();
-      setStatus(authEl, 'Ready — checking against ' + count + ' shows (' + index.length + ' track plays).');
+      setStatus(authEl, 'Ready, checking against ' + count + ' shows (' + index.length + ' track plays).');
       $('check-btn').disabled = false;
       $('check-btn').addEventListener('click', check);
 

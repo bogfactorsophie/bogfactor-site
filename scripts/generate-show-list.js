@@ -7,19 +7,30 @@ function closeModal(modalId) {
   document.getElementById(modalId).style.display = 'none';
 }
 
-// Close modal when clicking outside of it
-window.onclick = function (event) {
+// Close modal when clicking outside of it.
+// addEventListener rather than `window.onclick =`, which replaced whatever
+// other global click handler happened to be registered first.
+window.addEventListener('click', function (event) {
   if (event.target.classList.contains('modal')) {
     event.target.style.display = 'none';
   }
-};
+});
+
+// Any modal that is currently on screen. Was a `[style*="display: block"]`
+// string match, which missed the contact modal because that one opens with
+// `display: flex`.
+function findOpenModal() {
+  return Array.prototype.find.call(document.querySelectorAll('.modal'), function (modal) {
+    return modal.style.display && modal.style.display !== 'none';
+  });
+}
 
 // Close modal when pressing Escape key
 document.addEventListener('keydown', function (event) {
   if (event.key === 'Escape' || event.key === 'Esc') {
-    const openModal = document.querySelector('.modal[style*="display: block"]');
-    if (openModal) {
-      openModal.style.display = 'none';
+    const modal = findOpenModal();
+    if (modal) {
+      modal.style.display = 'none';
     }
   }
 });
@@ -60,8 +71,10 @@ window.loadShows = async function () {
       // Add copy link button
       const linkIcon = document.createElement('button');
       linkIcon.className = 'copy-link-btn';
+      linkIcon.type = 'button';
       linkIcon.innerHTML = '🔗';
       linkIcon.title = 'Copy link to this show';
+      linkIcon.setAttribute('aria-label', `Copy link to ${show.title}`);
       linkIcon.onclick = (e) => {
         e.preventDefault();
         const url = `${window.location.origin}${window.location.pathname}#${show.id}`;
@@ -175,6 +188,8 @@ window.loadShows = async function () {
           youtubeBtn.className = 'youtube-search-btn';
           youtubeBtn.innerHTML = '🔍';
           youtubeBtn.title = `Search "${track}" on YouTube`;
+          // the glyph alone gives a screen reader nothing to read out
+          youtubeBtn.setAttribute('aria-label', `Search for ${track} on YouTube`);
           youtubeBtn.href = `https://www.youtube.com/results?search_query=${encodeURIComponent(
             track
           )}`;

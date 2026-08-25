@@ -2,7 +2,16 @@
   "permissions": {
     "allow": [
       "WebFetch(domain:bogfactor.co.uk)",
-      "Bash(node *)"
+      "Bash(node *)",
+      "Bash(timeout 90 npx wrangler dev -c worker-shows/wrangler.dev.toml --port 8787)",
+      "Bash(curl -s http://127.0.0.1:8787/api/shows)",
+      "Bash(python3 -c ' *)",
+      "Bash(curl -s http://127.0.0.1:8787/)",
+      "Bash(cd *)",
+      "Bash(pkill -f \"wrangler dev\")",
+      "Bash(npx wrangler *)",
+      "Bash(curl -s -o /dev/null --max-time 2 http://127.0.0.1:8787/api/shows)",
+      "Bash(curl -s -o /dev/null -w '  / -> %{http_code}\\\\n' --max-time 5 http://127.0.0.1:8787/)"
     ],
     "deny": [],
     "ask": []

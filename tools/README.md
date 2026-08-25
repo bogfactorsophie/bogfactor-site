@@ -91,43 +91,19 @@ The `window.BogFactorLiveStream` object exposes these methods that the test page
 
 ## Adding a New Show
 
-The radio page generates shows dynamically from `shows.json`. This makes it easy to add new shows each month!
+Shows live in the `bogfactor` D1 database, not in a checked-in file. Add and
+edit them through the admin UI at `/admin/add-show/` (behind Cloudflare Access),
+which writes to D1 via `/api/admin/shows`.
 
-Edit `radio/shows.json` and add a new object at the **top** of the array (most recent shows first):
-
-```json
-{
-  "id": "dec2025",
-  "title": "December 2025 Show",
-  "description": "Welcome to our website, traveller, are you ready to join us on our quest? Sophie and Emily are ready to take you to the bog",
-  "mixcloudPath": "/ehfm/bog-factor-051225/",
-  "date": "2025-12",
-  "tracklist": []
-}
-```
-
-### Field Explanations
-
-- **id**: Unique identifier (used for modal IDs). Use format like `dec2025`, `jan2026`, etc.
-- **title**: Show title displayed on the page
-- **description**: Show description text
-- **mixcloudPath**: The Mixcloud URL path (e.g., from `https://www.mixcloud.com/ehfm/bog-factor-051225/` use `/ehfm/bog-factor-051225/`)
-- **date**: Date in YYYY-MM format (for future sorting if needed)
-- **tracklist**: Array of track strings (empty for now, populate later)
+The form covers title, description, Mixcloud path, air date, producer, artwork
+(uploaded to R2) and the tracklist. `/admin/shows/` lists everything already in
+the database, with an edit link per show.
 
 ## Adding a Tracklist
 
-To add a tracklist to an existing show, replace the empty `tracklist` array with track names:
-
-```json
-"tracklist": [
-  "Artist Name - Track Title",
-  "Another Artist - Another Track",
-  "Third Artist - Third Track"
-]
-```
-
-The tracklist will automatically appear in the modal popup when you click "View Tracklist".
+Edit the show in `/admin/add-show/?id=<showId>` and fill in the tracklist field,
+one `Artist - Title` per line. It appears in the modal on the radio page as soon
+as the show is saved.
 
 ## Example: Full Show Entry with Tracklist
 

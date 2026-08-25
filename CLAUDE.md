@@ -27,7 +27,8 @@ The site uses a flat directory structure with section-based organization:
 - `index.html` - Landing page with background image, live stream widget, and footer links
 - `radio/index.html` - Radio show archive with embedded Mixcloud players and tracklist modals
 - `about/index.html` - About page with information about the show and hosts
-- `radio/shows.json` - Master data file containing all show metadata and tracklists
+- Show metadata and tracklists live in the `bogfactor` D1 database, served by
+  `worker-shows` at `/api/shows`. There is no longer a checked-in data file.
 - `styles.css` - Global stylesheet shared across all pages
 - `scripts/` - JavaScript modules for interactive features
 - `assets/` - Image and other media files
@@ -81,33 +82,36 @@ Images in `assets/`:
 
 ### Show Data Structure
 
-Show metadata is stored in `radio/shows.json` as an array of show objects. Each show contains:
+Show metadata lives in D1 and is served by `worker-shows` from `GET /api/shows`,
+newest first. Each show comes back as:
 - `id` - Unique identifier (e.g., "nov2025")
 - `title` - Show title and date
 - `description` - Brief description of the episode theme
 - `mixcloudPath` - Path to the Mixcloud player (e.g., "/ehfm/bog-fav/")
-- `date` - Date in YYYY-MM format
-- `image` (optional) - Relative path to show-specific image
+- `airedAt` - ISO date the show went out
+- `image` (optional) - `/api/images/{key}`, backed by R2 — **not** a path into `assets/`
 - `tracklist` - Array of track strings in "Artist - Title" format
 
-The radio page dynamically generates show cards and tracklist modals from this JSON file.
+`scripts/generate-show-list.js` (radio page) and `scripts/recent-shows.js`
+(landing page) both fetch `/api/shows`. Shows are edited through `/admin/shows`,
+which writes to D1 via `/api/admin/shows`.
 
 ### Development Tools
 
 The `tools/` directory contains:
 - `test-live.html` - Test page for live streaming widget functionality
 - `rekordbox-to-json.py` - Python utility to convert Rekordbox DJ playlist exports to JSON format
-- `sync-playlists.py` - Syncs all tracks from `shows.json` to "Bog Factor" playlists on Spotify and Tidal
+- `sync-playlists.py` - Syncs all tracks to "Bog Factor" playlists on Spotify and Tidal. **Currently broken:** it still reads the removed `radio/shows.json` and needs repointing at `/api/shows`
 - `requirements.txt` - Python dependencies for `sync-playlists.py` (tidalapi, spotipy, python-dotenv)
 - `README.md` - Instructions for adding new radio shows and using the playlist sync tool
 
 ## Playlist Sync
 
-`tools/sync-playlists.py` automatically syncs every track from `radio/shows.json` to a "Bog Factor" playlist on Spotify and Tidal. It uses fuzzy matching to find tracks, handling quirks like curly quotes, feat. suffixes, and swapped artist/title fields.
+`tools/sync-playlists.py` syncs every track to a "Bog Factor" playlist on Spotify and Tidal. **It is currently broken:** `SHOWS_JSON` still points at `radio/shows.json`, which has been removed now that shows live in D1. It needs repointing at `/api/shows` (the response already carries `tracklist` per show). It uses fuzzy matching to find tracks, handling quirks like curly quotes, feat. suffixes, and swapped artist/title fields.
 
 ### GitHub Actions
 
-The workflow at `.github/workflows/sync-playlists.yml` runs automatically when `radio/shows.json` is pushed to `main`, or manually via workflow_dispatch.
+The workflow at `.github/workflows/sync-playlists.yml` triggers on pushes to `radio/shows.json`, or manually via workflow_dispatch. Since that file no longer exists, **only the manual trigger can fire** — the trigger needs changing to a cron once the script reads from the API.
 
 Required GitHub Actions secrets:
 - `SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`, `SPOTIFY_REFRESH_TOKEN` - Spotify OAuth credentials
@@ -152,9 +156,11 @@ First time only — create and seed the local database:
 # Apply the schema to the LOCAL D1
 npx wrangler d1 execute bogfactor --local --file=worker-shows/schema.sql -c worker-shows/wrangler.dev.toml
 
-# Generate + load seed data from radio/shows.json
-node tools/migrate-json-to-d1.mjs
-npx wrangler d1 execute bogfactor --local --file=tools/out/migration.sql -c worker-shows/wrangler.dev.toml
+# Seed shows. There is no seed file: the one-off JSON migration and its source
+# data have both been removed now that shows live in D1. Export from the
+# production database instead, or the local archive comes up empty:
+#   npx wrangler d1 export bogfactor --remote --output=tools/out/shows.sql
+#   npx wrangler d1 execute bogfactor --local --file=tools/out/shows.sql -c worker-shows/wrangler.dev.toml
 
 # Seed the default broadcast schedule (1st Friday monthly, 13:00–14:00 Europe/London)
 npx wrangler d1 execute bogfactor --local --file=tools/seed-schedule.sql -c worker-shows/wrangler.dev.toml
@@ -189,7 +195,6 @@ python3 -m http.server 3000   # http://127.0.0.1:3000
 - Relative paths are used for assets and scripts within subdirectories:
   - Landing page uses: `styles.css`, `scripts/`, `assets/`
   - Subpages use: `../styles.css`, `../scripts/`, `../assets/`
-- Show images in `shows.json` use relative paths: `../assets/image-name.jpg`
 
 When adding new pages or modifying paths, maintain consistency with the existing pattern for that section.
 
@@ -207,7 +212,7 @@ The site is actively being worked on with recent enhancements:
 
 - Use vanilla HTML, CSS, and JavaScript for fast loading times
 - Keep the codebase minimal and clean - no build process or dependencies
-- Store all show data in `radio/shows.json` for easy updates
+- Store all show data in D1, edited through `/admin/shows` — never in a checked-in file
 - Use root-relative paths for navigation, relative paths for assets
 - Test changes using a local static server or by opening files directly in browser
 
@@ -228,6 +233,6 @@ The procedure for testing is something like:
 - Test draggable sun elements by clicking and dragging them
 - Test behaviour of the site when Bog Factor is on air using `tools/test-live.html`
 - Test behaviour of the site when Bog Factor goes on and off air using `tools/test-countdown.html`
-- Verify show data displays correctly after editing `radio/shows.json`
+- Verify show data displays correctly after editing shows in `/admin/shows`
 
 Further documentation of these test features is included in `radio/README.md`

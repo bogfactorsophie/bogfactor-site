@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+
+# The admin panel is behind Cloudflare Access, but there is no reason to have
+# crawlers knocking on it either.
+Disallow: /admin/
+Disallow: /api/
+
+Sitemap: https://bogfactor.co.uk/sitemap.xml

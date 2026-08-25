@@ -1,15 +1,35 @@
 <!doctype html>
-<html>
+<html lang="en-GB">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Radio - Bog Factor</title>
+    <meta name="description" content="Every Bog Factor show on EHFM, with full tracklists and Mixcloud players. Psychedelic folk, pagan boogie and sleaze from Sophie and Emily.">
+    <link rel="canonical" href="https://bogfactor.co.uk/radio/">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Bog Factor">
+    <meta property="og:title" content="Radio - Bog Factor">
+    <meta property="og:description" content="Every Bog Factor show on EHFM, with full tracklists and Mixcloud players.">
+    <meta property="og:url" content="https://bogfactor.co.uk/radio/">
+    <meta property="og:image" content="https://bogfactor.co.uk/assets/vibes-graphic.jpg">
+    <meta property="og:locale" content="en_GB">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Radio - Bog Factor">
+    <meta name="twitter:description" content="Every Bog Factor show on EHFM, with full tracklists and Mixcloud players.">
+    <meta name="twitter:image" content="https://bogfactor.co.uk/assets/vibes-graphic.jpg">
+
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.cdnfonts.com" crossorigin>
     <link href="https://fonts.cdnfonts.com/css/luminari" rel="stylesheet">
-    <link href="https://fonts.cdnfonts.com/css/noto-serif-gurmukhi" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Gurmukhi:wght@400;600&family=MedievalSharp&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../styles.css">
+
     <script src="../scripts/mixcloud-player.js"></script>
     <script src="../scripts/draggable-suns.js"></script>
     <script src="../scripts/schedule.js"></script>
@@ -22,22 +42,32 @@
   <body class="radio-page">
 
     <div class="toolbar">
-      <a href="/index.html">Home</a>
-      <a href="/radio/index.html">Radio</a>
-      <a href="/about/index.html">About</a>
+      <a class="toolbar-logo" href="/index.html" aria-label="Bog Factor, back to the home page"><span>Bog</span> <span>Factor</span></a>
+      <nav class="toolbar-nav">
+        <a href="/radio/index.html" aria-current="page">Radio</a>
+        <a href="/radio/tracks/index.html">The Vault</a>
+        <a href="/about/index.html">About</a>
+      </nav>
+    </div>
+
+    <!-- This page had no h1 at all: it opened straight into the archive card,
+         whose heading is about the Vault rather than about this page. -->
+    <div class="textbox page-intro">
+      <h1 class="page-title">Every show</h1>
+      <p>Every Bog Factor broadcast on EHFM, newest first, with the full tracklist for each one.</p>
     </div>
 
     <div class="textbox archive-card">
-      <h2 class="archive-card-title">✶ The Bog Archive ✶</h2>
-      <p class="archive-card-text">Every track we've ever dug up — search it, sort it, spin the wheel.</p>
-      <a href="/radio/tracks/index.html" class="play-btn">🔍 Search the Tracks</a>
+      <h2 class="archive-card-title">The Bog Archive</h2>
+      <p class="archive-card-text">Every track we have ever dug up. Search it, sort it, spin the wheel.</p>
+      <a href="/radio/tracks/index.html" class="play-btn">Search the tracks</a>
     </div>
 
     <div id="shows-container"></div>
 
     <footer class="footer">
-      <a href="https://www.instagram.com" target="_blank">Instagram</a>
-      <a href="mailto:hello@bogfactor.co.uk" target="_blank">Email</a>
+      <a href="https://www.instagram.com/bog_factor/" target="_blank" rel="noopener noreferrer">Instagram</a>
+      <a href="mailto:hello@bogfactor.co.uk">Email</a>
       <a href="#" data-contact>Contact</a>
     </footer>
   </body>

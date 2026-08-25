@@ -6,3 +6,6 @@ tools/.venv/
 tools/out/
 .wrangler/
 worker-shows/.wrangler/
+.agents/
+skills-lock.json
+.claude/skills/

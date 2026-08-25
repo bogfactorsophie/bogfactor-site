@@ -1,9 +1,23 @@
 /**
- * Bog Factor Live Stream Widget
- * Shows live player when broadcasting, next show info when off-air
+ * Bog Factor live stream
+ *
+ * Two things live in here:
+ *
+ *   1. The landing-page hero status. The hero itself is static markup in
+ *      index.html (so it renders without JS and gives a crawler something to
+ *      read); this file fills in the "next show in ..." line, and swaps the
+ *      hero into its on-air state when we are broadcasting.
+ *
+ *   2. The EHFM dock, on every page. This is not a Bog Factor control. It
+ *      streams EHFM whether or not our show is on, which is why it is
+ *      everywhere and why its label now says whose sound you are about to get.
+ *
+ * It replaces the old fixed 350px corner widget, which carried the countdown,
+ * the listen button and the coming-up list all at once, and the unlabelled
+ * circle that used to sit in the bottom-left of every page.
  */
 
-(function() {
+(function () {
   'use strict';
 
   const STREAM_URLS = [
@@ -12,15 +26,24 @@
   ];
   const STREAM_URL = STREAM_URLS[Math.floor(Math.random() * STREAM_URLS.length)];
   const EHFM_LOGO = 'https://thumbnailer.mixcloud.com/unsafe/640x640/profile/4/5/d/0/f256-daaa-4954-86cc-aa43b7af4e6e';
+  const CHAT_URL = 'https://www.ehfm.live/chat';
+
+  const PLAY_GLYPH = '&#9654;&#xFE0E;';
+  const PAUSE_GLYPH = '&#9208;&#xFE0E;';
+  const MUTED_GLYPH = '&#128263;';
 
   let audioElement = null;
   let isPlaying = false;
-  let floatingPlayer = null;
-  let mainWidget = null;
+  let dock = null;
   let updateIntervalId;
   let currentInterval;
+  // The off-air hero actions as authored in index.html, so going off air can
+  // put them back rather than rebuild them from strings in here.
+  let heroActionsDefault = '';
+  let lastRenderedLive = null;
 
-  // Store/restore playing state across page navigation
+  // ---- playing state, carried across page navigation ----------------------
+
   function savePlayingState() {
     sessionStorage.setItem('bogFactorLiveStreamPlaying', isPlaying ? 'true' : 'false');
   }
@@ -33,9 +56,10 @@
     sessionStorage.removeItem('bogFactorLiveStreamPlaying');
   }
 
-  // Live/next-show state now comes from the DB-backed schedule (scripts/schedule.js).
-  // These delegate to window.BogFactorSchedule, which itself honours
-  // window.BogFactorTestConfig for the test pages.
+  // ---- schedule ------------------------------------------------------------
+  // Live/next-show state comes from the DB-backed schedule (scripts/schedule.js),
+  // which itself honours window.BogFactorTestConfig for the test pages.
+
   function getNextShowDate() {
     return window.BogFactorSchedule ? window.BogFactorSchedule.getNextShowDate() : null;
   }
@@ -44,26 +68,11 @@
     return window.BogFactorSchedule ? window.BogFactorSchedule.isLiveNow() : false;
   }
 
-  function formatNextShowDate(date) {
-    const options = {
-      weekday: 'long',
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: 'numeric',
-      minute: '2-digit',
-      timeZone: 'Europe/London',
-      timeZoneName: 'short'
-    };
-    return date.toLocaleString('en-GB', options);
-  }
-
   function getTimeUntilShow(nextShow) {
     if (!nextShow) return 'soon';
     const now = new Date();
     const diff = nextShow - now;
 
-    // If we've passed the show time (negative diff), return "Starting now..."
     if (diff < 0) {
       return 'Starting now...';
     }
@@ -73,27 +82,18 @@
     const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
     const seconds = Math.floor((diff % (1000 * 60)) / 1000);
 
-    // If less than 1 day, show detailed textual format with seconds
+    // Under a day, count down in words with seconds.
     if (days === 0) {
       const parts = [];
-
-      if (hours > 0) {
-        parts.push(`${hours} hour${hours !== 1 ? 's' : ''}`);
-      }
-      if (minutes > 0) {
-        parts.push(`${minutes} minute${minutes !== 1 ? 's' : ''}`);
-      }
+      if (hours > 0) parts.push(`${hours} hour${hours !== 1 ? 's' : ''}`);
+      if (minutes > 0) parts.push(`${minutes} minute${minutes !== 1 ? 's' : ''}`);
       if (seconds > 0 || parts.length === 0) {
         parts.push(`${seconds} second${seconds !== 1 ? 's' : ''}`);
       }
-
       return parts.join(' ');
     }
 
-    // If more than 1 day, show original format
-    if (days > 0) {
-      return `${days} day${days !== 1 ? 's' : ''}, ${hours} hour${hours !== 1 ? 's' : ''}`;
-    }
+    return `${days} day${days !== 1 ? 's' : ''}, ${hours} hour${hours !== 1 ? 's' : ''}`;
   }
 
   function isLandingPage() {
@@ -103,460 +103,316 @@
     return window.location.pathname === '/' || window.location.pathname === '/index.html';
   }
 
+  // ---- audio ---------------------------------------------------------------
+
+  function archiveHasAudio() {
+    return document.body.classList.contains('mixcloud-player-active');
+  }
+
+  function startPlaying() {
+    if (archiveHasAudio()) return;
+    if (!audioElement) audioElement = new Audio(STREAM_URL);
+    audioElement.play();
+    isPlaying = true;
+    afterPlayStateChange();
+  }
+
+  function stopPlaying() {
+    if (audioElement) audioElement.pause();
+    isPlaying = false;
+    afterPlayStateChange();
+  }
+
   function togglePlay() {
-    if (!audioElement) {
-      audioElement = new Audio(STREAM_URL);
-    }
-
     if (isPlaying) {
-      audioElement.pause();
-      isPlaying = false;
-      updatePlayButton();
-      updateFloatingPlayer();
-      savePlayingState();
+      stopPlaying();
     } else {
-      audioElement.play();
-      isPlaying = true;
-      updatePlayButton();
-      updateFloatingPlayer();
-      savePlayingState();
+      startPlaying();
     }
+  }
 
-    // Notify toolbar widget to update its UI
+  function afterPlayStateChange() {
+    updateHeroPlayButton();
+    renderDock();
+    savePlayingState();
     if (window.BogFactorToolbarWidget) {
       window.BogFactorToolbarWidget.updateUI(isPlaying);
     }
   }
 
-  function updatePlayButton() {
-    const playBtn = document.getElementById('stream-play-btn');
-    if (playBtn) {
-      playBtn.innerHTML = isPlaying ? '&#9208;&#xFE0E;' : '&#9654;&#xFE0E;';
-      playBtn.setAttribute('aria-label', isPlaying ? 'Pause' : 'Play');
-    }
+  // ---- the dock ------------------------------------------------------------
+
+  function dockState() {
+    if (archiveHasAudio()) return 'blocked';
+    return isPlaying ? 'playing' : 'idle';
   }
 
-  function updateFloatingPlayer() {
-    if (!floatingPlayer) return;
-
-    const logo = floatingPlayer.querySelector('.floating-player-logo');
-    const pauseBtn = floatingPlayer.querySelector('.floating-player-pause');
-    const muteIcon = floatingPlayer.querySelector('.floating-player-mute');
-    const isMixcloudActive = document.body.classList.contains('mixcloud-player-active');
-
-    if (isMixcloudActive && muteIcon) {
-      // Show mute icon when Mixcloud is playing
-      logo.style.display = 'none';
-      pauseBtn.style.display = 'none';
-      muteIcon.style.display = 'flex';
-    } else if (isPlaying) {
-      logo.style.display = 'none';
-      pauseBtn.style.display = 'flex';
-      if (muteIcon) muteIcon.style.display = 'none';
-    } else {
-      logo.style.display = 'block';
-      pauseBtn.style.display = 'none';
-      if (muteIcon) muteIcon.style.display = 'none';
-    }
-  }
-
-
-  function createFloatingPlayer() {
-    const onLandingPage = isLandingPage();
-
-    const player = document.createElement('div');
-    player.className = 'floating-audio-player';
-    player.innerHTML = `
-      <div class="floating-player-wrapper">
-        <div class="floating-player-circle">
-          <img src="${EHFM_LOGO}" alt="Play EHFM Live" class="floating-player-logo" />
-          <button class="floating-player-pause" aria-label="Pause">&#9208;&#xFE0E;</button>
-          <div class="floating-player-mute" title="Live stream paused while show is playing">&#128263;</div>
-        </div>
-        ${onLandingPage ? '<button class="floating-player-expand" aria-label="Expand widget">+</button>' : ''}
-      </div>
+  function createDock() {
+    const el = document.createElement('div');
+    el.className = 'ehfm-dock';
+    el.dataset.state = 'idle';
+    el.dataset.show = 'ehfm';
+    el.innerHTML = `
+      <button type="button" class="ehfm-dock-btn">
+        <span class="ehfm-dock-mark">
+          <img class="ehfm-dock-logo" src="${EHFM_LOGO}" alt="" aria-hidden="true"
+               width="44" height="44">
+          <span class="ehfm-dock-glyph" aria-hidden="true">${PLAY_GLYPH}</span>
+        </span>
+        <span class="ehfm-dock-copy">
+          <span class="ehfm-dock-kicker"></span>
+          <span class="ehfm-dock-action"></span>
+        </span>
+      </button>
+      <p class="ehfm-dock-note" id="ehfm-dock-note" role="tooltip"></p>
     `;
 
-    // Function to start playing
-    const startPlaying = () => {
-      // Don't allow playing if Mixcloud is active
-      if (document.body.classList.contains('mixcloud-player-active')) {
-        return;
-      }
-
-      if (!audioElement) {
-        audioElement = new Audio(STREAM_URL);
-      }
-      audioElement.play();
-      isPlaying = true;
-      updateFloatingPlayer();
-      updatePlayButton();
-      savePlayingState();
-    };
-
-    // Logo click - start playing
-    const logo = player.querySelector('.floating-player-logo');
-    logo.addEventListener('click', startPlaying);
-
-    // Pause button click - stop playing
-    const pauseBtn = player.querySelector('.floating-player-pause');
-    pauseBtn.addEventListener('click', () => {
-      // Don't allow pausing if Mixcloud is active
-      if (document.body.classList.contains('mixcloud-player-active')) {
-        return;
-      }
-
-      if (audioElement) {
-        audioElement.pause();
-      }
-      isPlaying = false;
-      updateFloatingPlayer();
-      updatePlayButton();
-      savePlayingState();
+    el.querySelector('.ehfm-dock-btn').addEventListener('click', () => {
+      // Inert rather than disabled, so it stays focusable and the note below
+      // can explain itself to a screen reader.
+      if (dockState() === 'blocked') return;
+      togglePlay();
     });
 
-    // Expand button click - show main widget (only on landing page)
-    if (onLandingPage) {
-      const expandBtn = player.querySelector('.floating-player-expand');
-      if (expandBtn) {
-        expandBtn.addEventListener('click', (e) => {
-          e.stopPropagation(); // Prevent triggering parent click events
-          if (mainWidget) {
-            // Set initial hidden state
-            mainWidget.style.display = 'block';
-            mainWidget.style.opacity = '0';
-            mainWidget.style.transform = 'translateY(-20px)';
-
-            // Force reflow to ensure initial state is rendered
-            mainWidget.offsetHeight;
-
-            // Animate to visible state
-            requestAnimationFrame(() => {
-              mainWidget.style.opacity = '1';
-              mainWidget.style.transform = 'translateY(0)';
-            });
-
-            // Hide floating player
-            hideFloatingPlayer();
-          }
-        });
-      }
-    }
-
-    return player;
+    return el;
   }
 
-  function showFloatingPlayer() {
-    if (!floatingPlayer) {
-      floatingPlayer = createFloatingPlayer();
-      document.body.appendChild(floatingPlayer);
-      updateFloatingPlayer();
-    } else {
-      floatingPlayer.style.display = 'block';
-      updateFloatingPlayer(); // Update state when showing existing player
-    }
-  }
+  function renderDock() {
+    if (!dock) return;
 
-  function hideFloatingPlayer() {
-    if (floatingPlayer) {
-      floatingPlayer.style.display = 'none';
-    }
-  }
-
-  function createWidget() {
-    const widget = document.createElement('div');
-    widget.id = 'stream-widget';
-    widget.className = 'stream-widget';
-
+    const state = dockState();
     const live = isLiveNow();
-    const nextShow = getNextShowDate();
+
+    dock.dataset.state = state;
+    dock.dataset.show = live ? 'bogfactor' : 'ehfm';
+
+    const btn = dock.querySelector('.ehfm-dock-btn');
+    const kicker = dock.querySelector('.ehfm-dock-kicker');
+    const action = dock.querySelector('.ehfm-dock-action');
+    const glyph = dock.querySelector('.ehfm-dock-glyph');
+    const note = dock.querySelector('.ehfm-dock-note');
+
+    // Whose sound is this? Off air it is the station, on air it is us. The old
+    // circle looked identical either way, which wasted the one hour a month
+    // where the answer actually matters.
+    if (live) {
+      kicker.innerHTML = '<span class="live-dot"></span>Bog Factor, live';
+    } else {
+      kicker.textContent = 'EHFM, live';
+    }
+
+    if (state === 'blocked') {
+      action.textContent = 'Paused for the archive';
+      glyph.innerHTML = MUTED_GLYPH;
+      note.textContent = 'The archive player has the sound. Close it to come back to the live stream.';
+      btn.setAttribute('aria-disabled', 'true');
+      btn.setAttribute('aria-pressed', 'false');
+      // The tooltip is only drawn on hover, so point at it explicitly: that is
+      // what gets the reason read out to someone arriving by keyboard.
+      btn.setAttribute('aria-describedby', 'ehfm-dock-note');
+    } else if (state === 'playing') {
+      action.textContent = 'Stop listening';
+      glyph.innerHTML = PAUSE_GLYPH;
+      note.textContent = '';
+      btn.removeAttribute('aria-disabled');
+      btn.removeAttribute('aria-describedby');
+      btn.setAttribute('aria-pressed', 'true');
+    } else {
+      action.textContent = 'Listen live';
+      glyph.innerHTML = PLAY_GLYPH;
+      note.textContent = '';
+      btn.removeAttribute('aria-disabled');
+      btn.removeAttribute('aria-describedby');
+      btn.setAttribute('aria-pressed', 'false');
+    }
+  }
+
+  function mountDock() {
+    if (dock) return;
+    dock = createDock();
+    document.body.appendChild(dock);
+    renderDock();
+  }
+
+  // ---- the landing hero ----------------------------------------------------
+
+  function updateHeroPlayButton() {
+    const btn = document.getElementById('stream-play-btn');
+    if (!btn) return;
+    btn.textContent = isPlaying ? 'Stop listening' : 'Listen live';
+    btn.setAttribute('aria-pressed', isPlaying ? 'true' : 'false');
+  }
+
+  // Full hero render. Only called on a live/off-air change, so a returning
+  // listener is not having their CTA rebuilt underneath them every second.
+  function renderHero() {
+    const hero = document.getElementById('hero');
+    if (!hero) return;
+
+    const status = document.getElementById('hero-status');
+    const actions = document.getElementById('hero-actions');
+    const live = isLiveNow();
+
+    hero.dataset.live = live ? 'true' : 'false';
 
     if (live) {
-      // We're live!
-      widget.innerHTML = `
-        <button class="stream-minimize-btn" aria-label="Minimize widget">&#9866;</button>
-        <div class="stream-live-indicator">
-          <span class="live-dot"></span>
-          <span class="live-text">LIVE NOW!</span>
-        </div>
-        <div class="stream-player">
-          <button id="stream-play-btn" class="stream-play-button" aria-label="Play">&#9654;&#xFE0E;</button>
-          <a href="https://www.ehfm.live/" target="_blank" rel="noopener noreferrer">
-            <img src="${EHFM_LOGO}" alt="EHFM Logo" class="ehfm-logo">
-          </a>
-        </div>
-        <p class="stream-subtitle">Broadcasting from the bog &#8226; 1-2pm UK</p>
-      `;
+      status.innerHTML = '<span class="live-dot"></span>On air right now on EHFM';
+
+      const listen = document.createElement('button');
+      listen.type = 'button';
+      listen.className = 'play-btn';
+      listen.id = 'stream-play-btn';
+      listen.textContent = 'Listen live';
+
+      const chat = document.createElement('a');
+      chat.className = 'hero-link';
+      chat.href = CHAT_URL;
+      chat.target = '_blank';
+      chat.rel = 'noopener noreferrer';
+      chat.textContent = 'Join the chat';
+
+      actions.replaceChildren(listen, chat);
+      listen.addEventListener('click', togglePlay);
+      updateHeroPlayButton();
     } else {
-      // Off-air
-      widget.innerHTML = `
-        <button class="stream-minimize-btn" aria-label="Minimize widget">&#9866;</button>
-        <div class="stream-header">
-          <p class="countdown">Next show in ${getTimeUntilShow(nextShow)}</p>
-        </div>
-        <div class="stream-player">
-          <button id="stream-play-btn" class="stream-play-button" aria-label="Play">&#9654;&#xFE0E;</button>
-          <a href="https://www.ehfm.live/" target="_blank" rel="noopener noreferrer">
-            <img src="${EHFM_LOGO}" alt="EHFM Logo" class="ehfm-logo">
-          </a>
-        </div>
-      `;
+      updateHeroCountdown();
+      // Back to the archive link exactly as index.html authored it.
+      actions.innerHTML = heroActionsDefault;
     }
 
-    // Container for the town-crier "coming up" cards. upcoming-shows.js fills
-    // this so the schedule announcement lives inside the same panel as the
-    // live indicator / countdown rather than floating separately.
-    const upcoming = document.createElement('div');
-    upcoming.id = 'upcoming-shows';
-    upcoming.className = 'upcoming-shows';
-    upcoming.style.display = 'none';
-    widget.appendChild(upcoming);
-
-    return widget;
+    // The test pages listen for this to know the panel was (re)built.
+    document.dispatchEvent(new CustomEvent('bogfactor:widget-rendered'));
   }
 
-  // Let upcoming-shows.js know the widget (and its #upcoming-shows container)
-  // has just been built or rebuilt, so it can (re)render its cards into it.
-  function notifyWidgetRendered() {
-    document.dispatchEvent(new CustomEvent('bogfactor:widget-rendered'));
+  // The cheap per-second update: just the countdown text.
+  function updateHeroCountdown() {
+    const status = document.getElementById('hero-status');
+    if (!status) return;
+    const next = getNextShowDate();
+    status.textContent = next
+      ? `Next show in ${getTimeUntilShow(next)}`
+      : 'Next show to be announced';
+  }
+
+  // ---- ticking -------------------------------------------------------------
+
+  function updateCountdownAndStatus() {
+    const live = isLiveNow();
+
+    if (live !== lastRenderedLive) {
+      lastRenderedLive = live;
+      renderHero();
+      renderDock();
+      return;
+    }
+
+    if (!live) updateHeroCountdown();
+  }
+
+  function getUpdateInterval() {
+    const nextShow = getNextShowDate();
+    if (!nextShow) return 60000;
+    const diff = nextShow - new Date();
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    // Every second while live or inside the last day, every minute otherwise.
+    if (isLiveNow() || days === 0) return 1000;
+    return 60000;
+  }
+
+  function startUpdateInterval() {
+    if (updateIntervalId) clearInterval(updateIntervalId);
+    updateIntervalId = setInterval(() => {
+      updateCountdownAndStatus();
+      const newInterval = getUpdateInterval();
+      if (newInterval !== currentInterval) {
+        currentInterval = newInterval;
+        startUpdateInterval();
+      }
+    }, currentInterval);
+  }
+
+  function restoreAudioState() {
+    if (!getPlayingState() || archiveHasAudio()) return;
+
+    setTimeout(() => {
+      if (!audioElement) audioElement = new Audio(STREAM_URL);
+      audioElement
+        .play()
+        .then(() => {
+          isPlaying = true;
+          updateHeroPlayButton();
+          renderDock();
+          if (window.BogFactorToolbarWidget) {
+            window.BogFactorToolbarWidget.updateUI(true);
+          }
+        })
+        .catch((err) => {
+          console.log('Could not auto-play audio:', err);
+          isPlaying = false;
+          savePlayingState();
+        });
+    }, 100);
   }
 
   function updateToolbarHeight() {
     const toolbar = document.querySelector('.toolbar');
     if (toolbar) {
-      const height = toolbar.offsetHeight;
-      document.documentElement.style.setProperty('--toolbar-height', `${height}px`);
-    }
-  }
-
-  function restoreAudioState() {
-    // Check if audio was playing in previous page
-    const wasPlaying = getPlayingState();
-    const isMixcloudActive = document.body.classList.contains('mixcloud-player-active');
-
-    // Only restore if it was playing and Mixcloud isn't active
-    if (wasPlaying && !isMixcloudActive) {
-      // Small delay to ensure UI is ready
-      setTimeout(() => {
-        if (!audioElement) {
-          audioElement = new Audio(STREAM_URL);
-        }
-        audioElement.play().then(() => {
-          isPlaying = true;
-          updatePlayButton();
-          updateFloatingPlayer();
-        }).catch(err => {
-          console.log('Could not auto-play audio:', err);
-          // Clear state if autoplay fails
-          isPlaying = false;
-          savePlayingState();
-        });
-      }, 100);
+      document.documentElement.style.setProperty(
+        '--toolbar-height',
+        `${toolbar.offsetHeight}px`
+      );
     }
   }
 
   function init() {
-    // Check if we're on the landing page or another page
-    const onLandingPage = isLandingPage();
-
-    // Set toolbar height CSS variable (needed on all pages)
     updateToolbarHeight();
     window.addEventListener('resize', updateToolbarHeight);
 
-    if (!onLandingPage) {
-      // Other pages (radio, about): just show floating player
-      showFloatingPlayer();
-    }
+    const actions = document.getElementById('hero-actions');
+    if (actions) heroActionsDefault = actions.innerHTML;
 
-    // Restore audio state from previous page
+    // The dock is on every page, on air or not.
+    mountDock();
+
     restoreAudioState();
-
-    // Save state before page unload
     window.addEventListener('beforeunload', savePlayingState);
 
-    // The live/off-air widget and the countdown ticking depend on the schedule,
-    // so wait until scripts/schedule.js has loaded its data before rendering.
-    // That avoids flashing a wrong state on first paint.
+    // Wait for the schedule before touching the hero, so the first paint is
+    // not a wrong state that then corrects itself.
     const startScheduleUI = () => {
-      if (onLandingPage) {
-        const widget = createWidget();
-        mainWidget = widget; // Store reference to widget for expand functionality
-
-        // Insert after toolbar
-        const toolbar = document.querySelector('.toolbar');
-        if (toolbar) {
-          toolbar.insertAdjacentElement('afterend', widget);
-        } else {
-          document.body.insertBefore(widget, document.body.firstChild);
-        }
-
-        // Attach play button event listener
-        const playBtn = document.getElementById('stream-play-btn');
-        if (playBtn) {
-          playBtn.addEventListener('click', togglePlay);
-        }
-
-        // Attach minimize button event listener
-        const minimizeBtn = widget.querySelector('.stream-minimize-btn');
-        if (minimizeBtn) {
-          minimizeBtn.addEventListener('click', () => {
-            // Don't stop audio - keep it playing if it was playing
-            // Hide widget with animation
-            widget.style.opacity = '0';
-            widget.style.transform = 'translateY(-20px)';
-            setTimeout(() => {
-              widget.style.display = 'none';
-              // Show floating player after widget is minimized
-              showFloatingPlayer();
-            }, 300);
-          });
-        }
-
-        notifyWidgetRendered();
-      }
-
+      lastRenderedLive = isLiveNow();
+      if (isLandingPage()) renderHero();
+      renderDock();
       currentInterval = getUpdateInterval();
       startUpdateInterval();
     };
 
     if (window.BogFactorSchedule) {
       window.BogFactorSchedule.onReady(startScheduleUI);
+      document.addEventListener('bogfactor:schedule-updated', () => {
+        updateCountdownAndStatus();
+      });
     } else {
       startScheduleUI();
     }
   }
 
-  // Update countdown and check for live/off-air transitions
-  function updateCountdownAndStatus() {
-    const countdownEl = document.querySelector('.countdown');
-    if (countdownEl) {
-      const nextShow = getNextShowDate();
-      countdownEl.textContent = `Next show in ${getTimeUntilShow(nextShow)}`;
-    }
+  // ---- public API ----------------------------------------------------------
 
-    // Check if we should switch to live mode or back to countdown
-    const live = isLiveNow();
-    const hasLiveIndicator = !!document.querySelector('.stream-live-indicator');
-
-    if ((live && !hasLiveIndicator) || (!live && hasLiveIndicator)) {
-      const oldWidget = document.getElementById('stream-widget');
-      if (oldWidget) {
-        // Check if widget was minimized
-        const wasMinimized = oldWidget.style.display === 'none';
-
-        const newWidget = createWidget();
-        oldWidget.replaceWith(newWidget);
-        mainWidget = newWidget; // Update reference
-
-        // If it was minimized, keep the new widget minimized
-        if (wasMinimized) {
-          newWidget.style.display = 'none';
-          newWidget.style.opacity = '0';
-          newWidget.style.transform = 'translateY(-20px)';
-          // Floating player should remain visible
-        }
-
-        // Reattach play button listener
-        const playBtn = document.getElementById('stream-play-btn');
-        if (playBtn) {
-          playBtn.addEventListener('click', togglePlay);
-        }
-
-        // Reattach minimize button listener
-        const minimizeBtn = newWidget.querySelector('.stream-minimize-btn');
-        if (minimizeBtn) {
-          minimizeBtn.addEventListener('click', () => {
-            // Don't stop audio - keep it playing if it was playing
-            // Hide widget with animation
-            newWidget.style.opacity = '0';
-            newWidget.style.transform = 'translateY(-20px)';
-            setTimeout(() => {
-              newWidget.style.display = 'none';
-              // Show floating player after widget is minimized
-              showFloatingPlayer();
-            }, 300);
-          });
-        }
-
-        notifyWidgetRendered();
-      }
-    }
-  }
-
-  // Determine update interval based on time until show
-  function getUpdateInterval() {
-    const nextShow = getNextShowDate();
-    const now = new Date();
-    const diff = nextShow - now;
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-
-    // Update every second if currently live OR less than 1 day until show
-    // Otherwise, update every minute
-    if (isLiveNow() || days === 0) {
-      return 1000;
-    }
-    return 60000;
-  }
-
-  function startUpdateInterval() {
-    if (updateIntervalId) {
-      clearInterval(updateIntervalId);
-    }
-    updateIntervalId = setInterval(() => {
-      updateCountdownAndStatus();
-
-      // Check if we need to change the update frequency
-      const newInterval = getUpdateInterval();
-      if (newInterval !== currentInterval) {
-        currentInterval = newInterval;
-        startUpdateInterval(); // Restart with new interval
-      }
-    }, currentInterval);
-  }
-
-  // Expose API for other scripts
   window.BogFactorLiveStream = {
     toggleStream() {
-      if (!audioElement) {
-        audioElement = new Audio(STREAM_URL);
-      }
-
-      if (isPlaying) {
-        audioElement.pause();
-        isPlaying = false;
-      } else {
-        audioElement.play();
-        isPlaying = true;
-      }
-
-      updatePlayButton();
-      updateFloatingPlayer();
-      savePlayingState();
-
-      // Notify toolbar widget to update its UI
-      if (window.BogFactorToolbarWidget) {
-        window.BogFactorToolbarWidget.updateUI(isPlaying);
-      }
+      togglePlay();
     },
     stopStream() {
-      if (audioElement && isPlaying) {
-        audioElement.pause();
-        isPlaying = false;
-        updatePlayButton();
-        updateFloatingPlayer();
-        savePlayingState();
-
-        // Notify toolbar widget to update its UI
-        if (window.BogFactorToolbarWidget) {
-          window.BogFactorToolbarWidget.updateUI(false);
-        }
-      }
+      if (isPlaying) stopPlaying();
     },
     getPlayingState() {
       return isPlaying;
     },
+    // Kept under its old name: mixcloud-player.js calls this when the archive
+    // player takes or releases the audio.
     updateFloatingPlayer() {
-      updateFloatingPlayer();
+      renderDock();
     },
     clearPlayingState() {
       clearPlayingState();
@@ -564,9 +420,7 @@
     forceUpdate() {
       updateCountdownAndStatus();
       const newInterval = getUpdateInterval();
-      if (newInterval !== currentInterval) {
-        currentInterval = newInterval;
-      }
+      if (newInterval !== currentInterval) currentInterval = newInterval;
       startUpdateInterval();
     },
     getCurrentInterval() {
@@ -577,14 +431,12 @@
     },
     isLiveNow() {
       return isLiveNow();
-    }
+    },
   };
 
-  // Initialize when DOM is ready
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', init);
   } else {
     init();
   }
-
 })();

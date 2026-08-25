@@ -44,19 +44,18 @@ Then copy the **Application Audience (AUD) tag** and your team domain (e.g.
 `ACCESS_AUD` and `ACCESS_TEAM_DOMAIN`, and redeploy. The worker will then
 verify the Access JWT on every admin request as defence-in-depth.
 
-## Seeding from `radio/shows.json`
+## Seeding
 
-After the worker, D1, and R2 exist:
+D1 is now the source of truth for shows, and the original seed path (a one-off
+migration from `radio/shows.json`) has been removed along with that file.
+
+Add shows through the admin UI at `/admin/add-show/`. To copy production down
+to a local database:
 
 ```bash
-node tools/migrate-json-to-d1.mjs
-npx wrangler d1 execute bogfactor --remote --file=tools/out/migration.sql
-bash tools/out/upload-images.sh
+npx wrangler d1 export bogfactor --remote --output=tools/out/shows.sql
+npx wrangler d1 execute bogfactor --local --file=tools/out/shows.sql -c worker-shows/wrangler.dev.toml
 ```
-
-The migration uses the first Friday of each show's `YYYY-MM` at 13:00 UTC for
-`aired_at`. Hand-edit any one-offs (e.g. the morning shows) in the admin UI
-afterwards.
 
 ## Local dev
 

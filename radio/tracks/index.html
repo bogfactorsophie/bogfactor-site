@@ -1,15 +1,35 @@
 <!doctype html>
-<html>
+<html lang="en-GB">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>All Tracks - Bog Factor</title>
+    <meta name="description" content="Search every track Bog Factor has played on EHFM, see the most played artists, or let the bog wheel pick something at random.">
+    <link rel="canonical" href="https://bogfactor.co.uk/radio/tracks/">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Bog Factor">
+    <meta property="og:title" content="All Tracks - Bog Factor">
+    <meta property="og:description" content="Search every track Bog Factor has played on EHFM, or let the bog wheel pick something at random.">
+    <meta property="og:url" content="https://bogfactor.co.uk/radio/tracks/">
+    <meta property="og:image" content="https://bogfactor.co.uk/assets/bog-wheel.jpg">
+    <meta property="og:locale" content="en_GB">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="All Tracks - Bog Factor">
+    <meta name="twitter:description" content="Search every track Bog Factor has played on EHFM, or let the bog wheel pick something at random.">
+    <meta name="twitter:image" content="https://bogfactor.co.uk/assets/bog-wheel.jpg">
+
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.cdnfonts.com" crossorigin>
     <link href="https://fonts.cdnfonts.com/css/luminari" rel="stylesheet">
-    <link href="https://fonts.cdnfonts.com/css/noto-serif-gurmukhi" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Gurmukhi:wght@400;600&family=MedievalSharp&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../styles.css">
+
     <script src="../../scripts/draggable-suns.js"></script>
     <script src="../../scripts/schedule.js"></script>
     <script src="../../scripts/live-stream.js"></script>
@@ -19,99 +39,111 @@
     <script src="../../scripts/contact-form.js"></script>
 
     <!-- Tracks-page styling lives here so the look is easy to iterate on
-         without disturbing the shared stylesheet. -->
+         without disturbing the shared stylesheet. Colours, spacing, radii and
+         type all come from the tokens in styles.css. -->
     <style>
-      .tracks-intro h1 {
-        font-family: 'Luminari', fantasy;
-        color: rgb(135, 89, 33);
-        font-size: 2.2rem;
-        margin: 0 0 0.3rem;
-      }
-      .tracks-intro p { margin: 0; }
+      /* the h1 and its lead paragraph now use the shared .page-title /
+         .page-intro rules in styles.css */
 
-      /* Search */
+      /* ---- search ---- */
       .track-search-input {
         width: 100%;
         box-sizing: border-box;
-        padding: 0.7rem 0.9rem;
-        font-family: inherit;
-        font-size: 1.1rem;
-        color: rgb(54, 50, 41);
-        background: rgba(255, 255, 255, 0.65);
-        border: 1px solid rgba(135, 89, 33, 0.5);
-        border-radius: 4px;
+        padding: var(--space-2) var(--space-3);
+        font-family: var(--font-body);
+        font-size: var(--text-md);
+        color: var(--bog-ink);
+        /* opaque rather than a 65% white veil, so the field reads as a field */
+        background: #fffdf8;
+        border: 2px solid var(--bog-brown-soft);
+        border-radius: var(--radius-soft);
       }
-      .track-search-input:focus { outline: 2px solid rgb(135, 89, 33); outline-offset: -1px; }
-      .search-meta { margin: 0.6rem 0 0; font-size: 0.9rem; color: rgb(130, 71, 81); }
+      .track-search-input:focus-visible {
+        outline: 3px solid var(--bog-brown);
+        outline-offset: 1px;
+        border-color: var(--bog-brown);
+      }
+      .search-meta {
+        margin: var(--space-2) 0 0;
+        font-size: var(--text-sm);
+        color: var(--bog-plum);
+      }
 
-      .track-list { list-style: none; margin: 0.8rem 0 0; padding: 0; }
+      /* ---- track lists ------------------------------------------------
+         Two columns on desktop, one under 768px, with faint banding instead
+         of a hairline under every single row. */
+      .track-list {
+        list-style: none;
+        margin: var(--space-3) 0 0;
+        padding: 0;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        column-gap: var(--space-5);
+      }
       .track-list li {
-        padding: 0.5rem 0;
-        border-bottom: 1px solid rgba(135, 89, 33, 0.2);
+        padding: var(--space-2);
+        border-bottom: none;
+      }
+      .track-list li:nth-child(odd) {
+        background-color: rgba(135, 89, 33, 0.07);
       }
       .track-line { font-weight: 600; }
-      .track-line .by { font-weight: 400; color: rgb(130, 71, 81); }
-      /* Compact, muted YouTube search button beside the artist name */
+      .track-line .by { font-weight: 400; color: var(--bog-plum); }
+
+      /* Compact, muted YouTube search link beside the track name */
       .track-yt-btn {
         background: none;
         padding: 0;
-        margin-left: 0.4rem;
-        font-size: 0.8rem;
-        opacity: 0.45;
+        margin-left: var(--space-1);
+        font-size: var(--text-sm);
+        opacity: 0.55;
         vertical-align: baseline;
       }
       .track-yt-btn:hover { background: none; opacity: 1; transform: scale(1.15); }
-      .track-where { font-size: 0.85rem; color: rgb(54, 50, 41); opacity: 0.8; }
-      .track-where a { color: rgb(135, 89, 33); text-decoration: none; }
-      .track-where a:hover { color: rgb(218, 72, 72); text-decoration: underline; }
+
+      .track-where { font-size: var(--text-xs); color: var(--bog-ink); }
+      .track-where a { color: var(--bog-brown); text-decoration: none; }
+      .track-where a:hover { color: var(--bog-red-deep); text-decoration: underline; }
+
       .play-count {
         display: inline-block;
         min-width: 1.4em;
         text-align: center;
-        margin-right: 0.5rem;
+        margin-right: var(--space-1);
         padding: 0 0.4em;
-        background: rgb(135, 89, 33);
-        color: wheat;
-        border-radius: 10px;
-        font-size: 0.8rem;
+        background: var(--bog-brown);
+        color: var(--bog-wheat);
+        border-radius: var(--radius-pill);
+        font-size: var(--text-xs);
       }
 
-      /* Bog-metrics */
+      /* ---- bog-metrics ---- */
       .metrics-grid {
         display: grid;
         grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
-        gap: 1rem;
-        margin-top: 0.5rem;
+        gap: var(--space-4);
+        margin-top: var(--space-2);
       }
       .metric-tile { text-align: center; }
       .metric-num {
-        font-family: 'Luminari', fantasy;
-        font-size: 2rem;
-        color: rgb(218, 72, 72);
-        line-height: 1.1;
+        font-family: var(--font-display);
+        font-size: var(--text-xl);
+        /* the deep accent: this is small-to-mid display text on paper, and the
+           brighter brand red only clears 3.28:1 there */
+        color: var(--bog-red-deep);
+        line-height: 1.15;
+        padding-bottom: 2px;
       }
-      .metric-label { font-size: 0.85rem; color: rgb(54, 50, 41); }
+      .metric-label { font-size: var(--text-sm); color: var(--bog-ink); }
 
-      /* Spin the wheel */
-      .spin-btn {
-        font-family: 'Luminari', fantasy;
-        font-size: 1.1rem;
-        padding: 0.6rem 1.2rem;
-        background: rgb(135, 89, 33);
-        color: wheat;
-        border: none;
-        border-radius: 4px;
-        cursor: pointer;
-      }
-      .spin-btn:hover { background: rgb(218, 72, 72); }
-      .spin-btn:disabled { opacity: 0.6; cursor: default; }
-      .spin-result { margin-top: 1rem; min-height: 1.4em; }
+      /* ---- spin the wheel ---- */
+      .spin-result { margin-top: var(--space-4); min-height: 1.4em; }
 
       .wheel-wrap {
         position: relative;
         width: 220px;
         height: 220px;
-        margin: 0.5rem auto 1.2rem;
+        margin: var(--space-2) auto var(--space-4);
       }
       .bog-wheel {
         width: 100%;
@@ -119,7 +151,7 @@
         border-radius: 50%;
         background: url('/assets/bog-wheel.jpg') center / 118% no-repeat;
         box-shadow: 0 4px 14px rgba(54, 50, 41, 0.45),
-                    inset 0 0 0 4px rgba(135, 89, 33, 0.5);
+                    inset 0 0 0 4px var(--bog-brown-soft);
         transform: rotate(0deg);
         transition: transform 4s cubic-bezier(0.17, 0.67, 0.18, 1);
       }
@@ -128,10 +160,10 @@
         top: -8px;
         left: 50%;
         transform: translateX(-50%);
-        color: rgb(218, 72, 72);
-        font-size: 1.7rem;
+        color: var(--bog-red-deep);
+        font-size: var(--text-lg);
         line-height: 1;
-        filter: drop-shadow(0 1px 1px rgba(0, 0, 0, 0.35));
+        filter: drop-shadow(0 1px 1px rgba(54, 50, 41, 0.35));
         pointer-events: none;
         z-index: 2;
       }
@@ -139,34 +171,112 @@
 
       .spin-section { text-align: center; }
       .spin-section .spin-result {
-        font-size: 1.15rem;
+        font-size: var(--text-md);
         line-height: 1.5;
       }
+      .spin-btn:disabled { opacity: 0.6; cursor: default; }
 
-      /* clickable artist names in the charts */
-      .artist-link { cursor: pointer; color: rgb(135, 89, 33); }
-      .artist-link:hover { color: rgb(218, 72, 72); text-decoration: underline; }
+      /* Clickable artist names in the charts: clicking one runs it as a search.
+         A real <button> (see tracks-page.js), stripped back to look like text. */
+      .artist-link {
+        cursor: pointer;
+        color: var(--bog-brown);
+        background: none;
+        border: none;
+        padding: 0;
+        font-family: inherit;
+        font-size: inherit;
+        text-align: left;
+      }
+      .artist-link:hover { color: var(--bog-red-deep); text-decoration: underline; }
+      .artist-link:focus-visible {
+        outline: 3px solid var(--bog-brown);
+        outline-offset: 2px;
+      }
+
+      /* ---- the two charts, side by side ------------------------------
+         These were two more full-width plates stacked under the search
+         results and the metrics, which made four near-identical list
+         sections in a row. Pairing them breaks the run. */
+      .chart-pair {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: var(--space-4);
+        width: 90%;
+        max-width: 900px;
+        margin: var(--space-4) auto;
+      }
+      /* Each column is full height so the pair reads as one unit, but the
+         parchment inside it is only as tall as its own list. The motif then
+         lands in the leftover space below the plate, on the background rather
+         than on the paper. */
+      .chart-col {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+
+      .chart-pair .textbox {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        flex: 0 0 auto;
+      }
+
+      /* Tail motif: the shared .bog-star mark, coloured for the vellum plate.
+         auto margins both sides centre it in whatever space the shorter list
+         leaves over; in the taller plate there is none, so it tucks under the
+         list instead. */
+      .chart-tail {
+        width: 42px;
+        /* auto both sides centres it in the leftover space */
+        margin: var(--space-4) auto;
+        color: var(--bog-brown);
+        opacity: 0.35;
+        flex-shrink: 0;
+      }
+      /* inside a chart column there is only room for one track per row */
+      .chart-pair .track-list {
+        grid-template-columns: 1fr;
+        column-gap: 0;
+      }
+
+      @media screen and (max-width: 768px) {
+        .track-list {
+          grid-template-columns: 1fr;
+          column-gap: 0;
+        }
+        .chart-pair {
+          width: 92%;
+        }
+      }
     </style>
   </head>
 
   <body class="radio-page">
 
+
+
     <div class="toolbar">
-      <a href="/index.html">Home</a>
-      <a href="/radio/index.html">Radio</a>
-      <a href="/about/index.html">About</a>
+      <a class="toolbar-logo" href="/index.html" aria-label="Bog Factor, back to the home page"><span>Bog</span> <span>Factor</span></a>
+      <nav class="toolbar-nav">
+        <a href="/radio/index.html">Radio</a>
+        <a href="/radio/tracks/index.html" aria-current="page">The Vault</a>
+        <a href="/about/index.html">About</a>
+      </nav>
     </div>
 
-    <div class="textbox tracks-intro">
-      <h1>The Vault</h1>
+    <div class="textbox page-intro tracks-intro">
+      <h1 class="page-title">The Vault</h1>
       <p>Everything Bog Factor has ever played, carefully dug up and laid out. Search it, see what we play most, or let the spinning wheel decide.</p>
     </div>
 
     <div class="textbox">
-      <h2>Search the Archives</h2>
+      <h2>Search the archives</h2>
+      <label class="visually-hidden" for="track-search">Search tracks by title or artist</label>
       <input type="search" id="track-search" class="track-search-input"
-             placeholder="Search by track or artist…" autocomplete="off" aria-label="Search tracks">
-      <p id="search-meta" class="search-meta"></p>
+             placeholder="Search by track or artist" autocomplete="off">
+      <p id="search-meta" class="search-meta" role="status"></p>
       <ul id="search-results" class="track-list"></ul>
     </div>
 
@@ -175,29 +285,37 @@
       <div id="metrics" class="metrics-grid"></div>
     </div>
 
-    <div class="textbox spin-section">
-      <h2>Spin the Wheel 🌀</h2>
+    <div class="textbox textbox--reading spin-section">
+      <h2>Spin the wheel</h2>
       <div class="wheel-wrap">
-        <div class="wheel-pointer">▼</div>
+        <div class="wheel-pointer" aria-hidden="true">&#9660;</div>
         <div id="bog-wheel" class="bog-wheel"></div>
       </div>
       <button type="button" id="spin-btn" class="spin-btn">Spin</button>
-      <div id="spin-result" class="spin-result"></div>
+      <div id="spin-result" class="spin-result" role="status"></div>
     </div>
 
-    <div class="textbox">
-      <h2>Most played tracks</h2>
-      <ul id="top-tracks" class="track-list"></ul>
-    </div>
+    <div class="chart-pair">
+      <div class="chart-col">
+        <div class="textbox">
+          <h2>Most played tracks</h2>
+          <ul id="top-tracks" class="track-list"></ul>
+        </div>
+        <span class="bog-star chart-tail" aria-hidden="true"></span>
+      </div>
 
-    <div class="textbox">
-      <h2>Most played artists</h2>
-      <ul id="top-artists" class="track-list"></ul>
+      <div class="chart-col">
+        <div class="textbox">
+          <h2>Most played artists</h2>
+          <ul id="top-artists" class="track-list"></ul>
+        </div>
+        <span class="bog-star chart-tail" aria-hidden="true"></span>
+      </div>
     </div>
 
     <footer class="footer">
-      <a href="https://www.instagram.com" target="_blank">Instagram</a>
-      <a href="mailto:hello@bogfactor.co.uk" target="_blank">Email</a>
+      <a href="https://www.instagram.com/bog_factor/" target="_blank" rel="noopener noreferrer">Instagram</a>
+      <a href="mailto:hello@bogfactor.co.uk">Email</a>
       <a href="#" data-contact>Contact</a>
     </footer>
   </body>

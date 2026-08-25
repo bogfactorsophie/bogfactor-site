@@ -1,6 +1,6 @@
 // Shared logic for the show admin tools. One script, two pages:
-//   - "Add New Show" (/admin/add-show/)        — has #show-form (create, or edit via ?id=)
-//   - "Manage Previous Shows" (/admin/shows/)   — has #shows-list (list + delete)
+//   - "Add New Show" (/admin/add-show/)        has #show-form (create, or edit via ?id=)
+//   - "Manage Previous Shows" (/admin/shows/)   has #shows-list (list + delete)
 // Each block below only runs if its DOM is present, so the same file drives both.
 // Requires tools/rekordbox-to-tracklist.js to be loaded first on the form page.
 (function () {

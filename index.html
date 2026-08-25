@@ -1,46 +1,136 @@
 <!doctype html>
-<html>
+<html lang="en-GB">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bog Factor</title>
-    <link rel="icon" type="image/x-icon" href="favicon.ico">
-    <link rel="icon" type="image/png" sizes="32x32" href="assets/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="assets/favicon-16x16.png">
+    <meta name="description" content="Bog Factor is a monthly radio show on EHFM in Edinburgh. Sophie and Emily play psychedelic folk, pagan boogie and sleaze, live on the first Friday of the month.">
+    <link rel="canonical" href="https://bogfactor.co.uk/">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Bog Factor">
+    <meta property="og:title" content="Bog Factor">
+    <meta property="og:description" content="A monthly radio show on EHFM, Edinburgh. Psychedelic folk, pagan boogie and sleaze, dug up from the bog.">
+    <meta property="og:url" content="https://bogfactor.co.uk/">
+    <meta property="og:image" content="https://bogfactor.co.uk/assets/vibes-graphic.jpg">
+    <meta property="og:locale" content="en_GB">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Bog Factor">
+    <meta name="twitter:description" content="A monthly radio show on EHFM, Edinburgh. Psychedelic folk, pagan boogie and sleaze, dug up from the bog.">
+    <meta name="twitter:image" content="https://bogfactor.co.uk/assets/vibes-graphic.jpg">
+
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.cdnfonts.com" crossorigin>
     <link href="https://fonts.cdnfonts.com/css/luminari" rel="stylesheet">
-    <link href="https://fonts.cdnfonts.com/css/noto-serif-gurmukhi" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Gurmukhi:wght@400;600&family=MedievalSharp&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
+
     <script src="scripts/draggable-suns.js"></script>
     <script src="scripts/schedule.js"></script>
     <script src="scripts/live-stream.js"></script>
     <script src="scripts/toolbar-live-widget.js"></script>
     <script src="scripts/upcoming-shows.js"></script>
+    <script src="scripts/recent-shows.js"></script>
     <script src="scripts/contact-form.js"></script>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "RadioSeries",
+      "name": "Bog Factor",
+      "url": "https://bogfactor.co.uk/",
+      "description": "A monthly radio show on EHFM in Edinburgh. Psychedelic folk, pagan boogie and sleaze.",
+      "inLanguage": "en-GB",
+      "genre": ["Folk", "Psychedelic", "Radio show"],
+      "productionCompany": {
+        "@type": "RadioStation",
+        "name": "EHFM",
+        "url": "https://www.ehfm.live"
+      },
+      "author": [
+        { "@type": "Person", "name": "Sophie" },
+        { "@type": "Person", "name": "Emily" }
+      ]
+    }
+    </script>
   </head>
 
-  <body>
-
-    <style>
-      body {
-        background: url('assets/vibes-graphic.jpg') no-repeat center center fixed;
-        background-size: cover;
-        display: flex;
-        flex-direction: column;
-        height: 100vh;
-        margin: 0;
-      }
-    </style>
-
+  <body class="landing-page">
 
     <div class="toolbar">
-      <a href="/index.html">Home</a>
-      <a href="/radio/index.html">Radio</a>
-      <a href="/about/index.html">About</a>
+      <span class="toolbar-logo" aria-hidden="true"><span>Bog</span> <span>Factor</span></span>
+      <nav class="toolbar-nav">
+        <a href="/radio/index.html">Radio</a>
+        <a href="/radio/tracks/index.html">The Vault</a>
+        <a href="/about/index.html">About</a>
+      </nav>
     </div>
 
+    <!-- The hero is static markup on purpose: it renders without JavaScript,
+         gives a crawler something to read, and reserves its own height so
+         live-stream.js filling in the status line cannot shift the page.
+         scripts/live-stream.js swaps it into its on-air state.
+
+         The arced wordmark used to be painted into the background photograph.
+         It is now type, which means it is the page's real h1, it stays crisp at
+         any size, and the photograph underneath is free of text. -->
+    <main class="hero" id="hero" data-live="false">
+      <!-- role="img" + aria-label, rather than a visually-hidden span beside an
+           aria-hidden svg: that arrangement put the name in the document twice,
+           so a crawler read "Bog Factor BOG FACTOR". This way the glyphs are the
+           only copy of the text and assistive tech gets one clean label. -->
+      <h1 class="wordmark">
+        <svg class="wordmark-svg" viewBox="0 0 640 215" role="img"
+             aria-label="Bog Factor" focusable="false">
+          <defs>
+            <!-- A wide, shallow arc (radius 560 over a 600 chord, so it rises
+                 about 87 units). The original painted wordmark curves gently;
+                 a tighter radius rotates the outer letters so steeply that the
+                 word reads as lopsided. -->
+            <path id="bog-arc" d="M 20,190 A 560,560 0 0 1 620,190" fill="none"></path>
+          </defs>
+          <text class="wordmark-text">
+            <textPath href="#bog-arc" startOffset="50%" text-anchor="middle">BOG FACTOR</textPath>
+          </text>
+        </svg>
+        <!-- the shared starburst, sized and placed as a share of the arc so it
+             tracks the wordmark at any width -->
+        <span class="bog-star wordmark-star" aria-hidden="true"></span>
+      </h1>
+
+      <div class="textbox hero-plate">
+        <p class="hero-status countdown" id="hero-status" role="status">Live on EHFM, first Friday of the month, 1pm to 2pm UK</p>
+        <p class="hero-lede">A monthly radio show on EHFM, broadcasting from Edinburgh. Sophie and Emily dig up psychedelic folk, pagan boogie, spiritual jazz and twisted bossa nova.</p>
+        <p class="hero-when">Live on the first Friday of the month, 1pm to 2pm UK.</p>
+        <div class="hero-actions" id="hero-actions">
+          <a class="play-btn" href="/radio/index.html">Hear the archive</a>
+        </div>
+      </div>
+    </main>
+
+    <!-- Town-crier cards, filled by scripts/upcoming-shows.js. Hidden until
+         there is something on the schedule to announce. -->
+    <section class="upcoming-section" id="upcoming-section" hidden>
+      <div class="upcoming-shows" id="upcoming-shows"></div>
+    </section>
+
+    <!-- The three most recent shows, filled by scripts/recent-shows.js from
+         /api/shows. Hidden until they load, so a failed fetch leaves no empty
+         frame behind. -->
+    <section class="textbox recent-section" id="recent-section" hidden>
+      <h2 class="recent-heading">Latest from the bog</h2>
+      <div class="recent-grid" id="recent-shows"></div>
+      <p class="recent-more"><a href="/radio/index.html">All the shows and their tracklists</a></p>
+    </section>
+
     <footer class="footer">
-      <a href="https://www.instagram.com/bog_factor/" target="_blank">Instagram</a>
-      <a href="mailto:hello@bogfactor.co.uk" target="_blank">Email</a>
+      <a href="https://www.instagram.com/bog_factor/" target="_blank" rel="noopener noreferrer">Instagram</a>
+      <a href="mailto:hello@bogfactor.co.uk">Email</a>
       <a href="#" data-contact>Contact</a>
     </footer>
   </body>
