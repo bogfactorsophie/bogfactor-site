@@ -1,0 +1,15 @@
+# Old URLs, kept alive.
+#
+# /about/ became /lore/ and /radio/tracks/ became /vault/ when the nav was
+# reworded away from the corporate register. Anything already linking to or
+# bookmarking the old paths — search results, the Instagram bio, a message
+# someone sent a year ago — still lands in the right place. 301, because these
+# moves are permanent and crawlers should transfer the old pages' standing to
+# the new ones.
+/about      /lore   301
+/about/     /lore/  301
+/about/index.html   /lore/  301
+
+/radio/tracks       /vault  301
+/radio/tracks/      /vault/ 301
+/radio/tracks/index.html    /vault/ 301

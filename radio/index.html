@@ -26,7 +26,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://fonts.cdnfonts.com" crossorigin>
-    <link href="https://fonts.cdnfonts.com/css/luminari" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/morris-roman" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Gurmukhi:wght@400;600&family=MedievalSharp&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../styles.css">
 
@@ -35,6 +35,7 @@
     <script src="../scripts/schedule.js"></script>
     <script src="../scripts/live-stream.js"></script>
     <script src="../scripts/toolbar-live-widget.js"></script>
+    <script src="../scripts/toolbar-menu.js"></script>
     <script src="../scripts/generate-show-list.js"></script>
     <script src="../scripts/contact-form.js"></script>
   </head>
@@ -45,23 +46,36 @@
       <a class="toolbar-logo" href="/index.html" aria-label="Bog Factor, back to the home page"><span>Bog</span> <span>Factor</span></a>
       <nav class="toolbar-nav">
         <a href="/radio/index.html" aria-current="page">Radio</a>
-        <a href="/radio/tracks/index.html">The Vault</a>
-        <a href="/about/index.html">About</a>
+        <a href="/vault/index.html">Vault</a>
+        <a href="/lore/index.html">Lore</a>
       </nav>
     </div>
 
-    <!-- This page had no h1 at all: it opened straight into the archive card,
-         whose heading is about the Vault rather than about this page. -->
-    <div class="textbox page-intro">
-      <h1 class="page-title">Every show</h1>
-      <p>Every Bog Factor broadcast on EHFM, newest first, with the full tracklist for each one.</p>
-    </div>
-
-    <div class="textbox archive-card">
-      <h2 class="archive-card-title">The Bog Archive</h2>
-      <p class="archive-card-text">Every track we have ever dug up. Search it, sort it, spin the wheel.</p>
-      <a href="/radio/tracks/index.html" class="play-btn">Search the tracks</a>
-    </div>
+    <!-- A masthead rather than a plate. Wrapped in .textbox this heading was
+         visually identical to every show card beneath it - same veil, same
+         noise, same measure - so it read as the first item in the list rather
+         than as the title of the list. On open ground it can only be a title. -->
+    <header class="page-masthead">
+      <!-- The hero's arced wordmark at page-title scale: same lime, same dark
+           halo, same starburst under the curve. role="img" + aria-label rather
+           than a hidden span beside an aria-hidden svg, so the name is in the
+           document once. -->
+      <h1 class="page-title page-arc">
+        <svg class="page-arc-svg" viewBox="0 0 480 132" role="img"
+             aria-label="Radio Archive" focusable="false">
+          <defs>
+            <!-- the hero arc's proportions, scaled: a 450 chord on a 420 radius
+                 rises about 60, the same shallow curve at three quarters size -->
+            <path id="page-arc-path" d="M 15,118 A 420,420 0 0 1 465,118" fill="none"></path>
+          </defs>
+          <text class="page-arc-text">
+            <textPath href="#page-arc-path" startOffset="50%" text-anchor="middle">Radio Archive</textPath>
+          </text>
+        </svg>
+        <span class="bog-star page-arc-star" aria-hidden="true"></span>
+      </h1>
+      <p class="page-masthead__lead">Bog Factor shows from days of yore</p>
+    </header>
 
     <div id="shows-container"></div>
 

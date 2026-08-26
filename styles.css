@@ -45,9 +45,14 @@
     --radius-soft: 6px;      /* cards, inputs, images, modals */
     --radius-pill: 999px;    /* chips and interactive pills */
 
-    /* ---- type ---------------------------------------------------------- */
-    --font-display: 'Luminari', 'Papyrus', fantasy;
-    --font-script:  'MedievalSharp', 'Luminari', cursive;
+    /* ---- type ----------------------------------------------------------
+       Morris Roman is Steffmann's revival of William Morris's Golden/Troy
+       type, so the display face is now literal Arts-and-Crafts lettering
+       rather than Luminari's fantasy-novel approximation of it. It ships in
+       one weight only (900), so anything asking for bold gets it already and
+       a `font-weight` on display type is a no-op. */
+    --font-display: 'Morris Roman', 'Luminari', 'Papyrus', fantasy;
+    --font-script:  'MedievalSharp', 'Morris Roman', cursive;
     --font-body:    'Noto Serif Gurmukhi', Georgia, serif;
 
     --text-xs:   0.82rem;
@@ -84,16 +89,18 @@ body {
     margin: auto;
 }
 
-/* The plain plate: same collage, with the arced "BOG FACTOR" and its glyph
-   removed. Those are drawn as type now (see .wordmark), so the photograph is
-   not carrying text that competes with the page's own headings. One shared
-   asset across every page, so browsing the site does not fetch two versions of
-   the same picture. */
+/* The plain plate: the same collage cropped to its top band (0-770px of the
+   original 1638x2048), which sits clear of the arced "BOG FACTOR" and its
+   glyph. Cropping rather than erasing them: the retouched version left visible
+   smearing across the middle of the picture. The wordmark is drawn as type now
+   (see .wordmark), so the photograph does not carry text competing with the
+   page's own headings. One shared asset across every page, so browsing the site
+   does not fetch two versions of the same picture. */
 body.landing-page,
 body.radio-page,
-body.about-page,
+body.lore-page,
 body.blog-page {
-    background: url('assets/vibes-graphic-plain.jpg') no-repeat center center fixed;
+    background: url('assets/vibes-graphic-crop.jpg') no-repeat center center fixed;
     background-size: cover;
 }
 
@@ -147,10 +154,10 @@ body.landing-page {
 }
 
 /* ---- typography -------------------------------------------------------
-   Luminari is the display face and carries the brand. MedievalSharp is the
+   Morris Roman is the display face and carries the brand. MedievalSharp is the
    second display face and is now reserved for one role: the "hand-lettered
    sign" moments (modal headings, the archive button). It used to compete with
-   Luminari on buttons, labels and the toolbar all at once. */
+   the display face on buttons, labels and the toolbar all at once. */
 
 .main-title a {
     color: var(--bog-brown);
@@ -227,7 +234,7 @@ h3 {
 .textbox {
     --measure: 900px;
     margin: var(--space-4) auto;
-    padding: var(--space-4);
+    padding: var(--space-5) var(--space-4);
     width: 90%;
     max-width: var(--measure);
     background: var(--bog-paper-veil);
@@ -238,13 +245,40 @@ h3 {
     scroll-margin-top: 100px;
 }
 
+/* A plate's padding is the only thing that should set the space inside its
+   edges, and it was not: every card on the site opens with an <h2>, whose
+   default top margin does NOT collapse through the parent's padding. So each
+   plate carried its 20px of padding PLUS ~19px of stray heading margin at the
+   top, against 20px of padding alone at the foot — 39 above, 20 below, on every
+   card on every page. Zeroing the outer margins of the first and last children
+   hands the spacing back to the padding, top and bottom alike.
+
+   These are `> *` rather than named elements so a card opening with a <p> or a
+   <div> is balanced too, and they survive the narrower padding the mobile
+   breakpoints set further down. */
+.textbox > :first-child {
+    margin-top: 0;
+}
+
+.textbox > :last-child {
+    margin-bottom: 0;
+}
+
+/* A status line or a results list that has nothing in it yet should take up no
+   room. Both start empty on /vault/, and their margins were adding a phantom
+   band under the search field before a single result existed. */
+.textbox .search-meta:empty,
+.textbox .track-list:empty {
+    margin: 0;
+}
+
 /* Prose sits on a reading measure rather than the full plate width. Using this
    next to a default .textbox is what gives a page vertical rhythm. */
 .textbox--reading {
     --measure: 640px;
 }
 
-/* An interior page's own h1. /radio/ and /about/ had no h1 at all, and the bare
+/* An interior page's own h1. /radio/ and /lore/ had no h1 at all, and the bare
    h1 size (2.6rem) is a hero scale that would shout inside a plate. This is the
    page-heading scale: same face and colour, one step down. */
 .page-title {
@@ -254,6 +288,90 @@ h3 {
 
 .page-intro p {
     margin: 0;
+}
+
+/* ---- page masthead ------------------------------------------------------
+   The title of a page, set on open ground instead of on a .textbox plate.
+
+   On /radio/ the heading used to sit in a plate identical to the show cards
+   below it, so nothing but its position said it outranked them, and position
+   alone does not read as rank.
+
+   The title itself is the hero's arced wordmark at a smaller scale: lime type
+   on the shallow curve, dark halo, starburst beneath. That is also what makes
+   it legible here - the same treatment already survives this photograph on the
+   landing page, where plain brown text on the carved stone does not. */
+.page-masthead {
+    width: 90%;
+    max-width: 480px;
+    /* the space underneath is doing the ranking: it is what separates a title
+       from the first thing it titles */
+    margin: var(--space-4) auto var(--space-5);
+    text-align: center;
+}
+
+.page-masthead .page-title {
+    margin: 0;
+    /* the arc is a mark, not prose */
+    user-select: none;
+    -webkit-user-select: none;
+    /* the starburst is positioned against this box */
+    position: relative;
+    line-height: 1;
+}
+
+.page-arc-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    /* the hero's halo, unchanged: lime alone measures about 1.5:1 on the
+       photograph, and this lifts it off the stone without altering the colour */
+    filter:
+        drop-shadow(0 1px 0 rgba(31, 26, 20, 0.55))
+        drop-shadow(0 0 5px rgba(31, 26, 20, 0.8));
+}
+
+/* One size for every page. The titles are all of a length - "Every show",
+   "The Vault", "Our Lore" - so none of them needs its own value. An earlier
+   draft carried per-page sizes because /lore/ read "Welcome to the Bog",
+   which overran the arc by a third; shortening the title was the better fix
+   and took the special cases with it. */
+.page-arc-text {
+    font-family: var(--font-display);
+    font-size: 70px;
+    letter-spacing: 0.05em;
+    fill: var(--bog-lime);
+}
+
+/* Sits where the hero's does: centred, and 82% of the way down its box. */
+.page-arc-star {
+    position: absolute;
+    left: 50%;
+    top: 82%;
+    width: 8%;
+    transform: translate(-50%, -50%);
+    color: var(--bog-lime);
+    filter:
+        drop-shadow(0 1px 0 rgba(31, 26, 20, 0.55))
+        drop-shadow(0 0 5px rgba(31, 26, 20, 0.8));
+}
+
+.page-masthead__lead {
+    /* Ink with a paper halo, the opposite way round from the arc above it. The
+       arc is pale type and takes a dark halo; this is a line of prose, and the
+       top of the background photograph is pale stone, so pale-on-pale had no
+       contrast at all. Dark type lifted by a light halo is what reads here. */
+    max-width: 44ch;
+    /* The starburst hangs to the very bottom of the h1's box (it is absolutely
+       placed at 82% and pulled back by half its own height), so with no top
+       margin here the strapline sat all but touching it. The hero gives its
+       lede the same air below the wordmark. */
+    margin: var(--space-4) auto 0;
+    color: var(--bog-ink);
+    filter:
+        drop-shadow(0 1px 0 rgba(247, 224, 193, 0.9))
+        drop-shadow(0 0 5px rgba(247, 224, 193, 0.95));
 }
 
 .banner {
@@ -297,21 +415,27 @@ h3 {
     user-select: none;
     -webkit-user-select: none;
     font-family: var(--font-display);
-    font-size: var(--text-md);
+    /* A step up from where it sat under Luminari. Morris Roman has a smaller
+       cap height for a given size, and dropping the uppercasing took away the
+       rest: title case is shorter than caps, so the mark read smaller at the
+       same value even though nothing about the size had changed. */
+    font-size: var(--text-lg);
     line-height: 1.05;
     letter-spacing: 0.04em;
-    text-transform: uppercase;
+    /* breathing room off the left edge, so the mark is not wedged into the
+       corner. The toolbar's own padding alone read as tight once the logo grew. */
+    padding-left: var(--space-3);
     color: var(--bog-brown);
     text-decoration: none;
     white-space: nowrap;
     flex-shrink: 0;
 }
 
-/* A logo should carry a bit more presence than a nav link. Only above the
-   mobile breakpoint: the two-line lockup below it is already tuned to fit. */
+/* A logo should carry a bit more presence than a nav link. */
 @media screen and (min-width: 769px) {
     .toolbar-logo {
-        font-size: var(--text-lg);
+        font-size: var(--text-xl);
+        padding-left: var(--space-4);
     }
 }
 
@@ -375,6 +499,146 @@ span.toolbar-logo {
     color: var(--bog-brown);
     text-decoration: underline;
     text-underline-offset: 3px;
+}
+
+/* ---- toolbar dropdown --------------------------------------------------
+   The three links used to sit open in the bar. scripts/toolbar-menu.js wraps
+   them in this trigger + panel; without that script the nav renders as it
+   always did, so everything here is additive.
+
+   Note the knock-on: the bar no longer has to fit three links, the logo and the
+   live controls side by side, which is what the tightest of the small-screen
+   overrides further down were bought to solve. */
+.toolbar-menu {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.toolbar-menu-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--bog-green);
+    background: transparent;
+    border: 0;
+    padding: var(--space-1) var(--space-2);
+    /* a comfortable target without the button reading as a box */
+    min-height: 44px;
+    min-width: 44px;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.toolbar-menu-trigger:hover {
+    color: var(--bog-red-deep);
+}
+
+.toolbar-menu-trigger:focus-visible {
+    outline: 3px solid var(--bog-brown);
+    outline-offset: 2px;
+}
+
+/* Three bars, drawn rather than set as a glyph so they take currentColor and
+   follow the trigger's hover and focus states. On open the outer two rotate
+   into a cross and the middle one fades, so the same control says "close". */
+.toolbar-menu-icon {
+    position: relative;
+    display: block;
+    width: 22px;
+    height: 16px;
+}
+
+.toolbar-menu-icon span {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    border-radius: 1px;
+    background-color: currentColor;
+    transition: transform 150ms ease, opacity 150ms ease;
+}
+
+.toolbar-menu-icon span:nth-child(1) { top: 0; }
+/* -1px, not a translate: the bar is 2px tall, so this is what centres it */
+.toolbar-menu-icon span:nth-child(2) { top: 50%; margin-top: -1px; }
+.toolbar-menu-icon span:nth-child(3) { bottom: 0; }
+
+.toolbar-menu.is-open .toolbar-menu-icon span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+
+.toolbar-menu.is-open .toolbar-menu-icon span:nth-child(2) {
+    opacity: 0;
+}
+
+.toolbar-menu.is-open .toolbar-menu-icon span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+}
+
+/* The panel. Right-aligned because the nav sits at the right of the bar, and
+   a left-aligned panel would hang off the edge on a phone. */
+.toolbar-menu-panel {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    min-width: 11em;
+    padding: var(--space-2);
+    margin-top: var(--space-1);
+    background-color: var(--bog-toolbar);
+    border: 1px solid var(--bog-brown-soft);
+    border-radius: var(--radius-soft);
+    box-shadow: 0 6px 18px rgba(31, 26, 20, 0.28);
+    z-index: var(--z-toolbar);
+    /* Closed by default. visibility (not just opacity) so the links are out of
+       the tab order and out of the accessibility tree while hidden. */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: opacity 150ms ease, transform 150ms ease, visibility 150ms;
+}
+
+.toolbar-menu.is-open .toolbar-menu-panel {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Stacked, the links want to be rows rather than inline text.
+
+   Doubled up on `.toolbar-nav` for specificity, not for effect: the small-screen
+   overrides near the foot of this file set `.toolbar-nav a` to a centred flex
+   box so the links could survive as a row on a 360px bar. In a dropdown they
+   are not a row any more, and those rules would otherwise win on source order. */
+.toolbar-menu-panel.toolbar-nav a {
+    display: block;
+    padding: var(--space-2) var(--space-3);
+    margin: 0;
+    border-radius: var(--radius-soft);
+    text-align: left;
+    white-space: nowrap;
+    /* the row itself is the target, so it does not need a min-height of its own
+       beyond what the padding already gives it */
+    min-height: 0;
+}
+
+.toolbar-menu-panel.toolbar-nav a:hover {
+    background-color: var(--bog-brown-hair);
+    text-decoration: none;
+}
+
+.toolbar-menu-panel.toolbar-nav a[aria-current="page"] {
+    background-color: var(--bog-brown-hair);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .toolbar-menu-icon span,
+    .toolbar-menu-panel {
+        transition: none;
+    }
 }
 
 /* Toolbar Live Widget.
@@ -519,7 +783,7 @@ span.toolbar-logo {
 }
 
 body.radio-page .sun-container,
-body.about-page .sun-container,
+body.lore-page .sun-container,
 body.blog-page .sun-container {
     z-index: var(--z-behind);
     pointer-events: none;
@@ -866,32 +1130,6 @@ img {
     margin-right: var(--space-3);
 }
 
-/* "The Bog Archive" feature card at the top of the radio page */
-.archive-card {
-    text-align: center;
-}
-
-.archive-card-title {
-    font-family: var(--font-display);
-    font-size: var(--text-xl);
-    line-height: 1.15;
-    padding-bottom: var(--space-1);
-    color: var(--bog-brown);
-    margin: 0 0 var(--space-2);
-}
-
-.archive-card-text {
-    margin: 0 auto var(--space-4);
-    max-width: 32em;
-    color: var(--bog-ink);
-}
-
-.archive-card .play-btn {
-    display: inline-block;
-    color: var(--bog-wheat);
-    text-decoration: none;
-}
-
 .button-container {
     display: flex;
     justify-content: center;
@@ -927,18 +1165,18 @@ img {
     box-shadow: 0 4px 15px rgba(54, 50, 41, 0.25);
 }
 
-.about-page a {
+.lore-page a {
     color: var(--bog-brown);
     text-decoration: none;
     transition: color 0.3s ease;
 }
 
-.about-page a:hover {
+.lore-page a:hover {
     color: var(--bog-red-deep);
     text-decoration: underline;
 }
 
-.about-page a:visited {
+.lore-page a:visited {
     color: var(--bog-plum);
 }
 
@@ -950,7 +1188,7 @@ img {
 
 /* The track lists set `list-style: none; padding: 0` on themselves, but
    `.textbox ul` above is one specificity point higher and was winning, so every
-   row on /radio/tracks/ carried a bullet and a 25px indent it never wanted.
+   row on /vault/ carried a bullet and a 25px indent it never wanted.
    Qualifying the selector settles it. */
 .textbox .track-list {
     list-style: none;
@@ -1041,59 +1279,84 @@ html {
 }
 
 /* ============================================================
-   Landing hero
+   Landing hero: the billboard
 
-   Replaces the 350px fixed corner card that used to carry the countdown, the
-   listen button and the coming-up list all at once. Those three jobs now have
-   three homes: the status line here, the dock at the foot of the page, and the
-   town-crier section below.
+   Section one is the whole first screen: name, one line about the show, the
+   crier's notice of what is next, and an invitation to scroll. The plate that
+   used to sit here carried four unrelated jobs (countdown, strapline, schedule,
+   archive link). The archive link went away because the archive is one scroll
+   down; the rest is the crier card's, which sits in the hero itself now — see
+   the Upcoming Shows block below.
 
-   Off air this is the show's front door. On air the same plate takes the
-   accent and becomes the live moment, without moving anything around, so the
-   page does not reshuffle under a returning listener.
+   The type sits straight on the photograph rather than on vellum, and now with
+   no wash pooled behind it either: the picture is at full strength edge to
+   edge, and each piece of copy earns its own legibility with a dark halo.
    ============================================================ */
 .hero {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    /* Capped top space. The old widget floated a third of the way down the
-       viewport, which read as a bug rather than as breathing room. */
-    padding: var(--space-4) var(--space-4);
+    justify-content: center;
+    /* One screen, less the sticky toolbar above it. --toolbar-height is set by
+       live-stream.js; the fallback matches .toolbar's reserved min-height so
+       the first paint is right even before that runs. */
+    min-height: calc(100dvh - var(--toolbar-height, 72px));
+    padding: var(--space-5) var(--space-4) calc(var(--space-5) * 2.5);
     box-sizing: border-box;
+    text-align: center;
     /* Above the suns, so the copy is never covered. */
-    position: relative;
     z-index: var(--z-content);
-    /* This wrapper is transparent and full-width, so on its own it was swallowing
-       clicks across the whole top of the page and leaving the suns beside the
-       plate unpickable. Only the plate itself should intercept. */
+    /* This wrapper is transparent and full-width, so on its own it swallowed
+       clicks across the whole top of the page and left the suns beside the copy
+       unpickable. Only the copy and the controls should intercept. */
     pointer-events: none;
 }
 
-.hero-plate {
-    pointer-events: auto;
+/* The wash is off, so the collage is at full strength behind the copy.
+   Everything in the hero already carries its own dark halo — the wordmark and
+   the starburst through drop-shadow filters, the prose through text-shadow —
+   which is what makes this survivable at all. Restore it by putting the rule
+   below back:
+
+   .hero::before {
+       content: '';
+       position: absolute;
+       inset: 0;
+       background:
+           radial-gradient(ellipse 46% 40% at 50% 45%,
+               rgba(31, 26, 20, 0.68) 0%,
+               rgba(31, 26, 20, 0.42) 48%,
+               rgba(31, 26, 20, 0) 76%);
+       pointer-events: none;
+       z-index: -1;
+   }
+*/
+
+.hero-inner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 760px;
 }
 
 /* ---- the arced wordmark ----------------------------------------------
-   Type on an SVG path, in the lime sampled straight out of the original
-   artwork (#becd79), hollow like the painted original. Being real text it
-   scales without blurring, and the h1 carries the site's name in the markup
-   where a background image never could. */
+   Type on an SVG path, filled in the lime sampled straight out of the original
+   artwork (#becd79). Being real text it scales without blurring, and the h1
+   carries the site's name in the markup where a background image never could. */
 .wordmark {
     width: 100%;
-    max-width: 640px;
+    /* vw-capped rather than a flat pixel width: the arc is the page's one big
+       gesture and should scale with the screen, but it stops short of the
+       gutters so the outer letters never run off the frame. */
+    max-width: min(760px, 62vw);
     margin: 0 0 var(--space-4);
     padding: 0;
     line-height: 1;
     /* the arc is decoration around the letters; clicks pass through to any sun
-       sitting behind it */
+       sitting behind it, and it keeps the mark out of drag-selection too */
     pointer-events: none;
-    /* Not selectable. These letters are `fill: none`, so a selection highlight
-       paints a solid block per glyph and the word turns into a row of green
-       rectangles. It would happen a lot, too: dragging a sun means dragging
-       across the hero. The name is still in the title, the meta and the svg's
-       aria-label, so nothing is lost by making the mark itself inert. */
-    user-select: none;
-    -webkit-user-select: none;
     /* the starburst is positioned against this box */
     position: relative;
 }
@@ -1131,105 +1394,121 @@ html {
 
 .wordmark-text {
     font-family: var(--font-display);
-    font-size: 76px;
+    /* Sized so "Bog Factor" fills about four fifths of the arc. Mixed case is
+       far narrower than the caps this replaced, which left the mark stranded in
+       the middle of the curve at the old 76px. */
+    font-size: 106px;
     letter-spacing: 0.05em;
-    fill: none;
-    stroke: var(--bog-lime);
-    /* thicker than a hairline: these are hollow letters sitting over a busy
-       photograph, and a thin stroke disappears into the carved stone behind */
-    stroke-width: 3.5;
-    stroke-linejoin: round;
-    paint-order: stroke;
+    fill: var(--bog-lime);
 }
 
-/* Reuses .textbox, so the vellum and its noise texture come along unchanged.
-   Sits below the wordmark rather than beside it, so the arc has the top of the
-   picture to itself. */
-.hero-plate {
-    --measure: 640px;
-    width: 100%;
+/* The one line of prose in the hero. Set in paper rather than white — the
+   brief rules out hard whites, and the cream is the same stock the cards below
+   are printed on, so the page reads as one material. */
+.hero-lede {
+    pointer-events: auto;
     margin: 0;
-    padding: var(--space-4) var(--space-5);
-    border-left: 6px solid var(--bog-brown);
-    transition: border-color 0.3s ease;
-    /* Deliberately NOT overriding the plate's background. Measured against the
-       interior plates, the hero renders #cab3a7 where they render #cbb5a6: the
-       same vellum. It reads cooler than the modal only because the modal has no
-       noise texture over its paper. Left alone so the hero is made of exactly
-       the same paper as the rest of the site. */
+    max-width: 30em;
+    font-family: var(--font-body);
+    font-size: clamp(1.12rem, 1.6vw, 1.35rem);
+    line-height: 1.5;
+    color: var(--bog-paper);
+    text-shadow:
+        0 1px 0 rgba(31, 26, 20, 0.6),
+        0 0 12px rgba(31, 26, 20, 0.7);
 }
 
-/* Sentence case on purpose. An uppercase wide-tracked label here would be a
-   fourth typographic voice on the page for no gain. */
+/* Off air this is empty: the crier card in the hero answers when the next show
+   is. This line only speaks when the show is actually on. */
 .hero-status {
-    display: flex;
+    display: none;
     align-items: center;
     gap: var(--space-2);
-    /* Reserved. live-stream.js fills this in once /api/schedule resolves, and
-       an unreserved line here shifted the whole hero downward on every load. */
-    min-height: 26px;
-    margin: 0 0 var(--space-2);
+    margin: var(--space-4) 0 0;
     font-family: var(--font-body);
     font-weight: 600;
-    font-size: var(--text-sm);
-    color: var(--bog-brown);
-}
-
-/* The card answers the three questions a first-time visitor has: what this is,
-   what the show is, and when it is on. That is one text element more than the
-   hero discipline I have been holding elsewhere, and it is deliberate: the point
-   of this card is now to inform, and the arc above it carries the name. */
-.hero-lede {
-    margin: 0 0 var(--space-2);
-    max-width: 46em;
     font-size: var(--text-md);
-    line-height: 1.5;
-}
-
-.hero-when {
-    margin: 0 0 var(--space-4);
-    font-family: var(--font-body);
-    font-weight: 600;
-    font-size: var(--text-base);
-    color: var(--bog-brown);
-}
-
-.hero-actions {
-    display: flex;
-    flex-wrap: wrap;
-    align-items: center;
-    gap: var(--space-3);
-    /* reserved for the same reason as .hero-status */
-    min-height: 50px;
-}
-
-.hero-actions .play-btn {
-    display: inline-block;
-    color: var(--bog-wheat);
-    text-decoration: none;
-}
-
-/* the secondary action is a quieter sibling, not a second primary */
-.hero-actions .hero-link {
-    font-family: var(--font-body);
-    font-size: var(--text-base);
-    color: var(--bog-brown);
-    text-decoration: underline;
-    text-underline-offset: 3px;
-}
-
-.hero-actions .hero-link:hover {
-    color: var(--bog-red-deep);
-}
-
-/* ---- on air ---- */
-.hero[data-live="true"] .hero-plate {
-    border-left-color: var(--bog-red);
+    color: var(--bog-lime);
+    text-shadow: 0 1px 0 rgba(31, 26, 20, 0.6), 0 0 10px rgba(31, 26, 20, 0.8);
 }
 
 .hero[data-live="true"] .hero-status {
-    color: var(--bog-red-deep);
+    display: flex;
+}
+
+/* Empty in both states on the live site, and collapsed when it is. The hero
+   carries no play or chat control of its own any more: off air the EHFM dock in
+   the corner plays the station, and on air the toolbar grows its own LIVE NOW
+   and Chat pair beside it — the hero's copies were a third and fourth way to
+   press the same two buttons. The row survives so the test pages can author a
+   control here to drive the stream directly. */
+.hero-actions {
+    pointer-events: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+    min-height: 46px;
+}
+
+.hero-actions:empty {
+    display: none;
+}
+
+/* ---- the scroll cue ----------------------------------------------------
+   The billboard's one job after the pitch is to say "there is more below".
+   Pinned to the foot of the first screen so it lands on the fold rather than
+   floating under the copy. */
+.hero-scroll {
+    pointer-events: auto;
+    position: absolute;
+    left: 50%;
+    bottom: var(--space-5);
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+    text-decoration: none;
+    font-family: var(--font-display);
     font-size: var(--text-md);
+    letter-spacing: 0.04em;
+    color: var(--bog-paper);
+    /* a heavier halo than the rest of the hero copy gets: the cue sits at the
+       foot of the frame, outside the wash, on the lightest part of the photo */
+    text-shadow:
+        0 1px 0 rgba(31, 26, 20, 0.75),
+        0 0 14px rgba(31, 26, 20, 0.95);
+    opacity: 0.95;
+    transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.hero-scroll:hover {
+    opacity: 1;
+    color: var(--bog-lime);
+}
+
+.hero-scroll:focus-visible {
+    outline: 3px solid var(--bog-lime);
+    outline-offset: 4px;
+}
+
+/* Two hairlines rotated into a chevron, so the cue costs no asset and takes
+   currentColor along with the label. */
+.hero-scroll__chevron {
+    width: 15px;
+    height: 15px;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg);
+    animation: heroScrollBob 2.6s ease-in-out infinite;
+}
+
+@keyframes heroScrollBob {
+    0%, 100% { transform: rotate(45deg) translate(0, 0); }
+    50%      { transform: rotate(45deg) translate(3px, 3px); }
 }
 
 /* ============================================================
@@ -1243,6 +1522,9 @@ html {
 .recent-section {
     position: relative;
     z-index: var(--z-content);
+    /* The hero's "Dig deeper" cue points here now that the crier has moved up
+       into the hero, so this has to clear the sticky toolbar when it lands. */
+    scroll-margin-top: calc(var(--toolbar-height, 72px) + var(--space-4));
 }
 
 .recent-heading {
@@ -1252,11 +1534,75 @@ html {
     line-height: 1.15;
     padding-bottom: var(--space-1);
     color: var(--bog-brown);
+    /* room for the archive mark in the corner, so a long heading never runs
+       under it */
+    padding-right: var(--space-5);
 }
 
+/* The way through to the whole archive, as a mark in the corner of the plate
+   rather than a sentence under the cards. A shovel, echoing the hero's "Dig
+   deeper" cue. Sized as a proper tap target, which the icon alone would not be. */
+.recent-all {
+    position: absolute;
+    top: var(--space-3);
+    right: var(--space-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    /* Outlined like the Listen pills below it, so it reads as a door rather
+       than as decoration someone left in the corner. */
+    border: 2px solid var(--bog-brown-soft);
+    border-radius: var(--radius-pill);
+    text-decoration: none;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.recent-all__icon {
+    display: block;
+    width: 26px;
+    height: 26px;
+    /* the shovel is drawn on a slight diagonal already; a little more tips it
+       into the ground rather than lying flat in the corner */
+    transform: rotate(-8deg);
+    /* Warms the icon's cool blade towards the page's earth palette. The wash
+       has to stay light on brightness: the blade is nearly white to begin with,
+       and washing it further left it dissolving into the parchment. The
+       contrast bump keeps the outline doing the work of reading as a shovel at
+       26px. */
+    filter: sepia(0.45) saturate(1.2) contrast(1.08);
+    transition: transform 0.2s ease;
+}
+
+.recent-all:hover,
+.recent-all:focus {
+    /* a wash rather than the Listen pill's solid brown fill: the shovel is a
+       coloured illustration, not a glyph in currentColor, and a dark fill
+       behind it just muddies it */
+    background-color: var(--bog-brown-hair);
+    border-color: var(--bog-brown);
+}
+
+/* it digs */
+.recent-all:hover .recent-all__icon,
+.recent-all:focus .recent-all__icon {
+    transform: rotate(-22deg);
+}
+
+.recent-all:focus-visible {
+    outline: 3px solid var(--bog-brown);
+    outline-offset: 2px;
+}
+
+/* Three across, always one row. This was auto-fit with a 220px minimum, which
+   sounds flexible but let the column count fall out of whatever width the
+   section happened to have: between 769px and about 880px it resolved to two
+   columns and dropped the third card onto a row of its own, which reads as a
+   broken grid rather than as flow. Three cards, three columns, no wrap. */
 .recent-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    grid-template-columns: repeat(3, 1fr);
     gap: var(--space-4);
 }
 
@@ -1289,12 +1635,25 @@ html {
     min-width: 0;
 }
 
+/* Date and title on one line. They wrap onto two only when the title is long
+   enough to need it, and the date keeps its own baseline either way. */
+.recent-card__meta {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-2);
+    min-width: 0;
+}
+
 .recent-card__when {
     margin: 0;
     font-family: var(--font-body);
     font-size: var(--text-xs);
     font-weight: 600;
     color: var(--bog-brown);
+    /* the date is the short, fixed half of the row: never let it be the thing
+       that wraps */
+    flex: 0 0 auto;
 }
 
 .recent-card__title {
@@ -1303,6 +1662,7 @@ html {
     font-size: var(--text-base);
     line-height: 1.2;
     padding-bottom: 2px;
+    min-width: 0;
 }
 
 .recent-card__title a {
@@ -1366,21 +1726,6 @@ html {
 .recent-card__listen:focus-visible {
     outline: 3px solid var(--bog-brown);
     outline-offset: 2px;
-}
-
-.recent-more {
-    margin: var(--space-4) 0 0;
-    font-size: var(--text-sm);
-}
-
-.recent-more a {
-    color: var(--bog-brown);
-    text-decoration: underline;
-    text-underline-offset: 3px;
-}
-
-.recent-more a:hover {
-    color: var(--bog-red-deep);
 }
 
 
@@ -1603,8 +1948,10 @@ html {
     }
 }
 
-/* The countdown line. `.countdown` is kept as a second class on .hero-status so
-   live-stream.js and the tools/test-*.html pages can keep addressing it. */
+/* The countdown line. `.countdown` rides along as a second class on the crier
+   card's "when" line so the tools/test-*.html pages have one stable hook to
+   read it from. It stays put whether or not that line is currently ticking —
+   the loud styling is `.crier-card__when--countdown`, which comes and goes. */
 .countdown {
     font-weight: 600;
 }
@@ -1721,10 +2068,18 @@ html {
         box-sizing: border-box;
     }
 
-    /* two cards abreast at most on a phone, so the artwork stays legible */
+    /* Two abreast on a phone, and only two cards to fill them: three cards in
+       two columns left an orphan on a second row. The third is hidden rather
+       than dropped in recent-shows.js so the count follows the layout — rotate
+       to landscape and the full three come back with no rerender. Its artwork
+       is `loading="lazy"`, so a hidden card costs no request either. */
     .recent-grid {
-        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        grid-template-columns: repeat(2, 1fr);
         gap: var(--space-3);
+    }
+
+    .recent-card:nth-child(n + 3) {
+        display: none;
     }
 
     /* the landing sections need the full mobile width, not the 500px reading
@@ -1734,27 +2089,23 @@ html {
         width: 92%;
     }
 
-    /* the hero plate is the page, not a column within it, so it takes the
-       full mobile width rather than the 500px reading measure */
+    /* the billboard keeps its full screen on a phone; only the side gutters
+       tighten, and the foot grows so the copy never collides with the cue */
     .hero {
-        padding: var(--space-4) var(--space-3);
+        padding: var(--space-4) var(--space-3) calc(var(--space-5) * 2.5);
     }
 
-    .hero-plate {
-        max-width: none;
-        width: 100%;
-        padding: var(--space-4);
+    /* The EHFM dock is fixed to the bottom-left corner, and on a phone it is
+       wide enough to reach the middle of the frame. Lift the cue clear of it
+       rather than let the two share a line. */
+    .hero-scroll {
+        bottom: calc(var(--space-4) + 48px);
     }
 
     /* the arc needs the full width on a phone or the letters get tiny */
     .wordmark {
         max-width: none;
         margin-bottom: var(--space-3);
-    }
-
-    .wordmark-text {
-        font-size: 80px;
-        stroke-width: 3;
     }
 
     /* Keep images at reasonable size */
@@ -1902,11 +2253,11 @@ html {
     }
 
     /* About page specific improvements */
-    .about-page .textbox {
+    .lore-page .textbox {
         max-width: 500px;
     }
 
-    .about-page p,
+    .lore-page p,
     .radio-page p {
         font-size: 18px;
     }
@@ -1992,18 +2343,16 @@ html {
         height: 6px;
     }
 
-    /* Two-line lockup: stacked it needs about 61px of width and still clears the
-       72px bar, where a single line would not fit beside three nav items and the
-       live controls. */
+    /* This used to be a two-line lockup: stacked, the mark needed about 61px of
+       width, because a single line could not fit beside three nav items and the
+       live controls. The nav is one hamburger now, so the room is there and the
+       logo can read as one line again. */
     .toolbar-logo {
-        font-size: var(--text-sm);
+        font-size: var(--text-md);
         letter-spacing: 0.02em;
         line-height: 1.1;
         text-align: left;
-    }
-
-    .toolbar-logo span {
-        display: block;
+        padding-left: var(--space-2);
     }
 
     /* Measured at 360px on air: logo 61 + nav 203 + live controls 87, plus gaps
@@ -2038,60 +2387,81 @@ html {
 
     .toolbar-logo {
         /* no auto margin, so it centres on its own row instead of being shoved
-           left with the nav orphaned beside it */
+           left with the nav orphaned beside it, and no left inset to lean it
+           off that centre */
         margin-right: 0;
+        padding-left: 0;
         text-align: center;
-    }
-
-    .toolbar-logo span {
-        display: inline;
     }
 }
 
 /* ============================================================
    Upcoming Shows: the "town crier" cards
 
-   These used to be crammed into the fixed live-stream widget, behind a
-   45vh scroll inside a 350px box. They are now their own section under the
-   landing hero, which is what the content was always worth. Two columns on
-   desktop, one on mobile.
+   These began crammed into the fixed live-stream widget, then spent a while as
+   their own band under the hero — where a single small card sat alone in a wide
+   empty stretch of photograph and read as unfinished. They now sit inside the
+   hero, in the place a second "Listen to EHFM" button used to hold: a notice
+   nailed up under the wordmark, which is what a town crier's card wanted to be
+   all along.
+
+   One card usually, two when a special shares the week. See MAX_CARDS in
+   scripts/upcoming-shows.js.
    ============================================================ */
-.upcoming-section {
-    width: 90%;
-    max-width: 900px;
-    margin: 0 auto var(--space-5);
-    padding: 0 var(--space-4);
-    box-sizing: border-box;
-    /* above the suns, same reason as .hero */
-    position: relative;
-    z-index: var(--z-content);
+.hero-crier {
+    /* Hugs its contents up to a limit, so a short notice reads as a handbill
+       rather than a wide panel with a date stranded at one end. Two cards widen
+       it to 640. */
+    width: fit-content;
+    min-width: min(300px, 100%);
+    max-width: min(440px, 100%);
+    margin-top: var(--space-4);
+    /* the hero above sets scroll-margin for the whole screen; this only needs
+       to clear the sticky toolbar if anything ever links to it directly */
+    scroll-margin-top: calc(var(--toolbar-height, 72px) + var(--space-4));
     /* transparent wrapper: let clicks through to the suns behind it, and let the
        cards inside take their own */
     pointer-events: none;
 }
 
-.upcoming-section .crier-card,
-.upcoming-section .crier-heading {
+.hero-crier:has(.crier-card + .crier-card) {
+    width: 100%;
+    max-width: min(640px, 100%);
+}
+
+.hero-crier .crier-card,
+.hero-crier .crier-heading {
     pointer-events: auto;
+}
+
+/* While Bog Factor is on air, the hero's own status line says so — in lime, with
+   a pulsing dot — and a card announcing when the next show is would be arguing
+   with it. The card steps aside for the hour. */
+.hero[data-live="true"] .hero-crier {
+    display: none;
 }
 
 .upcoming-shows {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
     gap: var(--space-3);
-    margin-top: var(--space-3);
     text-align: left;
 }
 
+/* The crier's cry, once, above however many cards follow. It sits on the
+   photograph rather than on paper, so it is set in the hero's own ink — cream
+   with a dark halo, like the lede — not the brown-on-vellum it used when this
+   section had its own band further down the page. */
 .crier-heading {
-    margin: 0;
-    /* spans the grid so the heading sits above both columns */
+    margin: 0 0 var(--space-2);
     grid-column: 1 / -1;
     font-family: var(--font-display);
-    color: var(--bog-brown);
     font-size: var(--text-md);
     letter-spacing: 0.02em;
-    text-shadow: 0 1px 0 rgba(245, 222, 179, 0.8);
+    color: var(--bog-paper);
+    text-shadow:
+        0 1px 0 rgba(31, 26, 20, 0.6),
+        0 0 10px rgba(31, 26, 20, 0.8);
 }
 
 .crier-card {
@@ -2105,7 +2475,10 @@ html {
     padding: var(--space-2) var(--space-3) var(--space-2) var(--space-2);
     text-decoration: none;
     color: var(--bog-ink);
-    box-shadow: 0 2px 6px rgba(54, 50, 41, 0.18);
+    /* Deeper than the cards further down the page, because this one is paper
+       lying on a photograph rather than on the page's own ground: it needs the
+       shadow to sit on top of the carved stone instead of dissolving into it. */
+    box-shadow: 0 3px 12px rgba(31, 26, 20, 0.42);
     transition: transform 0.12s ease, border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
@@ -2143,6 +2516,15 @@ a.crier-card:hover {
     font-weight: 600;
     color: var(--bog-brown);
     letter-spacing: 0.02em;
+}
+
+/* Worn only while the line is genuinely counting down — the final hour before
+   air, and while the show is on. The rest of the month the "when" line is a
+   date, and a date does not need to shout in red. See ticks() in
+   scripts/upcoming-shows.js. */
+.crier-card__when--countdown {
+    font-size: var(--text-sm);
+    color: var(--bog-red-deep);
 }
 
 .crier-card__title {
@@ -2189,26 +2571,27 @@ a.crier-card:hover {
 
    The site had no such block, while running three infinite loops (the two live
    pulses and the rotating suns), a four-second wheel spin and global smooth
-   scrolling. Everything that repeats forever or animates position now stops;
-   hover and press feedback stays, because that is a response to an action
-   rather than something happening at the reader.
+   scrolling. What repeats forever or animates position now stops; hover and
+   press feedback stays, because that is a response to an action rather than
+   something happening at the reader.
+
+   The suns are held out of this on purpose — see the note on them below.
    ============================================================ */
 @media (prefers-reduced-motion: reduce) {
     html {
         scroll-behavior: auto;
     }
 
-    /* The suns stop spinning on their own, because that is motion happening at
-       the reader without being asked for. They still spin while you have hold of
-       one, which is a response to your own hand and is the fun bit. */
-    .rotating-image {
-        animation: none;
-    }
+    /* The suns are the exception, deliberately.
+       They used to be stopped here and only spun on hover or while held, on the
+       reasoning that a forever-loop is motion happening at the reader without
+       being asked for. In practice that inverted the thing itself: with Reduce
+       Motion on, the suns sat dead on load and then started up under the
+       cursor, which is more startling than a slow constant turn, and it is not
+       what the site does. They turn, and they turn the other way when you touch
+       them — that is the toy. Left running for everyone.
 
-    .sun-container:hover .rotating-image,
-    .sun-container.sun-dragging .rotating-image {
-        animation: rotationFwd 7s infinite linear;
-    }
+       Everything else below still stops. */
 
     /* live indicators hold at full opacity: they still mark the state, they
        simply stop throbbing */
@@ -2223,11 +2606,24 @@ a.crier-card:hover {
         box-shadow: 0 2px 10px rgba(218, 72, 72, 0.45);
     }
 
+    /* the scroll cue holds still; the chevron is the signal, the bob was only
+       ever an attention-getter */
+    .hero-scroll__chevron {
+        animation: none;
+    }
+
+    /* the shovel keeps its resting tilt but stops swinging on hover */
+    .recent-all__icon,
+    .recent-all:hover .recent-all__icon,
+    .recent-all:focus .recent-all__icon {
+        transition: none;
+    }
+
     /* The wheel still spins. It only ever moves because you pressed Spin, so it
        is feedback rather than ambient motion, and removing it removes the
        feature. Shortened from 4s to 1s instead of killed outright.
        Qualified with .spin-section because the wheel's own rule lives in a
-       later <style> block on /radio/tracks/ and would otherwise win. */
+       later <style> block on /vault/ and would otherwise win. */
     .spin-section .bog-wheel {
         transition-duration: 1s;
     }

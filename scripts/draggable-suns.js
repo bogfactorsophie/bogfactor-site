@@ -36,14 +36,19 @@
   // browser hit-tests to the topmost element under the pointer.
   //
   // Placement only needs to keep them off the furniture that is on screen when
-  // the page opens: a sun that starts life hidden behind the hero plate is both
+  // the page opens: a sun that starts life hidden behind the hero copy is both
   // invisible and unpickable, which is a wasted sun. Dodging the lower sections
   // too would be pointless, since these are position: fixed and slide under
   // those sections as soon as you scroll.
   // .wordmark is in here because its letters are hollow outlines: a sun landing
   // inside a letter fills the counter and the word stops reading, even though
   // the type is correctly painted on top of it.
-  const CONTENT_SELECTOR = '.toolbar, .wordmark, .hero-plate, .footer, .ehfm-dock';
+  // .hero-inner replaces the old .hero-plate: the hero copy sits straight on
+  // the photograph now, with no plate behind it, so the column of type is the
+  // thing to dodge.
+  const CONTENT_SELECTOR =
+    '.toolbar, .wordmark, .hero-inner, .hero-scroll, .footer, .ehfm-dock, ' +
+    '.textbox, .page-masthead, .page-arc-svg';
   const PLACEMENT_ATTEMPTS = 30;
   const CLEARANCE = 8; // px of breathing room around content
 

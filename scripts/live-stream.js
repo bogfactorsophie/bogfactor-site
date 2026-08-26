@@ -26,7 +26,6 @@
   ];
   const STREAM_URL = STREAM_URLS[Math.floor(Math.random() * STREAM_URLS.length)];
   const EHFM_LOGO = 'https://thumbnailer.mixcloud.com/unsafe/640x640/profile/4/5/d/0/f256-daaa-4954-86cc-aa43b7af4e6e';
-  const CHAT_URL = 'https://www.ehfm.live/chat';
 
   const PLAY_GLYPH = '&#9654;&#xFE0E;';
   const PAUSE_GLYPH = '&#9208;&#xFE0E;';
@@ -37,8 +36,9 @@
   let dock = null;
   let updateIntervalId;
   let currentInterval;
-  // The off-air hero actions as authored in index.html, so going off air can
-  // put them back rather than rebuild them from strings in here.
+  // The off-air hero actions as authored in index.html — empty, in the live
+  // page — captured so going off air restores exactly what was there rather
+  // than rebuilding it from strings in here.
   let heroActionsDefault = '';
   let lastRenderedLive = null;
 
@@ -236,11 +236,33 @@
 
   // ---- the landing hero ----------------------------------------------------
 
+  // The hero carries no play button in either state.
+  //
+  // Off air it held a quiet "Listen to EHFM" outline; on air, a filled "Listen
+  // live" and a "Join the chat" link. Every one of those was a second copy of a
+  // control the page already had: the EHFM dock in the corner plays the stream
+  // in both states, and the toolbar grows its own LIVE NOW and Chat pair the
+  // moment we are on. Three ways to press play is not three times the
+  // invitation. The hero keeps the wordmark, the line about the show, the
+  // crier's notice of what is next, and — while we are on — the status line
+  // saying so. The footer's Instagram, Email and Contact are the only other
+  // things it offers.
+  //
+  // These two helpers survive only because the test pages may author a button
+  // of their own; with none on the page they are no-ops.
   function updateHeroPlayButton() {
     const btn = document.getElementById('stream-play-btn');
     if (!btn) return;
-    btn.textContent = isPlaying ? 'Stop listening' : 'Listen live';
+    const idle = btn.dataset.labelIdle || 'Listen live';
+    btn.textContent = isPlaying ? 'Stop listening' : idle;
     btn.setAttribute('aria-pressed', isPlaying ? 'true' : 'false');
+  }
+
+  function bindHeroPlayButton() {
+    const btn = document.getElementById('stream-play-btn');
+    if (!btn || btn.dataset.bound) return;
+    btn.dataset.bound = '1';
+    btn.addEventListener('click', togglePlay);
   }
 
   // Full hero render. Only called on a live/off-air change, so a returning
@@ -256,42 +278,26 @@
     hero.dataset.live = live ? 'true' : 'false';
 
     if (live) {
+      // The whole on-air announcement. The ways to act on it — play, chat — are
+      // the toolbar's and the dock's, and both appear on their own.
       status.innerHTML = '<span class="live-dot"></span>On air right now on EHFM';
-
-      const listen = document.createElement('button');
-      listen.type = 'button';
-      listen.className = 'play-btn';
-      listen.id = 'stream-play-btn';
-      listen.textContent = 'Listen live';
-
-      const chat = document.createElement('a');
-      chat.className = 'hero-link';
-      chat.href = CHAT_URL;
-      chat.target = '_blank';
-      chat.rel = 'noopener noreferrer';
-      chat.textContent = 'Join the chat';
-
-      actions.replaceChildren(listen, chat);
-      listen.addEventListener('click', togglePlay);
-      updateHeroPlayButton();
     } else {
-      updateHeroCountdown();
-      // Back to the archive link exactly as index.html authored it.
+      // Off air the hero says nothing about timing: the crier card above answers
+      // when the next show is. CSS hides the empty line, so this leaves no gap.
+      status.textContent = '';
+    }
+
+    // Whatever index.html authored, which on the live page is nothing at all.
+    // .hero-actions:empty then collapses the row. Kept for the test pages, which
+    // may author a play button to exercise the stream controls directly.
+    if (actions) {
       actions.innerHTML = heroActionsDefault;
+      bindHeroPlayButton();
+      updateHeroPlayButton();
     }
 
     // The test pages listen for this to know the panel was (re)built.
     document.dispatchEvent(new CustomEvent('bogfactor:widget-rendered'));
-  }
-
-  // The cheap per-second update: just the countdown text.
-  function updateHeroCountdown() {
-    const status = document.getElementById('hero-status');
-    if (!status) return;
-    const next = getNextShowDate();
-    status.textContent = next
-      ? `Next show in ${getTimeUntilShow(next)}`
-      : 'Next show to be announced';
   }
 
   // ---- ticking -------------------------------------------------------------
@@ -306,7 +312,8 @@
       return;
     }
 
-    if (!live) updateHeroCountdown();
+    // Off air there is nothing left to tick in the hero; upcoming-shows.js paces
+    // the crier card on its own timer, which idles until the final hour.
   }
 
   function getUpdateInterval() {
@@ -428,6 +435,11 @@
     },
     getNextShowDate() {
       return getNextShowDate();
+    },
+    // upcoming-shows.js renders the countdown now, and this is the wording it
+    // uses, so the phrasing stays in one place.
+    formatTimeUntil(date) {
+      return getTimeUntilShow(date);
     },
     isLiveNow() {
       return isLiveNow();

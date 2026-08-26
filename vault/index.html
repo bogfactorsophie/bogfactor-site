@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>All Tracks - Bog Factor</title>
     <meta name="description" content="Search every track Bog Factor has played on EHFM, see the most played artists, or let the bog wheel pick something at random.">
-    <link rel="canonical" href="https://bogfactor.co.uk/radio/tracks/">
+    <link rel="canonical" href="https://bogfactor.co.uk/vault/">
 
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Bog Factor">
     <meta property="og:title" content="All Tracks - Bog Factor">
     <meta property="og:description" content="Search every track Bog Factor has played on EHFM, or let the bog wheel pick something at random.">
-    <meta property="og:url" content="https://bogfactor.co.uk/radio/tracks/">
+    <meta property="og:url" content="https://bogfactor.co.uk/vault/">
     <meta property="og:image" content="https://bogfactor.co.uk/assets/bog-wheel.jpg">
     <meta property="og:locale" content="en_GB">
     <meta name="twitter:card" content="summary_large_image">
@@ -26,17 +26,18 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://fonts.cdnfonts.com" crossorigin>
-    <link href="https://fonts.cdnfonts.com/css/luminari" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/morris-roman" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Gurmukhi:wght@400;600&family=MedievalSharp&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../../styles.css">
+    <link rel="stylesheet" href="../styles.css">
 
-    <script src="../../scripts/draggable-suns.js"></script>
-    <script src="../../scripts/schedule.js"></script>
-    <script src="../../scripts/live-stream.js"></script>
-    <script src="../../scripts/toolbar-live-widget.js"></script>
-    <script src="../../scripts/track-utils.js"></script>
-    <script src="../../scripts/tracks-page.js" defer></script>
-    <script src="../../scripts/contact-form.js"></script>
+    <script src="../scripts/draggable-suns.js"></script>
+    <script src="../scripts/schedule.js"></script>
+    <script src="../scripts/live-stream.js"></script>
+    <script src="../scripts/toolbar-live-widget.js"></script>
+    <script src="../scripts/toolbar-menu.js"></script>
+    <script src="../scripts/track-utils.js"></script>
+    <script src="../scripts/tracks-page.js" defer></script>
+    <script src="../scripts/contact-form.js"></script>
 
     <!-- Tracks-page styling lives here so the look is easy to iterate on
          without disturbing the shared stylesheet. Colours, spacing, radii and
@@ -261,15 +262,28 @@
       <a class="toolbar-logo" href="/index.html" aria-label="Bog Factor, back to the home page"><span>Bog</span> <span>Factor</span></a>
       <nav class="toolbar-nav">
         <a href="/radio/index.html">Radio</a>
-        <a href="/radio/tracks/index.html" aria-current="page">The Vault</a>
-        <a href="/about/index.html">About</a>
+        <a href="/vault/index.html" aria-current="page">Vault</a>
+        <a href="/lore/index.html">Lore</a>
       </nav>
     </div>
 
-    <div class="textbox page-intro tracks-intro">
-      <h1 class="page-title">The Vault</h1>
-      <p>Everything Bog Factor has ever played, carefully dug up and laid out. Search it, see what we play most, or let the spinning wheel decide.</p>
-    </div>
+    <!-- Masthead rather than a plate, matching /radio/. The tracks-intro class
+         went with it: it had no rule anywhere in styles.css. -->
+    <header class="page-masthead">
+      <h1 class="page-title page-arc">
+        <svg class="page-arc-svg" viewBox="0 0 480 132" role="img"
+             aria-label="The Vault" focusable="false">
+          <defs>
+            <path id="page-arc-path" d="M 15,118 A 420,420 0 0 1 465,118" fill="none"></path>
+          </defs>
+          <text class="page-arc-text">
+            <textPath href="#page-arc-path" startOffset="50%" text-anchor="middle">The Vault</textPath>
+          </text>
+        </svg>
+        <span class="bog-star page-arc-star" aria-hidden="true"></span>
+      </h1>
+      <p class="page-masthead__lead">Every track Bog Factor has ever played on air, carefully dug up and laid out.</p>
+    </header>
 
     <div class="textbox">
       <h2>Search the archives</h2>

@@ -26,7 +26,8 @@ The site uses a flat directory structure with section-based organization:
 
 - `index.html` - Landing page with background image, live stream widget, and footer links
 - `radio/index.html` - Radio show archive with embedded Mixcloud players and tracklist modals
-- `about/index.html` - About page with information about the show and hosts
+- `lore/index.html` - "Lore" page (was `about/`) with information about the show and hosts
+- `vault/index.html` - "The Vault", every track ever played (was `radio/tracks/`)
 - Show metadata and tracklists live in the `bogfactor` D1 database, served by
   `worker-shows` at `/api/shows`. There is no longer a checked-in data file.
 - `styles.css` - Global stylesheet shared across all pages
@@ -36,8 +37,8 @@ The site uses a flat directory structure with section-based organization:
 
 ### Navigation Pattern
 
-All subpages (radio, about) share a consistent layout:
-- Toolbar navigation at the top with links to Home, Radio, and About
+All subpages (radio, vault, lore) share a consistent layout:
+- Toolbar navigation at the top with links to Home, Radio, The Vault, and Lore
 - SVG wavy border filters for visual effects
 - Footer with Instagram and Email mailto links
 
@@ -46,7 +47,7 @@ The landing page (`index.html`) has a minimal layout with the background image, 
 ### CSS Architecture
 
 `styles.css` contains:
-- Global typography using Luminari (display) and Noto Serif Gurmukhi (body text) from CDN fonts
+- Global typography using Morris Roman (display) and Noto Serif Gurmukhi (body text) from CDN fonts
 - `.textbox` class for content boxes with SVG wavy borders and noise texture effect
 - `.toolbar` styles for the navigation bar
 - `.stream-widget` styles for the live streaming player interface
@@ -138,8 +139,8 @@ Tidal uses PKCE OAuth. The access token is short-lived (~24 hours) but the refre
 ## Development
 
 There is no build step — edit HTML, CSS, or JS files directly. Static-only
-pages (e.g. `about/`) can be opened straight in a browser. However, any page
-that calls the API — `radio/`, `tracks/`, and `admin/` all `fetch('/api/...')`
+pages (e.g. `lore/`) can be opened straight in a browser. However, any page
+that calls the API — `radio/`, `vault/`, and `admin/` all `fetch('/api/...')`
 — needs the `worker-shows` worker running on the **same origin**, so a bare
 `python3 -m http.server` is not enough for those.
 
@@ -170,7 +171,7 @@ Then, to run the site:
 
 ```bash
 npx wrangler dev -c worker-shows/wrangler.dev.toml --port 8787
-# Site + API on http://127.0.0.1:8787  (e.g. /radio/tracks/, /radio/, /api/shows)
+# Site + API on http://127.0.0.1:8787  (e.g. /vault/, /radio/, /api/shows)
 ```
 
 Local D1 lives under `.wrangler/` (gitignored); re-run the seed step to refresh
@@ -227,7 +228,7 @@ Any new feature that affects the website when Bog Factor is live on air (or the 
 
 The procedure for testing is something like:
 - Open `index.html` in browser to test landing page
-- Navigate to subpages (`radio/`, `about/`) to test those sections
+- Navigate to subpages (`radio/`, `vault/`, `lore/`) to test those sections
 - Test tracklist modals and YouTube search links on the radio page
 - Test Mixcloud widgets on the radio page
 - Test draggable sun elements by clicking and dragging them

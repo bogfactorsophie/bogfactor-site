@@ -5,13 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>About - Bog Factor</title>
     <meta name="description" content="Bog Factor is Sophie and Emily, residents on EHFM in Edinburgh. Strange, mythic, joyous music rooted in place, named after the bogginess scale on walkhighlands.">
-    <link rel="canonical" href="https://bogfactor.co.uk/about/">
+    <link rel="canonical" href="https://bogfactor.co.uk/lore/">
 
     <meta property="og:type" content="website">
     <meta property="og:site_name" content="Bog Factor">
     <meta property="og:title" content="About - Bog Factor">
     <meta property="og:description" content="Sophie and Emily, residents on EHFM in Edinburgh. Strange, mythic, joyous music rooted in place.">
-    <meta property="og:url" content="https://bogfactor.co.uk/about/">
+    <meta property="og:url" content="https://bogfactor.co.uk/lore/">
     <meta property="og:image" content="https://bogfactor.co.uk/assets/sophie-and-emily.jpg">
     <meta property="og:locale" content="en_GB">
     <meta name="twitter:card" content="summary_large_image">
@@ -26,7 +26,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preconnect" href="https://fonts.cdnfonts.com" crossorigin>
-    <link href="https://fonts.cdnfonts.com/css/luminari" rel="stylesheet">
+    <link href="https://fonts.cdnfonts.com/css/morris-roman" rel="stylesheet">
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Gurmukhi:wght@400;600&family=MedievalSharp&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../styles.css">
 
@@ -34,24 +34,41 @@
     <script src="../scripts/schedule.js"></script>
     <script src="../scripts/live-stream.js"></script>
     <script src="../scripts/toolbar-live-widget.js"></script>
+    <script src="../scripts/toolbar-menu.js"></script>
     <script src="../scripts/contact-form.js"></script>
   </head>
 
-  <body class="about-page">
+  <body class="lore-page">
 
     <div class="toolbar">
       <a class="toolbar-logo" href="/index.html" aria-label="Bog Factor, back to the home page"><span>Bog</span> <span>Factor</span></a>
       <nav class="toolbar-nav">
         <a href="/radio/index.html">Radio</a>
-        <a href="/radio/tracks/index.html">The Vault</a>
-        <a href="/about/index.html" aria-current="page">About</a>
+        <a href="/vault/index.html">Vault</a>
+        <a href="/lore/index.html" aria-current="page">Lore</a>
       </nav>
     </div>
 
-    <!-- Promoted from h2: this is the page's own heading, and /about/ previously
-         had no h1 for a crawler or a screen-reader outline to anchor on. -->
+    <!-- The h1 here heads real prose rather than a one-line lead, so the title
+         lifts out to a masthead and the paragraphs keep their plate. Promoted
+         from h2 originally: this page had no h1 for a crawler or a screen-reader
+         outline to anchor on. -->
+    <header class="page-masthead">
+      <h1 class="page-title page-arc">
+        <svg class="page-arc-svg" viewBox="0 0 480 132" role="img"
+             aria-label="Our Lore" focusable="false">
+          <defs>
+            <path id="page-arc-path" d="M 15,118 A 420,420 0 0 1 465,118" fill="none"></path>
+          </defs>
+          <text class="page-arc-text">
+            <textPath href="#page-arc-path" startOffset="50%" text-anchor="middle">Our Lore</textPath>
+          </text>
+        </svg>
+        <span class="bog-star page-arc-star" aria-hidden="true"></span>
+      </h1>
+    </header>
+
     <div class="textbox">
-      <h1 class="page-title">Welcome to the Bog</h1>
       <p>
         Music with the bog factor is strange, mythic, joyous and rooted in place. From folk revival and pagan boogie to spiritual jazz and twisted bossa nova. The duo seek out sounds from deep within the bog to bring merriment wherever they go.
       </p>

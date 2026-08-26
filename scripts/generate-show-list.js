@@ -216,6 +216,11 @@ window.loadShows = async function () {
       container.appendChild(showDiv);
       container.appendChild(modal);
     });
+
+    // The show plates only exist now, so anything that placed itself against
+    // the page's furniture at DOMContentLoaded (the draggable suns) needs to
+    // look again.
+    document.dispatchEvent(new CustomEvent('bog:content-changed'));
   } catch (error) {
     console.error('Error loading shows:', error);
     document.getElementById('shows-container').innerHTML =
@@ -223,7 +228,12 @@ window.loadShows = async function () {
   }
 };
 
-// Load shows when page loads
+// Load shows once the DOM is parsed. This used to call loadShows() the moment
+// the file executed; the script is in <head> without defer, so whether
+// #shows-container existed by the time the fetch resolved was a race between
+// the network and the parser. It won locally and lost on a warm API. Same
+// readyState guard the other scripts in this directory use.
+function startShowList() {
 loadShows().then(() => {
   // If there's a hash in the URL, scroll to it with offset for toolbar
   if (window.location.hash) {
@@ -239,3 +249,10 @@ loadShows().then(() => {
     }
   }
 });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', startShowList);
+} else {
+  startShowList();
+}
