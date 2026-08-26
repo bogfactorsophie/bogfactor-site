@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en-GB">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>All Tracks - Bog Factor</title>
+    <meta name="description" content="Search every track Bog Factor has played on EHFM, see the most played artists, or let the bog wheel pick something at random.">
+    <link rel="canonical" href="https://bogfactor.co.uk/vault/">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Bog Factor">
+    <meta property="og:title" content="All Tracks - Bog Factor">
+    <meta property="og:description" content="Search every track Bog Factor has played on EHFM, or let the bog wheel pick something at random.">
+    <meta property="og:url" content="https://bogfactor.co.uk/vault/">
+    <meta property="og:image" content="https://bogfactor.co.uk/assets/bog-wheel.jpg">
+    <meta property="og:locale" content="en_GB">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="All Tracks - Bog Factor">
+    <meta name="twitter:description" content="Search every track Bog Factor has played on EHFM, or let the bog wheel pick something at random.">
+    <meta name="twitter:image" content="https://bogfactor.co.uk/assets/bog-wheel.jpg">
+
+    <link rel="icon" type="image/x-icon" href="/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.cdnfonts.com" crossorigin>
+    <link href="https://fonts.cdnfonts.com/css/morris-roman" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Gurmukhi:wght@400;600&family=MedievalSharp&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../styles.css">
+
+    <script src="../scripts/draggable-suns.js"></script>
+    <script src="../scripts/schedule.js"></script>
+    <script src="../scripts/live-stream.js"></script>
+    <script src="../scripts/toolbar-live-widget.js"></script>
+    <script src="../scripts/toolbar-menu.js"></script>
+    <script src="../scripts/track-utils.js"></script>
+    <script src="../scripts/tracks-page.js" defer></script>
+    <script src="../scripts/contact-form.js"></script>
+
+    <!-- Tracks-page styling lives here so the look is easy to iterate on
+         without disturbing the shared stylesheet. Colours, spacing, radii and
+         type all come from the tokens in styles.css. -->
+    <style>
+      /* the h1 and its lead paragraph now use the shared .page-title /
+         .page-intro rules in styles.css */
+
+      /* ---- search ---- */
+      .track-search-input {
+        width: 100%;
+        box-sizing: border-box;
+        padding: var(--space-2) var(--space-3);
+        font-family: var(--font-body);
+        font-size: var(--text-md);
+        color: var(--bog-ink);
+        /* opaque rather than a 65% white veil, so the field reads as a field */
+        background: #fffdf8;
+        border: 2px solid var(--bog-brown-soft);
+        border-radius: var(--radius-soft);
+      }
+      .track-search-input:focus-visible {
+        outline: 3px solid var(--bog-brown);
+        outline-offset: 1px;
+        border-color: var(--bog-brown);
+      }
+      .search-meta {
+        margin: var(--space-2) 0 0;
+        font-size: var(--text-sm);
+        color: var(--bog-plum);
+      }
+
+      /* ---- track lists ------------------------------------------------
+         Two columns on desktop, one under 768px, with faint banding instead
+         of a hairline under every single row. */
+      .track-list {
+        list-style: none;
+        margin: var(--space-3) 0 0;
+        padding: 0;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        column-gap: var(--space-5);
+      }
+      .track-list li {
+        padding: var(--space-2);
+        border-bottom: none;
+      }
+      .track-list li:nth-child(odd) {
+        background-color: rgba(135, 89, 33, 0.07);
+      }
+      .track-line { font-weight: 600; }
+      .track-line .by { font-weight: 400; color: var(--bog-plum); }
+
+      /* Compact, muted YouTube search link beside the track name */
+      .track-yt-btn {
+        background: none;
+        padding: 0;
+        margin-left: var(--space-1);
+        font-size: var(--text-sm);
+        opacity: 0.55;
+        vertical-align: baseline;
+      }
+      .track-yt-btn:hover { background: none; opacity: 1; transform: scale(1.15); }
+
+      .track-where { font-size: var(--text-xs); color: var(--bog-ink); }
+      .track-where a { color: var(--bog-brown); text-decoration: none; }
+      .track-where a:hover { color: var(--bog-red-deep); text-decoration: underline; }
+
+      .play-count {
+        display: inline-block;
+        min-width: 1.4em;
+        text-align: center;
+        margin-right: var(--space-1);
+        padding: 0 0.4em;
+        background: var(--bog-brown);
+        color: var(--bog-wheat);
+        border-radius: var(--radius-pill);
+        font-size: var(--text-xs);
+      }
+
+      /* ---- bog-metrics ---- */
+      .metrics-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+        gap: var(--space-4);
+        margin-top: var(--space-2);
+      }
+      .metric-tile { text-align: center; }
+      .metric-num {
+        font-family: var(--font-display);
+        font-size: var(--text-xl);
+        /* the deep accent: this is small-to-mid display text on paper, and the
+           brighter brand red only clears 3.28:1 there */
+        color: var(--bog-red-deep);
+        line-height: 1.15;
+        padding-bottom: 2px;
+      }
+      .metric-label { font-size: var(--text-sm); color: var(--bog-ink); }
+
+      /* ---- spin the wheel ---- */
+      .spin-result { margin-top: var(--space-4); min-height: 1.4em; }
+
+      .wheel-wrap {
+        position: relative;
+        width: 220px;
+        height: 220px;
+        margin: var(--space-2) auto var(--space-4);
+      }
+      .bog-wheel {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        background: url('/assets/bog-wheel.jpg') center / 118% no-repeat;
+        box-shadow: 0 4px 14px rgba(54, 50, 41, 0.45),
+                    inset 0 0 0 4px var(--bog-brown-soft);
+        transform: rotate(0deg);
+        transition: transform 4s cubic-bezier(0.17, 0.67, 0.18, 1);
+      }
+      .wheel-pointer {
+        position: absolute;
+        top: -8px;
+        left: 50%;
+        transform: translateX(-50%);
+        color: var(--bog-red-deep);
+        font-size: var(--text-lg);
+        line-height: 1;
+        filter: drop-shadow(0 1px 1px rgba(54, 50, 41, 0.35));
+        pointer-events: none;
+        z-index: 2;
+      }
+      .spin-result.spinning { opacity: 0.4; }
+
+      .spin-section { text-align: center; }
+      .spin-section .spin-result {
+        font-size: var(--text-md);
+        line-height: 1.5;
+      }
+      .spin-btn:disabled { opacity: 0.6; cursor: default; }
+
+      /* Clickable artist names in the charts: clicking one runs it as a search.
+         A real <button> (see tracks-page.js), stripped back to look like text. */
+      .artist-link {
+        cursor: pointer;
+        color: var(--bog-brown);
+        background: none;
+        border: none;
+        padding: 0;
+        font-family: inherit;
+        font-size: inherit;
+        text-align: left;
+      }
+      .artist-link:hover { color: var(--bog-red-deep); text-decoration: underline; }
+      .artist-link:focus-visible {
+        outline: 3px solid var(--bog-brown);
+        outline-offset: 2px;
+      }
+
+      /* ---- the two charts, side by side ------------------------------
+         These were two more full-width plates stacked under the search
+         results and the metrics, which made four near-identical list
+         sections in a row. Pairing them breaks the run. */
+      .chart-pair {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        gap: var(--space-4);
+        width: 90%;
+        max-width: 900px;
+        margin: var(--space-4) auto;
+      }
+      /* Each column is full height so the pair reads as one unit, but the
+         parchment inside it is only as tall as its own list. The motif then
+         lands in the leftover space below the plate, on the background rather
+         than on the paper. */
+      .chart-col {
+        display: flex;
+        flex-direction: column;
+        min-width: 0;
+      }
+
+      .chart-pair .textbox {
+        width: 100%;
+        max-width: none;
+        margin: 0;
+        flex: 0 0 auto;
+      }
+
+      /* Tail motif: the shared .bog-star mark, coloured for the vellum plate.
+         auto margins both sides centre it in whatever space the shorter list
+         leaves over; in the taller plate there is none, so it tucks under the
+         list instead. */
+      .chart-tail {
+        width: 42px;
+        /* auto both sides centres it in the leftover space */
+        margin: var(--space-4) auto;
+        color: var(--bog-brown);
+        opacity: 0.35;
+        flex-shrink: 0;
+      }
+      /* inside a chart column there is only room for one track per row */
+      .chart-pair .track-list {
+        grid-template-columns: 1fr;
+        column-gap: 0;
+      }
+
+      @media screen and (max-width: 768px) {
+        .track-list {
+          grid-template-columns: 1fr;
+          column-gap: 0;
+        }
+        .chart-pair {
+          width: 92%;
+        }
+      }
+    </style>
+  </head>
+
+  <body class="radio-page">
+
+
+
+    <div class="toolbar">
+      <a class="toolbar-logo" href="/index.html" aria-label="Bog Factor, back to the home page"><span>Bog</span> <span>Factor</span></a>
+      <nav class="toolbar-nav">
+        <a href="/radio/index.html">Radio</a>
+        <a href="/vault/index.html" aria-current="page">Vault</a>
+        <a href="/lore/index.html">Lore</a>
+      </nav>
+    </div>
+
+    <!-- Masthead rather than a plate, matching /radio/. The tracks-intro class
+         went with it: it had no rule anywhere in styles.css. -->
+    <header class="page-masthead">
+      <h1 class="page-title page-arc">
+        <svg class="page-arc-svg" viewBox="0 0 480 132" role="img"
+             aria-label="The Vault" focusable="false">
+          <defs>
+            <path id="page-arc-path" d="M 15,118 A 420,420 0 0 1 465,118" fill="none"></path>
+          </defs>
+          <text class="page-arc-text">
+            <textPath href="#page-arc-path" startOffset="50%" text-anchor="middle">The Vault</textPath>
+          </text>
+        </svg>
+        <span class="bog-star page-arc-star" aria-hidden="true"></span>
+      </h1>
+      <p class="page-masthead__lead">Every track Bog Factor has ever played on air, carefully dug up and laid out.</p>
+    </header>
+
+    <div class="textbox">
+      <h2>Search the archives</h2>
+      <label class="visually-hidden" for="track-search">Search tracks by title or artist</label>
+      <input type="search" id="track-search" class="track-search-input"
+             placeholder="Search by track or artist" autocomplete="off">
+      <p id="search-meta" class="search-meta" role="status"></p>
+      <ul id="search-results" class="track-list"></ul>
+    </div>
+
+    <div class="textbox">
+      <h2>Bog-metrics</h2>
+      <div id="metrics" class="metrics-grid"></div>
+    </div>
+
+    <div class="textbox textbox--reading spin-section">
+      <h2>Spin the wheel</h2>
+      <div class="wheel-wrap">
+        <div class="wheel-pointer" aria-hidden="true">&#9660;</div>
+        <div id="bog-wheel" class="bog-wheel"></div>
+      </div>
+      <button type="button" id="spin-btn" class="spin-btn">Spin</button>
+      <div id="spin-result" class="spin-result" role="status"></div>
+    </div>
+
+    <div class="chart-pair">
+      <div class="chart-col">
+        <div class="textbox">
+          <h2>Most played tracks</h2>
+          <ul id="top-tracks" class="track-list"></ul>
+        </div>
+        <span class="bog-star chart-tail" aria-hidden="true"></span>
+      </div>
+
+      <div class="chart-col">
+        <div class="textbox">
+          <h2>Most played artists</h2>
+          <ul id="top-artists" class="track-list"></ul>
+        </div>
+        <span class="bog-star chart-tail" aria-hidden="true"></span>
+      </div>
+    </div>
+
+    <footer class="footer">
+      <a href="https://www.instagram.com/bog_factor/" target="_blank" rel="noopener noreferrer">Instagram</a>
+      <a href="mailto:hello@bogfactor.co.uk">Email</a>
+      <a href="#" data-contact>Contact</a>
+    </footer>
+  </body>
+</html>

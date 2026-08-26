@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Check for Repeats - Bog Factor Admin</title>
-<link href="https://fonts.cdnfonts.com/css/luminari" rel="stylesheet">
+<link href="https://fonts.cdnfonts.com/css/morris-roman" rel="stylesheet">
 <link href="https://fonts.cdnfonts.com/css/noto-serif-gurmukhi" rel="stylesheet">
 <style>
   :root {
@@ -27,8 +27,8 @@
   }
   .wrap { max-width: 900px; margin: 0 auto; display: grid; gap: 1.5rem; }
   .panel { background: var(--panel); padding: 1.5rem; box-sizing: border-box; }
-  h1 { font-family: 'Luminari', fantasy; color: var(--brown); margin: 0 0 0.5rem; font-size: 2rem; }
-  h2 { font-family: 'Luminari', fantasy; color: var(--brown); margin: 0 0 1rem; font-size: 1.3rem; }
+  h1 { font-family: 'Morris Roman', 'Luminari', fantasy; color: var(--brown); margin: 0 0 0.5rem; font-size: 2rem; }
+  h2 { font-family: 'Morris Roman', 'Luminari', fantasy; color: var(--brown); margin: 0 0 1rem; font-size: 1.3rem; }
   .back-link { color: var(--brown); text-decoration: none; font-size: 0.9rem; font-weight: 600; }
   .back-link:hover { color: var(--red); }
   label { display: block; margin-top: 0.5rem; font-weight: 600; }
@@ -55,7 +55,7 @@
     background: var(--brown);
     color: wheat;
     border: none;
-    font-family: 'Luminari', fantasy;
+    font-family: 'Morris Roman', 'Luminari', fantasy;
     font-size: 1rem;
     cursor: pointer;
   }
@@ -66,7 +66,7 @@
 
   .summary { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-bottom: 1rem; }
   .summary .tally { font-size: 0.95rem; }
-  .summary .tally strong { font-size: 1.3rem; font-family: 'Luminari', fantasy; }
+  .summary .tally strong { font-size: 1.3rem; font-family: 'Morris Roman', 'Luminari', fantasy; }
   .dot { display: inline-block; width: 0.7em; height: 0.7em; border-radius: 50%; margin-right: 0.3em; vertical-align: middle; }
   .dot.new { background: var(--green); }
   .dot.played { background: var(--red); }
@@ -186,10 +186,10 @@
       if (!r.parsed.title && !r.parsed.artist) {
         li.className = 'bad';
         lineEl.textContent = line;
-        note.textContent = "Couldn't read this line — expected \"Title - Artist\".";
+        note.textContent = "Couldn't read this line. Expected \"Title - Artist\".";
       } else {
         lineEl.textContent = (r.parsed.title || '(untitled)') +
-          (r.parsed.artist ? ' — ' + r.parsed.artist : '');
+          (r.parsed.artist ? ' - ' + r.parsed.artist : '');
 
         if (r.played.length) {
           nPlayed++;
@@ -205,7 +205,7 @@
         } else {
           nNew++;
           li.className = 'new';
-          note.textContent = '🟢 New — never played.';
+          note.textContent = '🟢 New, never played.';
         }
       }
 
@@ -228,7 +228,7 @@
     setStatus(authEl, 'Loading played tracks…');
     try {
       const count = await loadShows();
-      setStatus(authEl, 'Ready — checking against ' + count + ' shows (' + index.length + ' track plays).');
+      setStatus(authEl, 'Ready, checking against ' + count + ' shows (' + index.length + ' track plays).');
       $('check-btn').disabled = false;
       $('check-btn').addEventListener('click', check);
 

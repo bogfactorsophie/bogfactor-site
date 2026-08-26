@@ -1,4 +1,4 @@
-// Bog Factor track utilities — pure logic, no DOM.
+// Bog Factor track utilities: pure logic, no DOM.
 //
 // One source of truth for how we read, normalise, search, and count tracks.
 // Both the public /tracks page and the admin "have we played it?" checker use
@@ -6,7 +6,7 @@
 //
 // Normalisation is deliberately light (per design): we fold away case,
 // punctuation, and accents, but we trust every word. No "the"-stripping, no
-// "feat." handling, no reordering — so "Golden Brown" == "golden brown," but
+// "feat." handling, no reordering, so "Golden Brown" == "golden brown," but
 // "Song (feat. X)" stays distinct from "Song". The result: matching is fully
 // deterministic, unlike the remote Spotify/Tidal search the sync tool relies on.
 //

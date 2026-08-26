@@ -1,200 +1,719 @@
-@import url('https://fonts.cdnfonts.com/css/luminari');
-@import url('https://fonts.cdnfonts.com/css/noto-serif-gurmukhi');
-@import url('https://fonts.googleapis.com/css2?family=MedievalSharp&display=swap');
+/* ============================================================
+   Bog Factor - global stylesheet
+
+   Fonts are linked from each page <head> (with preconnect) rather than
+   @import-ed here. They used to be requested twice per page, once via
+   @import and once via <link>, and the @import blocked this file's parse.
+
+   Everything below is tokenised. When you need a colour, space, radius or
+   layer, use a token or add one; please don't paste a fresh literal.
+   ============================================================ */
+
+:root {
+    /* ---- brand palette -------------------------------------------------
+       The brand hues are unchanged. The -deep variants exist only so small
+       text and button fills clear WCAG AA (4.5:1); the originals stay for
+       large type, fills and decoration, where they already pass. */
+    --bog-brown:       rgb(135, 89, 33);    /* primary.  4.71:1 on paper */
+    --bog-brown-soft:  rgba(135, 89, 33, 0.45);
+    --bog-brown-hair:  rgba(135, 89, 33, 0.2);
+    --bog-red:         rgb(218, 72, 72);    /* accent, large + decorative only */
+    --bog-red-deep:    rgb(166, 42, 42);    /* accent for text/fills. 5.49:1 on paper */
+    --bog-green:       rgb(20, 92, 40);     /* the one green. 6.17:1 either way on wheat */
+    --bog-plum:        rgb(130, 71, 81);    /* visited links, meta. 5.52:1 on paper */
+    --bog-ink:         rgb(54, 50, 41);     /* body text. 9.96:1 on paper */
+    /* Sampled out of the original artwork, so the wordmark that used to be
+       painted into the background photograph keeps its exact colour. */
+    --bog-lime:        #becd79;
+
+    /* ---- surfaces ------------------------------------------------------ */
+    --bog-wheat:       wheat;
+    --bog-paper:       #f7e0c1;
+    --bog-paper-veil:  #f7e0c1be;
+    --bog-paper-solid: #f7e0c1ee;
+    --bog-toolbar:     rgba(245, 222, 179, 0.95);
+
+    /* ---- spacing scale ------------------------------------------------- */
+    --space-1: 4px;
+    --space-2: 8px;
+    --space-3: 12px;
+    --space-4: 20px;
+    --space-5: 32px;
+
+    /* ---- radii: three steps, applied consistently ---------------------- */
+    --radius-edge: 0;        /* paper edges, tracklist plates */
+    --radius-soft: 6px;      /* cards, inputs, images, modals */
+    --radius-pill: 999px;    /* chips and interactive pills */
+
+    /* ---- type ----------------------------------------------------------
+       Morris Roman is Steffmann's revival of William Morris's Golden/Troy
+       type, so the display face is now literal Arts-and-Crafts lettering
+       rather than Luminari's fantasy-novel approximation of it. It ships in
+       one weight only (900), so anything asking for bold gets it already and
+       a `font-weight` on display type is a no-op. */
+    --font-display: 'Morris Roman', 'Luminari', 'Papyrus', fantasy;
+    --font-script:  'MedievalSharp', 'Morris Roman', cursive;
+    --font-body:    'Noto Serif Gurmukhi', Georgia, serif;
+
+    --text-xs:   0.82rem;
+    --text-sm:   0.9rem;
+    --text-base: 1rem;
+    --text-md:   1.15rem;
+    --text-lg:   1.4rem;
+    --text-xl:   1.9rem;
+    --text-2xl:  2.6rem;
+
+    /* ---- layers -------------------------------------------------------
+       The whole ladder in one place, so nothing has to guess. Modals sit
+       above the Mixcloud player, so a tracklist is never trapped behind it;
+       it is also capped in height (see .modal-content) so the player stays
+       visible while you read. */
+    --z-behind:  -1;   /* suns on interior pages */
+    --z-base:     1;   /* landing-page suns, behind the page's material */
+    --z-content: 10;   /* page content, so a sun never covers text */
+    --z-drag:    50;   /* a sun while it is being held, so you can see it move */
+    --z-toolbar:100;
+    --z-float:  200;   /* floating EHFM player */
+    --z-player: 300;   /* fixed Mixcloud player */
+    --z-modal:  400;
+
+    /* Height of the fixed Mixcloud player; set by scripts/mixcloud-player.js */
+    --player-height: 0px;
+    /* Space left above and below a modal */
+    --modal-gutter: 5vh;
+}
 
 body {
-    background-color: wheat;
+    background-color: var(--bog-wheat);
     width: 100%;
     margin: auto;
 }
 
+/* The plain plate: the same collage cropped to its top band (0-770px of the
+   original 1638x2048), which sits clear of the arced "BOG FACTOR" and its
+   glyph. Cropping rather than erasing them: the retouched version left visible
+   smearing across the middle of the picture. The wordmark is drawn as type now
+   (see .wordmark), so the photograph does not carry text competing with the
+   page's own headings. One shared asset across every page, so browsing the site
+   does not fetch two versions of the same picture. */
+body.landing-page,
 body.radio-page,
-body.about-page,
+body.lore-page,
 body.blog-page {
-    background: url('assets/vibes-graphic.jpg') no-repeat center center fixed;
+    background: url('assets/vibes-graphic-crop.jpg') no-repeat center center fixed;
     background-size: cover;
+}
+
+/* The landing page is one column that fills the viewport with the footer at the
+   foot of it. min-height + 100dvh rather than height: 100vh, so the mobile
+   Safari address bar can neither clip the hero nor jump the layout. This used
+   to live in an inline <style> block inside index.html's <body>. */
+body.landing-page {
+    display: flex;
+    flex-direction: column;
+    min-height: 100dvh;
+    margin: 0;
+}
+
+/* ---- the starburst -----------------------------------------------------
+   The mark lives in assets/bog-star.svg, once. Drawn here as a mask rather than
+   an <img> so each place can colour it: lime in the hero, brown on the Vault's
+   chart tails. Before this, the path data was pasted into five files. */
+.bog-star {
+    display: block;
+    background-color: currentColor;
+    -webkit-mask: url('assets/bog-star.svg') no-repeat center / contain;
+    mask: url('assets/bog-star.svg') no-repeat center / contain;
+    aspect-ratio: 1;
+    pointer-events: none;
+}
+
+/* Available to screen readers, invisible on screen. Used for form labels where
+   the surrounding heading already carries the visible text. */
+.visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+    border: 0;
 }
 
 /* Text selection/highlight color */
 ::selection {
-    background-color: #2d4a2b;
-    color: wheat;
+    background-color: var(--bog-green);
+    color: var(--bog-wheat);
 }
 
 ::-moz-selection {
-    background-color: #2d4a2b;
-    color: wheat;
+    background-color: var(--bog-green);
+    color: var(--bog-wheat);
 }
 
-.main-title a{
-    color: rgb(135, 89, 33);
-    font-family: "Luminari", fantasy;
-    font-size: 300%;
+/* ---- typography -------------------------------------------------------
+   Morris Roman is the display face and carries the brand. MedievalSharp is the
+   second display face and is now reserved for one role: the "hand-lettered
+   sign" moments (modal headings, the archive button). It used to compete with
+   the display face on buttons, labels and the toolbar all at once. */
+
+.main-title a {
+    color: var(--bog-brown);
+    font-family: var(--font-display);
+    font-size: var(--text-2xl);
     text-decoration: none;
 }
 
-.main-title a:hover{
-    color: rgb(218, 72, 72);
+.main-title a:hover {
+    color: var(--bog-red-deep);
 }
 
 p {
-    font-family: 'Noto Serif Gurmukhi', sans-serif;
-    color: rgb(54, 50, 41);
+    font-family: var(--font-body);
+    color: var(--bog-ink);
+    /* show descriptions carry real newlines from the database */
     white-space: pre-line;
 }
 
+h1 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    /* leading-1.1 plus the padding reserve keeps descenders off the baseline
+       in a face this decorative */
+    font-size: var(--text-2xl);
+    line-height: 1.1;
+    padding-bottom: var(--space-1);
+    color: var(--bog-brown);
+    margin: 0 0 var(--space-3);
+}
+
 h2 {
-    font-family: 'Noto Serif Gurmukhi', sans-serif;
+    font-family: var(--font-body);
     font-weight: 600;
-    font-size: 150%;
-    color: rgb(54, 50, 41);
+    font-size: var(--text-lg);
+    line-height: 1.25;
+    color: var(--bog-ink);
+}
+
+h3 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: var(--text-md);
+    line-height: 1.2;
+    color: var(--bog-brown);
 }
 
 .banner a:link {
-    color: green;
+    color: var(--bog-green);
     background-color: transparent;
     text-decoration: none;
-    font-family: 'MedievalSharp', cursive;
-    font-size: larger;
-    margin: 5px;
+    font-family: var(--font-script);
+    font-size: var(--text-md);
+    margin: var(--space-1);
 }
-  
+
 .banner a:visited {
-    color: rgb(130, 71, 81);
+    color: var(--bog-plum);
     background-color: transparent;
     text-decoration: none;
 }
-  
+
 .banner a:hover {
-    color: red;
+    color: var(--bog-red-deep);
     background-color: transparent;
     text-decoration: underline;
 }
   
+/* ---- the vellum plate -------------------------------------------------
+   The signature surface: translucent paper plus a noise texture, over the
+   fixed cover photo. Kept exactly as it was, but the width is now a variable
+   so sections can vary their measure instead of every box on the site being
+   an identical 900px rectangle. */
 .textbox {
-    background-color: rgba(226, 55, 24, 0.148);
-    margin: 20px auto;
-    padding: 20px;
+    --measure: 900px;
+    margin: var(--space-4) auto;
+    padding: var(--space-5) var(--space-4);
     width: 90%;
-    max-width: 900px;
-    background: #f7e0c1be;
+    max-width: var(--measure);
+    background: var(--bog-paper-veil);
     box-sizing: border-box;
+    border-radius: var(--radius-edge);
     /* v2.2 : Noise added for a vellum paper effect */
     background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAADIAAAAyCAMAAAAp4XiDAAAAUVBMVEWFhYWDg4N3d3dtbW17e3t1dXWBgYGHh4d5eXlzc3OLi4ubm5uVlZWPj4+NjY19fX2JiYl/f39ra2uRkZGZmZlpaWmXl5dvb29xcXGTk5NnZ2c8TV1mAAAAG3RSTlNAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEBAQEAvEOwtAAAFVklEQVR4XpWWB67c2BUFb3g557T/hRo9/WUMZHlgr4Bg8Z4qQgQJlHI4A8SzFVrapvmTF9O7dmYRFZ60YiBhJRCgh1FYhiLAmdvX0CzTOpNE77ME0Zty/nWWzchDtiqrmQDeuv3powQ5ta2eN0FY0InkqDD73lT9c9lEzwUNqgFHs9VQce3TVClFCQrSTfOiYkVJQBmpbq2L6iZavPnAPcoU0dSw0SUTqz/GtrGuXfbyyBniKykOWQWGqwwMA7QiYAxi+IlPdqo+hYHnUt5ZPfnsHJyNiDtnpJyayNBkF6cWoYGAMY92U2hXHF/C1M8uP/ZtYdiuj26UdAdQQSXQErwSOMzt/XWRWAz5GuSBIkwG1H3FabJ2OsUOUhGC6tK4EMtJO0ttC6IBD3kM0ve0tJwMdSfjZo+EEISaeTr9P3wYrGjXqyC1krcKdhMpxEnt5JetoulscpyzhXN5FRpuPHvbeQaKxFAEB6EN+cYN6xD7RYGpXpNndMmZgM5Dcs3YSNFDHUo2LGfZuukSWyUYirJAdYbF3MfqEKmjM+I2EfhA94iG3L7uKrR+GdWD73ydlIB+6hgref1QTlmgmbM3/LeX5GI1Ux1RWpgxpLuZ2+I+IjzZ8wqE4nilvQdkUdfhzI5QDWy+kw5Wgg2pGpeEVeCCA7b85BO3F9DzxB3cdqvBzWcmzbyMiqhzuYqtHRVG2y4x+KOlnyqla8AoWWpuBoYRxzXrfKuILl6SfiWCbjxoZJUaCBj1CjH7GIaDbc9kqBY3W/Rgjda1iqQcOJu2WW+76pZC9QG7M00dffe9hNnseupFL53r8F7YHSwJWUKP2q+k7RdsxyOB11n0xtOvnW4irMMFNV4H0uqwS5ExsmP9AxbDTc9JwgneAT5vTiUSm1E7BSflSt3bfa1tv8Di3R8n3Af7MNWzs49hmauE2wP+ttrq+AsWpFG2awvsuOqbipWHgtuvuaAE+A1Z/7gC9hesnr+7wqCwG8c5yAg3AL1fm8T9AZtp/bbJGwl1pNrE7RuOX7PeMRUERVaPpEs+yqeoSmuOlokqw49pgomjLeh7icHNlG19yjs6XXOMedYm5xH2YxpV2tc0Ro2jJfxC50ApuxGob7lMsxfTbeUv07TyYxpeLucEH1gNd4IKH2LAg5TdVhlCafZvpskfncCfx8pOhJzd76bJWeYFnFciwcYfubRc12Ip/ppIhA1/mSZ/RxjFDrJC5xifFjJpY2Xl5zXdguFqYyTR1zSp1Y9p+tktDYYSNflcxI0iyO4TPBdlRcpeqjK/piF5bklq77VSEaA+z8qmJTFzIWiitbnzR794USKBUaT0NTEsVjZqLaFVqJoPN9ODG70IPbfBHKK+/q/AWR0tJzYHRULOa4MP+W/HfGadZUbfw177G7j/OGbIs8TahLyynl4X4RinF793Oz+BU0saXtUHrVBFT/DnA3ctNPoGbs4hRIjTok8i+algT1lTHi4SxFvONKNrgQFAq2/gFnWMXgwffgYMJpiKYkmW3tTg3ZQ9Jq+f8XN+A5eeUKHWvJWJ2sgJ1Sop+wwhqFVijqWaJhwtD8MNlSBeWNNWTa5Z5kPZw5+LbVT99wqTdx29lMUH4OIG/D86ruKEauBjvH5xy6um/Sfj7ei6UUVk4AIl3MyD4MSSTOFgSwsH/QJWaQ5as7ZcmgBZkzjjU1UrQ74ci1gWBCSGHtuV1H2mhSnO3Wp/3fEV5a+4wz//6qy8JxjZsmxxy5+4w9CDNJY09T072iKG0EnOS0arEYgXqYnXcYHwjTtUNAcMelOd4xpkoqiTYICWFq0JSiPfPDQdnt+4/wuqcXY47QILbgAAAABJRU5ErkJggg==);
     scroll-margin-top: 100px;
 }
 
+/* A plate's padding is the only thing that should set the space inside its
+   edges, and it was not: every card on the site opens with an <h2>, whose
+   default top margin does NOT collapse through the parent's padding. So each
+   plate carried its 20px of padding PLUS ~19px of stray heading margin at the
+   top, against 20px of padding alone at the foot — 39 above, 20 below, on every
+   card on every page. Zeroing the outer margins of the first and last children
+   hands the spacing back to the padding, top and bottom alike.
+
+   These are `> *` rather than named elements so a card opening with a <p> or a
+   <div> is balanced too, and they survive the narrower padding the mobile
+   breakpoints set further down. */
+.textbox > :first-child {
+    margin-top: 0;
+}
+
+.textbox > :last-child {
+    margin-bottom: 0;
+}
+
+/* A status line or a results list that has nothing in it yet should take up no
+   room. Both start empty on /vault/, and their margins were adding a phantom
+   band under the search field before a single result existed. */
+.textbox .search-meta:empty,
+.textbox .track-list:empty {
+    margin: 0;
+}
+
+/* Prose sits on a reading measure rather than the full plate width. Using this
+   next to a default .textbox is what gives a page vertical rhythm. */
+.textbox--reading {
+    --measure: 640px;
+}
+
+/* An interior page's own h1. /radio/ and /lore/ had no h1 at all, and the bare
+   h1 size (2.6rem) is a hero scale that would shout inside a plate. This is the
+   page-heading scale: same face and colour, one step down. */
+.page-title {
+    font-size: var(--text-xl);
+    margin: 0 0 var(--space-3);
+}
+
+.page-intro p {
+    margin: 0;
+}
+
+/* ---- page masthead ------------------------------------------------------
+   The title of a page, set on open ground instead of on a .textbox plate.
+
+   On /radio/ the heading used to sit in a plate identical to the show cards
+   below it, so nothing but its position said it outranked them, and position
+   alone does not read as rank.
+
+   The title itself is the hero's arced wordmark at a smaller scale: lime type
+   on the shallow curve, dark halo, starburst beneath. That is also what makes
+   it legible here - the same treatment already survives this photograph on the
+   landing page, where plain brown text on the carved stone does not. */
+.page-masthead {
+    width: 90%;
+    max-width: 480px;
+    /* the space underneath is doing the ranking: it is what separates a title
+       from the first thing it titles */
+    margin: var(--space-4) auto var(--space-5);
+    text-align: center;
+}
+
+.page-masthead .page-title {
+    margin: 0;
+    /* the arc is a mark, not prose */
+    user-select: none;
+    -webkit-user-select: none;
+    /* the starburst is positioned against this box */
+    position: relative;
+    line-height: 1;
+}
+
+.page-arc-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    /* the hero's halo, unchanged: lime alone measures about 1.5:1 on the
+       photograph, and this lifts it off the stone without altering the colour */
+    filter:
+        drop-shadow(0 1px 0 rgba(31, 26, 20, 0.55))
+        drop-shadow(0 0 5px rgba(31, 26, 20, 0.8));
+}
+
+/* One size for every page. The titles are all of a length - "Every show",
+   "The Vault", "Our Lore" - so none of them needs its own value. An earlier
+   draft carried per-page sizes because /lore/ read "Welcome to the Bog",
+   which overran the arc by a third; shortening the title was the better fix
+   and took the special cases with it. */
+.page-arc-text {
+    font-family: var(--font-display);
+    font-size: 70px;
+    letter-spacing: 0.05em;
+    fill: var(--bog-lime);
+}
+
+/* Sits where the hero's does: centred, and 82% of the way down its box. */
+.page-arc-star {
+    position: absolute;
+    left: 50%;
+    top: 82%;
+    width: 8%;
+    transform: translate(-50%, -50%);
+    color: var(--bog-lime);
+    filter:
+        drop-shadow(0 1px 0 rgba(31, 26, 20, 0.55))
+        drop-shadow(0 0 5px rgba(31, 26, 20, 0.8));
+}
+
+.page-masthead__lead {
+    /* Ink with a paper halo, the opposite way round from the arc above it. The
+       arc is pale type and takes a dark halo; this is a line of prose, and the
+       top of the background photograph is pale stone, so pale-on-pale had no
+       contrast at all. Dark type lifted by a light halo is what reads here. */
+    max-width: 44ch;
+    /* The starburst hangs to the very bottom of the h1's box (it is absolutely
+       placed at 82% and pulled back by half its own height), so with no top
+       margin here the strapline sat all but touching it. The hero gives its
+       lede the same air below the wordmark. */
+    margin: var(--space-4) auto 0;
+    color: var(--bog-ink);
+    filter:
+        drop-shadow(0 1px 0 rgba(247, 224, 193, 0.9))
+        drop-shadow(0 0 5px rgba(247, 224, 193, 0.95));
+}
+
 .banner {
-    margin: 20px auto;
-    padding: 15px;
+    margin: var(--space-4) auto;
+    padding: var(--space-3);
     text-align: center;
 }
 
 .toolbar {
     position: sticky;
     top: 0;
-    background-color: rgba(245, 222, 179, 0.95);
-    padding: 15px;
+    background-color: var(--bog-toolbar);
+    padding: var(--space-3) var(--space-4);
     text-align: center;
-    z-index: 1000;
+    z-index: var(--z-toolbar);
     backdrop-filter: blur(5px);
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 20px;
+    gap: var(--space-4);
+    flex-wrap: nowrap;
+    /* Reserved height. toolbar-live-widget.js appends the LIVE NOW button after
+       first paint, which used to grow the toolbar and shift the whole page
+       down: a measurable CLS cost on the two pages that get traffic. The
+       reserve also keeps the bar under the 80px nav cap. */
+    min-height: 72px;
+    box-sizing: border-box;
+}
+
+/* ---- the wordmark, as a logo -------------------------------------------
+   Same face as the arc in the hero, set flat. The arc is roughly 3:1 and
+   shallow; at toolbar height its curve turns to mush, so the typeface carries
+   the recognition here and the curve stays a hero treatment.
+
+   Brown, not the lime from the arc: lime on the wheat bar measures 1.31:1,
+   which is unusable, and worse still for something that is a link. Brown is
+   4.59:1 and is already the primary. */
+.toolbar-logo {
+    margin-right: auto;
+    /* same reasoning as .wordmark: a logo is a mark, not prose */
+    user-select: none;
+    -webkit-user-select: none;
+    font-family: var(--font-display);
+    /* A step up from where it sat under Luminari. Morris Roman has a smaller
+       cap height for a given size, and dropping the uppercasing took away the
+       rest: title case is shorter than caps, so the mark read smaller at the
+       same value even though nothing about the size had changed. */
+    font-size: var(--text-lg);
+    line-height: 1.05;
+    letter-spacing: 0.04em;
+    /* breathing room off the left edge, so the mark is not wedged into the
+       corner. The toolbar's own padding alone read as tight once the logo grew. */
+    padding-left: var(--space-3);
+    color: var(--bog-brown);
+    text-decoration: none;
+    white-space: nowrap;
+    flex-shrink: 0;
+}
+
+/* A logo should carry a bit more presence than a nav link. */
+@media screen and (min-width: 769px) {
+    .toolbar-logo {
+        font-size: var(--text-xl);
+        padding-left: var(--space-4);
+    }
+}
+
+/* every state named, so no `.toolbar-nav a:visited` rule can recolour the logo the
+   way it did the Chat button */
+a.toolbar-logo:link,
+a.toolbar-logo:visited {
+    color: var(--bog-brown);
+}
+
+a.toolbar-logo:hover,
+a.toolbar-logo:active {
+    color: var(--bog-red-deep);
+    text-decoration: none;
+}
+
+a.toolbar-logo:focus-visible {
+    outline: 3px solid var(--bog-brown);
+    outline-offset: 3px;
+}
+
+/* On the landing page the logo is a span rather than a link, so there is no
+   self-link, and the bar keeps exactly the same shape on every page. */
+span.toolbar-logo {
+    cursor: default;
+}
+
+.toolbar-nav {
+    display: flex;
+    align-items: center;
+    /* the links used to carry `margin: 0 var(--space-3)` each, so there was 24px
+       between them; the flex gap has to make that up or the nav reads cramped */
+    gap: var(--space-4);
     flex-wrap: nowrap;
 }
 
-.toolbar a {
-    color: green;
+.toolbar-nav a {
+    color: var(--bog-green);
     background-color: transparent;
     text-decoration: none;
-    font-family: 'MedievalSharp', cursive;
-    font-size: larger;
-    margin: 0 15px;
+    font-family: var(--font-script);
+    font-size: var(--text-md);
+    margin: 0;
 }
 
-.toolbar a:visited {
-    color: rgb(130, 71, 81);
+
+.toolbar-nav a:visited {
+    color: var(--bog-plum);
     background-color: transparent;
     text-decoration: none;
 }
 
-.toolbar a:hover {
-    color: red;
+.toolbar-nav a:hover {
+    color: var(--bog-red-deep);
     background-color: transparent;
     text-decoration: underline;
 }
 
-/* Toolbar Live Widget */
-.toolbar-live-widget {
-    margin-left: auto;
+/* The page you are on, marked so the nav is orientating rather than decorative */
+.toolbar-nav a[aria-current="page"] {
+    color: var(--bog-brown);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+}
+
+/* ---- toolbar dropdown --------------------------------------------------
+   The three links used to sit open in the bar. scripts/toolbar-menu.js wraps
+   them in this trigger + panel; without that script the nav renders as it
+   always did, so everything here is additive.
+
+   Note the knock-on: the bar no longer has to fit three links, the logo and the
+   live controls side by side, which is what the tightest of the small-screen
+   overrides further down were bought to solve. */
+.toolbar-menu {
+    position: relative;
     display: flex;
-    gap: 10px;
     align-items: center;
+}
+
+.toolbar-menu-trigger {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--bog-green);
+    background: transparent;
+    border: 0;
+    padding: var(--space-1) var(--space-2);
+    /* a comfortable target without the button reading as a box */
+    min-height: 44px;
+    min-width: 44px;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.toolbar-menu-trigger:hover {
+    color: var(--bog-red-deep);
+}
+
+.toolbar-menu-trigger:focus-visible {
+    outline: 3px solid var(--bog-brown);
+    outline-offset: 2px;
+}
+
+/* Three bars, drawn rather than set as a glyph so they take currentColor and
+   follow the trigger's hover and focus states. On open the outer two rotate
+   into a cross and the middle one fades, so the same control says "close". */
+.toolbar-menu-icon {
+    position: relative;
+    display: block;
+    width: 22px;
+    height: 16px;
+}
+
+.toolbar-menu-icon span {
+    position: absolute;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    border-radius: 1px;
+    background-color: currentColor;
+    transition: transform 150ms ease, opacity 150ms ease;
+}
+
+.toolbar-menu-icon span:nth-child(1) { top: 0; }
+/* -1px, not a translate: the bar is 2px tall, so this is what centres it */
+.toolbar-menu-icon span:nth-child(2) { top: 50%; margin-top: -1px; }
+.toolbar-menu-icon span:nth-child(3) { bottom: 0; }
+
+.toolbar-menu.is-open .toolbar-menu-icon span:nth-child(1) {
+    transform: translateY(7px) rotate(45deg);
+}
+
+.toolbar-menu.is-open .toolbar-menu-icon span:nth-child(2) {
+    opacity: 0;
+}
+
+.toolbar-menu.is-open .toolbar-menu-icon span:nth-child(3) {
+    transform: translateY(-7px) rotate(-45deg);
+}
+
+/* The panel. Right-aligned because the nav sits at the right of the bar, and
+   a left-aligned panel would hang off the edge on a phone. */
+.toolbar-menu-panel {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    flex-direction: column;
+    align-items: stretch;
+    gap: 0;
+    min-width: 11em;
+    padding: var(--space-2);
+    margin-top: var(--space-1);
+    background-color: var(--bog-toolbar);
+    border: 1px solid var(--bog-brown-soft);
+    border-radius: var(--radius-soft);
+    box-shadow: 0 6px 18px rgba(31, 26, 20, 0.28);
+    z-index: var(--z-toolbar);
+    /* Closed by default. visibility (not just opacity) so the links are out of
+       the tab order and out of the accessibility tree while hidden. */
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(-4px);
+    transition: opacity 150ms ease, transform 150ms ease, visibility 150ms;
+}
+
+.toolbar-menu.is-open .toolbar-menu-panel {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+/* Stacked, the links want to be rows rather than inline text.
+
+   Doubled up on `.toolbar-nav` for specificity, not for effect: the small-screen
+   overrides near the foot of this file set `.toolbar-nav a` to a centred flex
+   box so the links could survive as a row on a 360px bar. In a dropdown they
+   are not a row any more, and those rules would otherwise win on source order. */
+.toolbar-menu-panel.toolbar-nav a {
+    display: block;
+    padding: var(--space-2) var(--space-3);
+    margin: 0;
+    border-radius: var(--radius-soft);
+    text-align: left;
+    white-space: nowrap;
+    /* the row itself is the target, so it does not need a min-height of its own
+       beyond what the padding already gives it */
+    min-height: 0;
+}
+
+.toolbar-menu-panel.toolbar-nav a:hover {
+    background-color: var(--bog-brown-hair);
+    text-decoration: none;
+}
+
+.toolbar-menu-panel.toolbar-nav a[aria-current="page"] {
+    background-color: var(--bog-brown-hair);
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .toolbar-menu-icon span,
+    .toolbar-menu-panel {
+        transition: none;
+    }
+}
+
+/* Toolbar Live Widget.
+   No margin-left: auto any more. The logo's margin-right: auto already pins
+   itself left and packs everything else right; a second auto margin here split
+   the slack instead, which slid the nav from the right edge to the centre the
+   moment we went on air. */
+.toolbar-live-widget {
+    display: flex;
+    gap: var(--space-2);
+    align-items: center;
+    flex-shrink: 0;
+}
+
+/* The two on-air toolbar controls share a shape. The colour is the only thing
+   that differs: red for "our show is on", green for "go and talk to people".
+   Both fills now clear AA against wheat text (5.35:1 and 6.17:1); the old
+   rgba(218,72,72,.9) and olive were at 3.20:1 and 2.90:1. */
+.toolbar-live-btn,
+.toolbar .toolbar-chat-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    color: var(--bog-wheat);
+    border: none;
+    padding: var(--space-2) var(--space-4);
+    font-family: var(--font-display);
+    font-size: var(--text-sm);
+    cursor: pointer;
+    border-radius: var(--radius-pill);
+    transition: transform 0.2s ease, box-shadow 0.3s ease, background-color 0.3s ease;
+    box-shadow: 0 2px 8px rgba(54, 50, 41, 0.25);
+    text-decoration: none;
+    line-height: 1.5;
+    box-sizing: border-box;
+    min-height: 40px;
 }
 
 .toolbar-live-btn {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    background-color: rgba(218, 72, 72, 0.9);
-    color: wheat;
-    border: none;
-    padding: 8px 16px;
-    font-family: 'Luminari', fantasy;
-    font-size: 14px;
-    cursor: pointer;
-    border-radius: 20px;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    line-height: 1.5;
-    box-sizing: border-box;
-    min-height: 40px;
+    background-color: var(--bog-red-deep);
 }
 
-.toolbar-live-btn:hover {
-    background-color: rgb(218, 72, 72);
+/* Every link state spelled out. `.toolbar-nav a:visited` is specificity (0,2,1) and
+   was out-ranking the single-class colour here, so once you had clicked Chat
+   once the label turned plum on dark green: 1.15:1, effectively invisible.
+   Chrome hides :visited colours from getComputedStyle for privacy, which is why
+   an automated contrast pass cannot catch this and a screenshot can. */
+.toolbar .toolbar-chat-btn,
+.toolbar .toolbar-chat-btn:link,
+.toolbar .toolbar-chat-btn:visited,
+.toolbar .toolbar-chat-btn:hover,
+.toolbar .toolbar-chat-btn:active,
+.toolbar .toolbar-chat-btn:focus {
+    background-color: var(--bog-green);
+    color: var(--bog-wheat);
+}
+
+/* The !important pile these rules used to carry was there to out-specify
+   `.toolbar-nav a`. Qualifying the selector does the same job honestly. */
+.toolbar-live-btn:hover,
+.toolbar .toolbar-chat-btn:hover {
+    color: var(--bog-wheat);
     transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    box-shadow: 0 4px 12px rgba(54, 50, 41, 0.35);
 }
 
-.toolbar-live-btn:active {
-    transform: scale(0.98);
+.toolbar-live-btn:active,
+.toolbar .toolbar-chat-btn:active {
+    transform: scale(0.97);
 }
 
-.toolbar-chat-btn {
-    display: flex !important;
-    align-items: center;
-    gap: 8px;
-    background: rgb(107, 142, 35) !important;
-    background-color: rgb(107, 142, 35) !important;
-    color: wheat !important;
-    border: none !important;
-    padding: 8px 16px;
-    font-family: 'Luminari', fantasy;
-    font-size: 14px;
-    cursor: pointer;
-    border-radius: 20px;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    text-decoration: none !important;
-    opacity: 1 !important;
-    line-height: 1.5;
-    box-sizing: border-box;
-    min-height: 40px;
-}
-
-.toolbar-chat-btn:hover {
-    background: rgb(85, 115, 25) !important;
-    background-color: rgb(85, 115, 25) !important;
-    color: wheat !important;
-    transform: scale(1.05);
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-}
-
-.toolbar-chat-btn:active {
-    transform: scale(0.98);
+.toolbar-live-btn:focus-visible,
+.toolbar .toolbar-chat-btn:focus-visible {
+    outline: 3px solid var(--bog-brown);
+    outline-offset: 2px;
 }
 
 .toolbar-chat-icon {
@@ -209,7 +728,7 @@ h2 {
 .toolbar-live-dot {
     width: 8px;
     height: 8px;
-    background-color: wheat;
+    background-color: var(--bog-wheat);
     border-radius: 50%;
     animation: pulse 1.5s ease-in-out infinite;
 }
@@ -250,18 +769,23 @@ h2 {
     }
 }
 
+/* Behind the page's material, so plates and text slide over the suns as you
+   scroll. They stay draggable anyway: hit-testing resolves to whatever is
+   topmost at the pointer, so a sun with nothing over it takes the click and one
+   under a plate does not. Exactly the ones you can see are the ones you can
+   pick up, which is why the containers keep pointer-events: auto. */
 .sun-container {
     position: fixed;
     pointer-events: auto;
-    z-index: 1;
+    z-index: var(--z-base);
     user-select: none;
     -webkit-user-select: none;
 }
 
 body.radio-page .sun-container,
-body.about-page .sun-container,
+body.lore-page .sun-container,
 body.blog-page .sun-container {
-    z-index: -1;
+    z-index: var(--z-behind);
     pointer-events: none;
 }
 
@@ -295,155 +819,216 @@ body.blog-page .sun-container {
 .mixcloud-container {
     display: flex;
     justify-content: center;
-    margin: 20px;
+    margin: var(--space-4);
 }
 
+/* There used to be a bare `img { width: 80%; margin: 20px }` here. Every image
+   on the site started wrong and was then rescued by a more specific class, and
+   any new image inherited the bug. Images now size themselves; only the
+   never-overflow guard is global. */
 img {
-    width: 80%;
-    margin: 20px;
+    max-width: 100%;
+    height: auto;
 }
 
 .footer {
     display: flex;
     justify-content: center;
-    padding: 20px;
+    flex-wrap: wrap;
+    padding: var(--space-4);
     margin-top: auto;
+    /* above the suns, so one cannot settle over a footer link and eat the click */
+    position: relative;
+    z-index: var(--z-content);
 }
 
 .footer a {
-    margin: 10px 10px;
+    margin: var(--space-2);
     text-decoration: none;
-    color: #333;
-    font-family: "Luminari", fantasy;
-    background-color: rgba(245, 222, 179, 0.95);
-    padding: 8px 16px;
-    border-radius: 20px;
+    color: var(--bog-ink);
+    font-family: var(--font-display);
+    background-color: var(--bog-toolbar);
+    padding: var(--space-2) var(--space-4);
+    border-radius: var(--radius-pill);
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .footer a:hover {
-    color: #555;
+    color: var(--bog-red-deep);
+    background-color: var(--bog-paper);
 }
 
-.tracklist-btn {
-    background-color: rgb(135, 89, 33);
-    color: wheat;
-    border: none;
-    padding: 12px 20px;
-    font-family: 'MedievalSharp', cursive;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-    line-height: 1.2;
-}
-
-.tracklist-btn:hover {
-    background-color: rgb(218, 72, 72);
+.footer a:focus-visible {
+    outline: 3px solid var(--bog-brown);
+    outline-offset: 2px;
 }
 
 .show-description a:link,
 .show-description a:hover {
-    color: rgb(135, 89, 33);
+    color: var(--bog-brown);
 }
 
+/* was `color: wheat` on a paper background, which made visited links in show
+   descriptions effectively invisible */
 .show-description a:visited,
 .show-description a:active {
-    color: wheat;
+    color: var(--bog-plum);
 }
 
 .modal {
     display: none;
     position: fixed;
-    z-index: 2000;
+    z-index: var(--z-modal);
     left: 0;
     top: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.7);
+    background-color: rgba(31, 26, 20, 0.72);
     overflow: auto;
 }
 
 .modal-content {
-    background-color: #f7e0c1;
-    margin: 5% auto;
-    padding: 30px;
-    width: 80%;
-    max-width: 600px;
+    background-color: var(--bog-paper);
+    margin: var(--modal-gutter) auto;
+    padding: var(--space-5);
+    width: 88%;
+    max-width: 620px;
     position: relative;
-    font-family: 'Noto Serif Gurmukhi', sans-serif;
-    border-radius: 8px;
-    border: 3px solid rgb(135, 89, 33);
+    font-family: var(--font-body);
+    border-radius: var(--radius-soft);
+    border: 3px solid var(--bog-brown);
     box-sizing: border-box;
+    /* Never taller than the space left above the Mixcloud player. dvh so the
+       mobile address bar doesn't push the close button off-screen. */
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100dvh - (2 * var(--modal-gutter)) - var(--player-height));
+    overflow: hidden;
+}
+
+/* Inner content scrolls; the heading and close button stay put */
+.tracklist-content,
+.modal-content > form {
+    flex: 1 1 auto;
+    min-height: 0;
+    overflow-y: auto;
 }
 
 .modal-content h3 {
-    font-family: 'MedievalSharp', cursive;
-    color: rgb(135, 89, 33);
-    margin-top: 0;
+    font-family: var(--font-script);
+    color: var(--bog-brown);
+    font-size: var(--text-lg);
+    line-height: 1.2;
+    margin: 0 var(--space-5) 0 0;
 }
 
 .close-btn {
     position: absolute;
-    right: 15px;
-    top: 10px;
+    right: var(--space-3);
+    top: var(--space-2);
+    /* a 44px target, per the mobile sizing the rest of the site already uses */
+    width: 44px;
+    height: 44px;
     font-size: 28px;
     font-weight: bold;
-    color: rgb(135, 89, 33);
+    color: var(--bog-brown);
     cursor: pointer;
     background: none;
     border: none;
+    border-radius: var(--radius-pill);
+    line-height: 1;
 }
 
 .close-btn:hover {
-    color: rgb(218, 72, 72);
+    color: var(--bog-red-deep);
+    background-color: var(--bog-brown-hair);
 }
 
+.close-btn:focus-visible {
+    outline: 3px solid var(--bog-brown);
+    outline-offset: 2px;
+}
+
+/* ---- tracklist --------------------------------------------------------
+   One column, as it always was. What changed is the row treatment: a hairline
+   under every one of 29 rows became a track number plus faint banding, which
+   does the same scanning job with far less ruling. */
 .tracklist-content {
-    margin-top: 20px;
-    color: rgb(54, 50, 41);
+    margin-top: var(--space-4);
+    color: var(--bog-ink);
 }
 
 .tracklist-content ul {
     list-style: none;
+    margin: 0;
     padding: 0;
+    counter-reset: track;
 }
 
 .tracklist-content li {
-    padding: 8px 0;
-    border-bottom: 1px solid rgba(135, 89, 33, 0.3);
+    counter-increment: track;
+    display: grid;
+    grid-template-columns: 1.8em 1fr auto;
+    align-items: baseline;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-2) var(--space-2) 0;
+    border-bottom: none;
+    border-radius: var(--radius-edge);
 }
 
-.tracklist-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 10px;
+/* banding instead of hairlines */
+.tracklist-content li:nth-child(odd) {
+    background-color: rgba(135, 89, 33, 0.07);
 }
+
+.tracklist-content li::before {
+    content: counter(track);
+    font-family: var(--font-display);
+    font-size: var(--text-sm);
+    color: var(--bog-brown);
+    text-align: right;
+    padding-left: var(--space-2);
+}
+
+/* generate-show-list.js puts .tracklist-item on the <li> itself, so the grid
+   above is already this element. Nothing extra to do here. */
 
 .track-text {
-    flex: 1;
+    min-width: 0;
+    line-height: 1.35;
 }
 
+/* Quiet by default. As a filled brown tile repeated down a 29-row list it drew
+   more attention than the track names it belongs to. */
 .youtube-search-btn {
-    background-color: rgb(135, 89, 33);
-    color: wheat;
+    background-color: transparent;
+    color: var(--bog-brown);
     border: none;
-    padding: 5px 10px;
-    font-size: 14px;
+    padding: 2px var(--space-1);
+    font-size: var(--text-sm);
     cursor: pointer;
-    border-radius: 4px;
-    transition: background-color 0.3s, transform 0.2s;
+    border-radius: var(--radius-soft);
+    opacity: 0.55;
+    transition: opacity 0.2s, background-color 0.3s, transform 0.2s;
     flex-shrink: 0;
     text-decoration: none;
     display: inline-block;
+    line-height: 1.4;
 }
 
 .youtube-search-btn:hover {
-    background-color: rgb(218, 72, 72);
-    transform: scale(1.1);
+    background-color: var(--bog-brown-hair);
+    opacity: 1;
+    transform: scale(1.08);
 }
 
 .youtube-search-btn:active {
     transform: scale(0.95);
+}
+
+.youtube-search-btn:focus-visible {
+    outline: 3px solid var(--bog-brown);
+    outline-offset: 2px;
 }
 
 /* Mixcloud Player Styles */
@@ -452,9 +1037,11 @@ img {
     bottom: 0;
     left: 0;
     width: 100%;
-    background-color: #f7e0c1;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.2);
-    z-index: 9999;
+    background-color: var(--bog-paper);
+    box-shadow: 0 -2px 10px rgba(54, 50, 41, 0.25);
+    /* below modals, so a tracklist opens in front of the player rather than
+       behind it. It was 9999 against the modal's 2000. */
+    z-index: var(--z-player);
     transition: transform 0.3s ease-in-out;
 }
 
@@ -469,32 +1056,15 @@ img {
 .player-controls {
     display: flex;
     align-items: center;
-    padding: 10px 20px;
+    padding: var(--space-2) var(--space-4);
     background-color: rgba(135, 89, 33, 0.1);
-    border-bottom: 2px solid rgb(135, 89, 33);
-}
-
-.player-btn {
-    background-color: rgb(135, 89, 33);
-    color: wheat;
-    border: none;
-    padding: 5px 12px;
-    font-family: 'MedievalSharp', cursive;
-    font-size: 20px;
-    cursor: pointer;
-    margin-right: 15px;
-    transition: background-color 0.3s;
-    border-radius: 3px;
-}
-
-.player-btn:hover {
-    background-color: rgb(218, 72, 72);
+    border-bottom: 2px solid var(--bog-brown);
 }
 
 .player-info {
     flex: 1;
-    font-family: 'Noto Serif Gurmukhi', sans-serif;
-    color: rgb(54, 50, 41);
+    font-family: var(--font-body);
+    color: var(--bog-ink);
     font-weight: 600;
 }
 
@@ -502,99 +1072,127 @@ img {
     padding: 0;
 }
 
-.play-btn {
-    background-color: rgb(135, 89, 33);
-    color: wheat;
+/* ---- the button family ------------------------------------------------
+   One shape for every button that does something on a plate: the archive
+   play button, the tracklist opener, the wheel, the Mixcloud close, the
+   contact submit. Sharp corners like the plate they sit on, MedievalSharp as
+   the lettering, brown resting, deep red on hover. They used to be four
+   separate near-identical rules with three different radii between them. */
+.play-btn,
+.tracklist-btn,
+.player-btn,
+.spin-btn,
+.contact-submit-btn {
+    background-color: var(--bog-brown);
+    color: var(--bog-wheat);
     border: none;
-    padding: 12px 20px;
-    font-family: 'MedievalSharp', cursive;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s;
+    padding: var(--space-3) var(--space-4);
+    font-family: var(--font-script);
+    font-size: var(--text-base);
     line-height: 1.2;
+    cursor: pointer;
+    border-radius: var(--radius-edge);
+    /* transform is listed so the :active push below actually eases */
+    transition: background-color 0.3s ease, transform 0.12s ease;
+    /* CTA labels stay on one line at desktop */
+    white-space: nowrap;
 }
 
-.play-btn:hover {
-    background-color: rgb(218, 72, 72);
+.play-btn:hover,
+.tracklist-btn:hover,
+.player-btn:hover,
+.spin-btn:hover,
+.contact-submit-btn:hover {
+    background-color: var(--bog-red-deep);
 }
 
-/* "The Bog Archive" feature card at the top of the radio page */
-.archive-card {
-    text-align: center;
+/* the physical push. Several of these buttons had no active state at all. */
+.play-btn:active,
+.tracklist-btn:active,
+.player-btn:active,
+.spin-btn:active,
+.contact-submit-btn:active {
+    transform: translateY(1px);
 }
 
-.archive-card-title {
-    font-family: 'Luminari', fantasy;
-    color: rgb(135, 89, 33);
-    margin: 0 0 0.4rem;
+.play-btn:focus-visible,
+.tracklist-btn:focus-visible,
+.player-btn:focus-visible,
+.spin-btn:focus-visible,
+.contact-submit-btn:focus-visible {
+    outline: 3px solid var(--bog-ink);
+    outline-offset: 2px;
 }
 
-.archive-card-text {
-    margin: 0 auto 1rem;
-    max-width: 32em;
-    color: rgb(54, 50, 41);
-}
-
-.archive-card .play-btn {
-    display: inline-block;
-    color: wheat;
-    text-decoration: none;
+.player-btn {
+    font-size: var(--text-md);
+    padding: var(--space-1) var(--space-3);
+    margin-right: var(--space-3);
 }
 
 .button-container {
     display: flex;
     justify-content: center;
     align-items: center;
-    margin-top: 15px;
-    gap: 10px;
+    margin-top: var(--space-3);
+    gap: var(--space-2);
 }
 
 .show-image-container {
     display: flex;
     justify-content: center;
-    margin: 20px 0;
+    margin: var(--space-4) 0;
 }
 
 .show-image {
     max-width: 400px;
     width: 100%;
     height: auto;
-    border-radius: 4px;
+    border-radius: var(--radius-soft);
 }
 
 .about-image-container {
     display: flex;
     justify-content: center;
-    margin: 30px auto;
+    margin: var(--space-5) auto;
 }
 
 .about-image {
     max-width: 600px;
     width: 90%;
     height: auto;
-    border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    border-radius: var(--radius-soft);
+    box-shadow: 0 4px 15px rgba(54, 50, 41, 0.25);
 }
 
-.about-page a {
-    color: rgb(135, 89, 33);
+.lore-page a {
+    color: var(--bog-brown);
     text-decoration: none;
     transition: color 0.3s ease;
 }
 
-.about-page a:hover {
-    color: rgb(218, 72, 72);
+.lore-page a:hover {
+    color: var(--bog-red-deep);
     text-decoration: underline;
 }
 
-.about-page a:visited {
-    color: rgb(130, 71, 81);
+.lore-page a:visited {
+    color: var(--bog-plum);
 }
 
 .textbox ul {
     list-style-type: circle;
-    color: rgb(54, 50, 41);
+    color: var(--bog-ink);
     padding-left: 25px;
+}
+
+/* The track lists set `list-style: none; padding: 0` on themselves, but
+   `.textbox ul` above is one specificity point higher and was winning, so every
+   row on /vault/ carried a bullet and a 25px indent it never wanted.
+   Qualifying the selector settles it. */
+.textbox .track-list {
+    list-style: none;
+    padding-left: 0;
 }
 
 .textbox ul li {
@@ -603,13 +1201,13 @@ img {
 }
 
 .textbox ul li a {
-    color: rgb(135, 89, 33);
+    color: var(--bog-brown);
     text-decoration: none;
     font-weight: 600;
 }
 
 .textbox ul li a:hover {
-    color: rgb(218, 72, 72);
+    color: var(--bog-red-deep);
     text-decoration: underline;
 }
 
@@ -622,7 +1220,7 @@ img {
 }
 
 .show-title-link {
-    color: rgb(54, 50, 41);
+    color: var(--bog-ink);
     text-decoration: none;
     transition: color 0.3s ease;
     flex: 1;
@@ -630,15 +1228,15 @@ img {
 }
 
 .show-title-link:hover {
-    color: rgb(218, 72, 72);
+    color: var(--bog-red-deep);
 }
 
 .show-title-link:visited {
-    color: rgb(54, 50, 41);
+    color: var(--bog-ink);
 }
 
 .show-title-link:visited:hover {
-    color: rgb(218, 72, 72);
+    color: var(--bog-red-deep);
 }
 
 .copy-link-btn {
@@ -676,271 +1274,665 @@ html {
         background-color: rgba(218, 72, 72, 0.2);
     }
     100% {
-        background-color: #f7e0c1be;
+        background-color: var(--bog-paper-veil);
     }
 }
 
-/* Live Stream Widget */
-.stream-widget {
-    position: fixed;
-    top: calc(var(--toolbar-height, 65px) + 30px);
-    left: 20px;
-    background: rgba(247, 224, 193, 0.95);
-    backdrop-filter: blur(10px);
-    padding: 28px 20px 20px 20px;
-    max-width: 350px;
-    width: auto;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-    text-align: center;
-    z-index: 500;
-    box-sizing: border-box;
-    transition: opacity 0.3s ease, transform 0.3s ease;
-    user-select: none;
-    -webkit-user-select: none;
-}
+/* ============================================================
+   Landing hero: the billboard
 
-.stream-minimize-btn {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    background: none;
-    border: none;
-    font-size: 24px;
-    color: rgb(135, 89, 33);
-    cursor: pointer;
-    padding: 0;url(https://www.ehfm.live/)
-    width: 32px;
-    height: 32px;
-    line-height: 24px;
-    opacity: 0.6;
-    transition: opacity 0.3s ease, transform 0.2s ease, color 0.3s ease;
-}
+   Section one is the whole first screen: name, one line about the show, the
+   crier's notice of what is next, and an invitation to scroll. The plate that
+   used to sit here carried four unrelated jobs (countdown, strapline, schedule,
+   archive link). The archive link went away because the archive is one scroll
+   down; the rest is the crier card's, which sits in the hero itself now — see
+   the Upcoming Shows block below.
 
-.stream-minimize-btn:hover {
-    opacity: 1;
-    transform: scale(1.1);
-    color: rgb(218, 72, 72);
-}
-
-.stream-minimize-btn:active {
-    transform: scale(0.9);
-}
-
-/* Floating Audio Player */
-.floating-audio-player {
-    position: fixed;
-    bottom: 20px;
-    left: 20px;
-    width: auto;
-    max-width: 200px;
-    z-index: 1001;
-    transition: transform 0.2s ease, box-shadow 0.2s ease, bottom 0.3s ease;
-    animation: float-in 0.5s ease-out;
+   The type sits straight on the photograph rather than on vellum, and now with
+   no wash pooled behind it either: the picture is at full strength edge to
+   edge, and each piece of copy earns its own legibility with a dark halo.
+   ============================================================ */
+.hero {
+    position: relative;
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 2px;
-}
-
-/* Move floating player up when Mixcloud player is active */
-body.mixcloud-player-active .floating-audio-player {
-    bottom: 200px;
-}
-
-body.mixcloud-player-active .floating-player-circle {
-    cursor: not-allowed;
-    opacity: 0.9;
-}
-
-.floating-player-wrapper {
-    position: relative;
-    display: flex;
-    align-items: center;
     justify-content: center;
-}
-
-.floating-player-circle {
-    width: 70px;
-    height: 70px;
-    border-radius: 50%;
-    overflow: hidden;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    border: 2px solid wheat;
-    background-color: #2AB7A9;
+    /* One screen, less the sticky toolbar above it. --toolbar-height is set by
+       live-stream.js; the fallback matches .toolbar's reserved min-height so
+       the first paint is right even before that runs. */
+    min-height: calc(100dvh - var(--toolbar-height, 72px));
+    padding: var(--space-5) var(--space-4) calc(var(--space-5) * 2.5);
     box-sizing: border-box;
+    text-align: center;
+    /* Above the suns, so the copy is never covered. */
+    z-index: var(--z-content);
+    /* This wrapper is transparent and full-width, so on its own it swallowed
+       clicks across the whole top of the page and left the suns beside the copy
+       unpickable. Only the copy and the controls should intercept. */
+    pointer-events: none;
+}
+
+/* The wash is off, so the collage is at full strength behind the copy.
+   Everything in the hero already carries its own dark halo — the wordmark and
+   the starburst through drop-shadow filters, the prose through text-shadow —
+   which is what makes this survivable at all. Restore it by putting the rule
+   below back:
+
+   .hero::before {
+       content: '';
+       position: absolute;
+       inset: 0;
+       background:
+           radial-gradient(ellipse 46% 40% at 50% 45%,
+               rgba(31, 26, 20, 0.68) 0%,
+               rgba(31, 26, 20, 0.42) 48%,
+               rgba(31, 26, 20, 0) 76%);
+       pointer-events: none;
+       z-index: -1;
+   }
+*/
+
+.hero-inner {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    justify-content: center;
+    width: 100%;
+    max-width: 760px;
+}
+
+/* ---- the arced wordmark ----------------------------------------------
+   Type on an SVG path, filled in the lime sampled straight out of the original
+   artwork (#becd79). Being real text it scales without blurring, and the h1
+   carries the site's name in the markup where a background image never could. */
+.wordmark {
+    width: 100%;
+    /* vw-capped rather than a flat pixel width: the arc is the page's one big
+       gesture and should scale with the screen, but it stops short of the
+       gutters so the outer letters never run off the frame. */
+    max-width: min(760px, 62vw);
+    margin: 0 0 var(--space-4);
     padding: 0;
-    transition: border-color 0.3s ease, box-shadow 0.2s ease;
-    flex-shrink: 0;
+    line-height: 1;
+    /* the arc is decoration around the letters; clicks pass through to any sun
+       sitting behind it, and it keeps the mark out of drag-selection too */
+    pointer-events: none;
+    /* the starburst is positioned against this box */
     position: relative;
 }
 
-@keyframes float-in {
-    from {
-        opacity: 0;
-        transform: translateY(20px) scale(0.8);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0) scale(1);
-    }
+/* Sits where it sat when it was a path inside the arc's viewBox: centred, and
+   82% of the way down the 640x215 box. Percentages, so it stays put as the
+   wordmark scales. */
+.wordmark-star {
+    position: absolute;
+    left: 50%;
+    top: 82%;
+    width: 12.2%;
+    transform: translate(-50%, -50%);
+    color: var(--bog-lime);
+    /* the same halo the letters get, so the mark sits on the photo the same way */
+    filter:
+        drop-shadow(0 1px 0 rgba(31, 26, 20, 0.55))
+        drop-shadow(0 0 5px rgba(31, 26, 20, 0.8));
 }
 
-.floating-audio-player:hover {
-    transform: scale(1.1);
+.wordmark-svg {
+    display: block;
+    width: 100%;
+    height: auto;
+    overflow: visible;
+    /* A dark halo behind the lime. Measured against the photograph the lime
+       alone is about 1.5:1, which was fine when it was decoration painted into
+       the picture but is thin for something that is now the page's h1. The halo
+       lifts the letters off the carved stone without altering #becd79 at all,
+       which is only possible because this is type rather than a baked JPEG. */
+    filter:
+        drop-shadow(0 1px 0 rgba(31, 26, 20, 0.55))
+        drop-shadow(0 0 5px rgba(31, 26, 20, 0.8));
 }
 
-body.mixcloud-player-active .floating-audio-player:hover {
-    transform: scale(1);
+.wordmark-text {
+    font-family: var(--font-display);
+    /* Sized so "Bog Factor" fills about four fifths of the arc. Mixed case is
+       far narrower than the caps this replaced, which left the mark stranded in
+       the middle of the curve at the old 76px. */
+    font-size: 106px;
+    letter-spacing: 0.05em;
+    fill: var(--bog-lime);
 }
 
-.floating-audio-player:active {
-    transform: scale(0.95);
+/* The one line of prose in the hero. Set in paper rather than white — the
+   brief rules out hard whites, and the cream is the same stock the cards below
+   are printed on, so the page reads as one material. */
+.hero-lede {
+    pointer-events: auto;
+    margin: 0;
+    max-width: 30em;
+    font-family: var(--font-body);
+    font-size: clamp(1.12rem, 1.6vw, 1.35rem);
+    line-height: 1.5;
+    color: var(--bog-paper);
+    text-shadow:
+        0 1px 0 rgba(31, 26, 20, 0.6),
+        0 0 12px rgba(31, 26, 20, 0.7);
 }
 
-body.mixcloud-player-active .floating-audio-player:active {
-    transform: scale(1);
+/* Off air this is empty: the crier card in the hero answers when the next show
+   is. This line only speaks when the show is actually on. */
+.hero-status {
+    display: none;
+    align-items: center;
+    gap: var(--space-2);
+    margin: var(--space-4) 0 0;
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: var(--text-md);
+    color: var(--bog-lime);
+    text-shadow: 0 1px 0 rgba(31, 26, 20, 0.6), 0 0 10px rgba(31, 26, 20, 0.8);
 }
 
-.floating-player-circle:hover {
-    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.4);
-    border-color: rgb(218, 72, 72);
+.hero[data-live="true"] .hero-status {
+    display: flex;
 }
 
-body.mixcloud-player-active .floating-player-circle:hover {
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-    border-color: wheat;
+/* Empty in both states on the live site, and collapsed when it is. The hero
+   carries no play or chat control of its own any more: off air the EHFM dock in
+   the corner plays the station, and on air the toolbar grows its own LIVE NOW
+   and Chat pair beside it — the hero's copies were a third and fourth way to
+   press the same two buttons. The row survives so the test pages can author a
+   control here to drive the stream directly. */
+.hero-actions {
+    pointer-events: auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
+    gap: var(--space-3);
+    margin-top: var(--space-4);
+    min-height: 46px;
 }
 
-.floating-player-circle:focus-within {
-    outline: 2px solid rgb(218, 72, 72);
+.hero-actions:empty {
+    display: none;
+}
+
+/* ---- the scroll cue ----------------------------------------------------
+   The billboard's one job after the pitch is to say "there is more below".
+   Pinned to the foot of the first screen so it lands on the fold rather than
+   floating under the copy. */
+.hero-scroll {
+    pointer-events: auto;
+    position: absolute;
+    left: 50%;
+    bottom: var(--space-5);
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: var(--space-1);
+    text-decoration: none;
+    font-family: var(--font-display);
+    font-size: var(--text-md);
+    letter-spacing: 0.04em;
+    color: var(--bog-paper);
+    /* a heavier halo than the rest of the hero copy gets: the cue sits at the
+       foot of the frame, outside the wash, on the lightest part of the photo */
+    text-shadow:
+        0 1px 0 rgba(31, 26, 20, 0.75),
+        0 0 14px rgba(31, 26, 20, 0.95);
+    opacity: 0.95;
+    transition: opacity 0.2s ease, color 0.2s ease;
+}
+
+.hero-scroll:hover {
+    opacity: 1;
+    color: var(--bog-lime);
+}
+
+.hero-scroll:focus-visible {
+    outline: 3px solid var(--bog-lime);
+    outline-offset: 4px;
+}
+
+/* Two hairlines rotated into a chevron, so the cue costs no asset and takes
+   currentColor along with the label. */
+.hero-scroll__chevron {
+    width: 15px;
+    height: 15px;
+    border-right: 2px solid currentColor;
+    border-bottom: 2px solid currentColor;
+    transform: rotate(45deg);
+    animation: heroScrollBob 2.6s ease-in-out infinite;
+}
+
+@keyframes heroScrollBob {
+    0%, 100% { transform: rotate(45deg) translate(0, 0); }
+    50%      { transform: rotate(45deg) translate(3px, 3px); }
+}
+
+/* ============================================================
+   Landing page: latest shows and the introduction
+
+   The landing page used to be a background photograph and nothing else. These
+   two sections give it something to read and somewhere to go, and they are two
+   more layout families so the page is not a stack of identical plates: a card
+   row, then an image-beside-text block.
+   ============================================================ */
+.recent-section {
+    position: relative;
+    z-index: var(--z-content);
+    /* The hero's "Dig deeper" cue points here now that the crier has moved up
+       into the hero, so this has to clear the sticky toolbar when it lands. */
+    scroll-margin-top: calc(var(--toolbar-height, 72px) + var(--space-4));
+}
+
+.recent-heading {
+    margin: 0 0 var(--space-4);
+    font-family: var(--font-display);
+    font-size: var(--text-lg);
+    line-height: 1.15;
+    padding-bottom: var(--space-1);
+    color: var(--bog-brown);
+    /* room for the archive mark in the corner, so a long heading never runs
+       under it */
+    padding-right: var(--space-5);
+}
+
+/* The way through to the whole archive, as a mark in the corner of the plate
+   rather than a sentence under the cards. A shovel, echoing the hero's "Dig
+   deeper" cue. Sized as a proper tap target, which the icon alone would not be. */
+.recent-all {
+    position: absolute;
+    top: var(--space-3);
+    right: var(--space-3);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 40px;
+    height: 40px;
+    /* Outlined like the Listen pills below it, so it reads as a door rather
+       than as decoration someone left in the corner. */
+    border: 2px solid var(--bog-brown-soft);
+    border-radius: var(--radius-pill);
+    text-decoration: none;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.recent-all__icon {
+    display: block;
+    width: 26px;
+    height: 26px;
+    /* the shovel is drawn on a slight diagonal already; a little more tips it
+       into the ground rather than lying flat in the corner */
+    transform: rotate(-8deg);
+    /* Warms the icon's cool blade towards the page's earth palette. The wash
+       has to stay light on brightness: the blade is nearly white to begin with,
+       and washing it further left it dissolving into the parchment. The
+       contrast bump keeps the outline doing the work of reading as a shovel at
+       26px. */
+    filter: sepia(0.45) saturate(1.2) contrast(1.08);
+    transition: transform 0.2s ease;
+}
+
+.recent-all:hover,
+.recent-all:focus {
+    /* a wash rather than the Listen pill's solid brown fill: the shovel is a
+       coloured illustration, not a glyph in currentColor, and a dark fill
+       behind it just muddies it */
+    background-color: var(--bog-brown-hair);
+    border-color: var(--bog-brown);
+}
+
+/* it digs */
+.recent-all:hover .recent-all__icon,
+.recent-all:focus .recent-all__icon {
+    transform: rotate(-22deg);
+}
+
+.recent-all:focus-visible {
+    outline: 3px solid var(--bog-brown);
     outline-offset: 2px;
 }
 
-.floating-player-logo {
+/* Three across, always one row. This was auto-fit with a 220px minimum, which
+   sounds flexible but let the column count fall out of whatever width the
+   section happened to have: between 769px and about 880px it resolved to two
+   columns and dropped the third card onto a row of its own, which reads as a
+   broken grid rather than as flow. Three cards, three columns, no wrap. */
+.recent-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-4);
+}
+
+.recent-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    min-width: 0;
+}
+
+.recent-card__image {
     width: 100%;
-    height: 100%;
-    object-fit: contain;
+    aspect-ratio: 1 / 1;
+    object-fit: cover;
+    border-radius: var(--radius-soft);
     display: block;
-    border-radius: 50%;
-    padding: 0;
+    /* holds the space before the image arrives, so the row does not jump */
+    background-color: var(--bog-brown-hair);
+}
+
+/* recent-shows.js wraps the text in this, and it was unstyled: a plain block, so
+   `margin-top: auto` on the Listen pill was inert and the spacing above it came
+   out of line-height rather than the box model. As a flex column the gap is
+   predictable and the pill can sit at the bottom of every card. */
+.recent-card__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+    flex: 1 1 auto;
+    min-width: 0;
+}
+
+/* Date and title on one line. They wrap onto two only when the title is long
+   enough to need it, and the date keeps its own baseline either way. */
+.recent-card__meta {
+    display: flex;
+    align-items: baseline;
+    flex-wrap: wrap;
+    gap: var(--space-1) var(--space-2);
+    min-width: 0;
+}
+
+.recent-card__when {
+    margin: 0;
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    color: var(--bog-brown);
+    /* the date is the short, fixed half of the row: never let it be the thing
+       that wraps */
+    flex: 0 0 auto;
+}
+
+.recent-card__title {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--text-base);
+    line-height: 1.2;
+    padding-bottom: 2px;
+    min-width: 0;
+}
+
+.recent-card__title a {
+    color: var(--bog-ink);
+    text-decoration: none;
+}
+
+.recent-card__title a:hover {
+    color: var(--bog-red-deep);
+    text-decoration: underline;
+}
+
+.recent-card__desc {
+    /* Air before the Listen pill. `margin-top: auto` on the pill only spaces it
+       out when the card has slack to give, which it does not in a single column
+       on a phone, so the button ended up jammed against the last line of text. */
+    margin: 0 0 var(--space-3);
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
+    line-height: 1.4;
+    color: var(--bog-ink);
+}
+
+/* Quieter than the archive's own Play button: three of these sit in a row and
+   none of them is the page's primary action. */
+.recent-card__listen {
+    align-self: flex-start;
+    margin-top: auto;
+    padding: var(--space-1) var(--space-3);
+    background-color: transparent;
+    color: var(--bog-brown);
+    border: 2px solid var(--bog-brown-soft);
+    border-radius: var(--radius-pill);
+    font-family: var(--font-script);
+    font-size: var(--text-sm);
+    text-decoration: none;
+    transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+/* every state named, so no :visited rule elsewhere can strand the label on the
+   filled hover background */
+.recent-card__listen:hover,
+.recent-card__listen:focus {
+    background-color: var(--bog-brown);
+    border-color: var(--bog-brown);
+    color: var(--bog-wheat);
+}
+
+.recent-card__listen:visited {
+    color: var(--bog-brown);
+}
+
+.recent-card__listen:visited:hover {
+    color: var(--bog-wheat);
+}
+
+.recent-card__listen:active {
+    transform: translateY(1px);
+}
+
+.recent-card__listen:focus-visible {
+    outline: 3px solid var(--bog-brown);
+    outline-offset: 2px;
+}
+
+
+/* ============================================================
+   EHFM dock
+
+   The small always-there tap to the station. This is not a Bog Factor
+   control: it streams EHFM whether or not our show is on, which is why it
+   lives on every page. It now says so, which it never used to.
+
+   States, via data-state on the root:
+     idle     resting, invites a listen
+     playing  audio running, tap to stop
+     blocked  the archive player has the audio, so this is inert and explains why
+   ============================================================ */
+.ehfm-dock {
+    position: fixed;
+    /* the tooltip anchors to this */
+    isolation: isolate;
+    left: var(--space-4);
+    /* Rides above the Mixcloud player using the height that player publishes,
+       replacing three hardcoded guesses (200px, 200px, 172px) that were spread
+       across breakpoints and wrong whenever the player's real height changed. */
+    bottom: calc(var(--player-height) + var(--space-4));
+    z-index: var(--z-float);
+    max-width: calc(100vw - (2 * var(--space-4)));
+    transition: bottom 0.3s ease;
+}
+
+.ehfm-dock-btn {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    width: 100%;
+    padding: var(--space-1) var(--space-3) var(--space-1) var(--space-1);
+    background: var(--bog-paper-solid);
+    border: 2px solid var(--bog-brown);
+    border-radius: var(--radius-pill);
+    box-shadow: 0 4px 14px rgba(54, 50, 41, 0.35);
+    cursor: pointer;
+    font-family: var(--font-body);
+    color: var(--bog-ink);
+    text-align: left;
     box-sizing: border-box;
+    transition: border-color 0.3s ease, box-shadow 0.2s ease, transform 0.12s ease;
 }
 
-.floating-player-pause {
+.ehfm-dock-btn:hover {
+    border-color: var(--bog-red);
+    box-shadow: 0 6px 18px rgba(54, 50, 41, 0.45);
+}
+
+.ehfm-dock-btn:active {
+    transform: translateY(1px);
+}
+
+.ehfm-dock-btn:focus-visible {
+    outline: 3px solid var(--bog-brown);
+    outline-offset: 3px;
+}
+
+.ehfm-dock-mark {
+    position: relative;
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    overflow: hidden;
+    background-color: var(--bog-brown);
+}
+
+.ehfm-dock-logo {
     width: 100%;
     height: 100%;
-    background-color: rgb(218, 72, 72);
-    border: none;
-    border-radius: 50%;
-    color: wheat;
-    font-size: 32px;
-    cursor: pointer;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    transition: background-color 0.3s ease;
+    object-fit: cover;
+    display: block;
 }
 
-.floating-player-pause:hover {
-    background-color: rgb(200, 60, 60);
-}
-
-.floating-player-mute {
-    width: 100%;
-    height: 100%;
-    background-color: rgb(135, 89, 33);
-    border: none;
-    border-radius: 50%;
-    color: wheat;
-    font-size: 32px;
-    cursor: not-allowed;
-    display: none;
-    align-items: center;
-    justify-content: center;
-    opacity: 0.8;
-}
-
-.floating-player-expand {
+/* the glyph that sits over the station logo and says what a tap will do */
+.ehfm-dock-glyph {
     position: absolute;
-    top: -2px;
-    right: -2px;
-    width: 24px;
-    height: 24px;
-    border-radius: 50%;
-    background-color: rgb(135, 89, 33);
-    color: wheat;
-    border: 2px solid wheat;
-    font-size: 18px;
-    font-weight: bold;
-    cursor: pointer;
+    inset: 0;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+    background-color: rgba(31, 26, 20, 0.55);
+    color: var(--bog-wheat);
+    font-size: var(--text-md);
     line-height: 1;
-    padding: 0;
 }
 
-.floating-player-expand:hover {
-    background-color: rgb(218, 72, 72);
-    transform: scale(1.15);
-    box-shadow: 0 3px 8px rgba(0, 0, 0, 0.4);
+.ehfm-dock-copy {
+    display: flex;
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
 }
 
-.floating-player-expand:active {
-    transform: scale(0.95);
-}
-
-.toolbar-live-label {
-    background: rgba(218, 72, 72, 0.95);
-    color: wheat;
-    padding: 10px 16px;
-    border-radius: 20px;
-    font-family: 'Luminari', fantasy;
-    font-size: 14px;
-    font-weight: bold;
-    white-space: nowrap;
+.ehfm-dock-kicker {
     display: flex;
     align-items: center;
-    gap: 8px;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    cursor: pointer;
-    transition: all 0.3s ease;
+    gap: var(--space-1);
+    font-family: var(--font-display);
+    font-size: var(--text-sm);
+    line-height: 1.2;
+    color: var(--bog-brown);
 }
 
-.toolbar-live-label:hover {
-    background: rgb(218, 72, 72);
-    transform: scale(1.1);
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.3);
+.ehfm-dock-action {
+    font-size: var(--text-xs);
+    line-height: 1.3;
+    color: var(--bog-ink);
+}
+
+/* ---- idle ---- */
+.ehfm-dock[data-state="idle"] .ehfm-dock-glyph {
+    /* the logo is the invitation when resting; the glyph only appears on hover */
+    opacity: 0;
+    transition: opacity 0.2s ease;
+}
+
+.ehfm-dock[data-state="idle"] .ehfm-dock-btn:hover .ehfm-dock-glyph,
+.ehfm-dock[data-state="idle"] .ehfm-dock-btn:focus-visible .ehfm-dock-glyph {
+    opacity: 1;
+}
+
+/* ---- playing ---- */
+.ehfm-dock[data-state="playing"] .ehfm-dock-btn {
+    border-color: var(--bog-red);
+}
+
+/* ---- blocked by the archive player ---- */
+.ehfm-dock[data-state="blocked"] .ehfm-dock-btn {
+    cursor: not-allowed;
+    opacity: 0.75;
+}
+
+.ehfm-dock[data-state="blocked"] .ehfm-dock-btn:hover {
+    border-color: var(--bog-brown);
+    box-shadow: 0 4px 14px rgba(54, 50, 41, 0.35);
+}
+
+/* ---- our show is the thing on air ---- */
+.ehfm-dock[data-show="bogfactor"] .ehfm-dock-btn {
+    border-color: var(--bog-red);
+}
+
+.ehfm-dock[data-show="bogfactor"] .ehfm-dock-kicker {
+    color: var(--bog-red-deep);
+}
+
+/* Carries the reason the control is inert. A tooltip rather than a permanent
+   block of text: it only matters in the moment you try to press the dock and it
+   does not respond.
+
+   It is still a real element rather than a title attribute, and the button
+   points at it with aria-describedby, so a screen reader reads the explanation
+   on focus even though it is only drawn on hover. Positioned absolutely so it
+   never takes layout space and cannot shove the pill around. */
+.ehfm-dock-note {
+    position: absolute;
+    bottom: calc(100% + var(--space-2));
+    left: 0;
+    width: max-content;
+    max-width: 15em;
+    margin: 0;
+    padding: var(--space-1) var(--space-2);
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    line-height: 1.3;
+    color: var(--bog-ink);
+    background: var(--bog-paper);
+    border: 1px solid var(--bog-brown-soft);
+    border-radius: var(--radius-soft);
+    box-shadow: 0 3px 10px rgba(54, 50, 41, 0.3);
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.15s ease, visibility 0.15s ease;
+}
+
+.ehfm-dock:hover .ehfm-dock-note,
+.ehfm-dock:focus-within .ehfm-dock-note {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* nothing to explain unless the archive player has taken the sound */
+.ehfm-dock-note:empty {
+    display: none;
 }
 
 .toolbar-live-dot {
     width: 8px;
     height: 8px;
-    background-color: wheat;
+    background-color: var(--bog-wheat);
     border-radius: 50%;
     animation: pulse 1.5s ease-in-out infinite;
     flex-shrink: 0;
 }
 
-.stream-live-indicator {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 15px;
-}
-
+/* Signals real state (we are on air right now), so it keeps its pulse. See the
+   reduced-motion block at the foot of this file. */
 .live-dot {
-    width: 12px;
-    height: 12px;
-    background-color: rgb(218, 72, 72);
+    width: 11px;
+    height: 11px;
+    flex-shrink: 0;
+    background-color: var(--bog-red-deep);
     border-radius: 50%;
     animation: pulse 1.5s ease-in-out infinite;
 }
@@ -956,101 +1948,21 @@ body.mixcloud-player-active .floating-player-circle:hover {
     }
 }
 
-.live-text {
-    font-family: 'Luminari', fantasy;
-    font-size: 20px;
-    color: rgb(218, 72, 72);
-    font-weight: bold;
-}
-
-.stream-subtitle {
-    font-family: 'Noto Serif Gurmukhi', sans-serif;
-    color: rgb(54, 50, 41);
-    font-style: italic;
-    margin-top: 10px;
-    font-size: 14px;
-}
-
-.stream-header h3 {
-    font-family: 'Luminari', fantasy;
-    font-size: 22px;
-    color: rgb(135, 89, 33);
-    margin: 0 0 10px 0;
-}
-
-.show-schedule {
-    font-family: 'Noto Serif Gurmukhi', sans-serif;
-    color: rgb(54, 50, 41);
-    font-size: 14px;
-    margin: 10px 0;
-    font-weight: 600;
-    line-height: 1.5;
-}
-
+/* The countdown line. `.countdown` rides along as a second class on the crier
+   card's "when" line so the tools/test-*.html pages have one stable hook to
+   read it from. It stays put whether or not that line is currently ticking —
+   the loud styling is `.crier-card__when--countdown`, which comes and goes. */
 .countdown {
-    font-family: 'Noto Serif Gurmukhi', sans-serif;
-    color: rgb(135, 89, 33);
-    font-size: 16px;
-    font-weight: bold;
-    margin: 10px 0 15px 0;
+    font-weight: 600;
 }
 
-.stream-player {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 15px;
-    margin: 15px auto;
-}
-
-.ehfm-logo {
-    width: 100px;
-    height: 100px;
-    border-radius: 8px;
-    display: block;
-    cursor: pointer;
-    transition: transform 0.3s ease;
-}
-
-.ehfm-logo:hover {
-    transform: scale(1.05);
-}
-
-.stream-play-button {
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    background-color: rgba(247, 224, 193, 0.95);
-    border: 3px solid rgb(135, 89, 33);
-    color: rgb(135, 89, 33);
-    font-size: 24px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
-    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
-    flex-shrink: 0;
-}
-
-.stream-play-button:hover {
-    background-color: rgb(218, 72, 72);
-    color: wheat;
-    border-color: rgb(218, 72, 72);
-    transform: scale(1.1);
-}
-
-.stream-play-button:active {
-    transform: scale(0.95);
-}
-
-.stream-listen-text {
-    font-family: 'Noto Serif Gurmukhi', sans-serif;
-    color: rgb(54, 50, 41);
-    margin: 10px 0 0 0;
-    font-size: 13px;
-    font-style: italic;
-}
+/* The following are gone with the old fixed stream widget, which the landing
+   hero and the EHFM dock have replaced between them:
+   .stream-widget, .stream-minimize-btn, .stream-live-indicator, .live-text,
+   .stream-subtitle, .stream-header, .stream-player, .stream-play-button,
+   .ehfm-logo, .floating-player-*, and the float-in keyframes.
+   .toolbar-live-label, .show-schedule and .stream-listen-text went with them;
+   those three had already had no markup referencing them. */
 
 /* Contact Form Modal */
 #contact-modal {
@@ -1064,35 +1976,40 @@ body.mixcloud-player-active .floating-player-circle:hover {
 }
 
 .contact-field {
-    margin-bottom: 16px;
+    margin-bottom: var(--space-4);
 }
 
 .contact-field label {
     display: block;
-    font-family: 'MedievalSharp', cursive;
-    color: rgb(135, 89, 33);
-    font-size: 16px;
-    margin-bottom: 6px;
+    font-family: var(--font-script);
+    color: var(--bog-brown);
+    font-size: var(--text-base);
+    margin-bottom: var(--space-1);
 }
 
 .contact-field input,
 .contact-field textarea {
     width: 100%;
-    padding: 10px 12px;
-    font-family: 'Noto Serif Gurmukhi', sans-serif;
-    font-size: 15px;
-    color: rgb(54, 50, 41);
-    background-color: rgba(255, 255, 255, 0.6);
-    border: 2px solid rgba(135, 89, 33, 0.4);
-    border-radius: 4px;
+    padding: var(--space-2) var(--space-3);
+    font-family: var(--font-body);
+    font-size: var(--text-base);
+    color: var(--bog-ink);
+    /* opaque, so the field is legibly a field against the paper rather than a
+       tint of it */
+    background-color: #fffdf8;
+    border: 2px solid var(--bog-brown-soft);
+    border-radius: var(--radius-soft);
     box-sizing: border-box;
     transition: border-color 0.3s ease;
 }
 
-.contact-field input:focus,
-.contact-field textarea:focus {
-    outline: none;
-    border-color: rgb(135, 89, 33);
+/* was `outline: none` with only a border colour change, which is a very weak
+   focus signal. The ring is explicit now. */
+.contact-field input:focus-visible,
+.contact-field textarea:focus-visible {
+    outline: 3px solid var(--bog-brown);
+    outline-offset: 1px;
+    border-color: var(--bog-brown);
 }
 
 .contact-field textarea {
@@ -1103,41 +2020,31 @@ body.mixcloud-player-active .floating-player-circle:hover {
 .contact-submit-btn {
     display: block;
     width: 100%;
-    padding: 12px 20px;
-    background-color: rgb(135, 89, 33);
-    color: wheat;
-    border: none;
-    font-family: 'MedievalSharp', cursive;
-    font-size: 18px;
-    cursor: pointer;
-    border-radius: 4px;
-    transition: background-color 0.3s ease;
-    margin-top: 8px;
-}
-
-.contact-submit-btn:hover {
-    background-color: rgb(218, 72, 72);
+    font-size: var(--text-md);
+    margin-top: var(--space-2);
 }
 
 .contact-submit-btn:disabled {
-    background-color: rgba(135, 89, 33, 0.5);
+    /* the old rgba(135,89,33,0.5) fill put wheat text at roughly 2:1 */
+    background-color: var(--bog-brown);
+    opacity: 0.6;
     cursor: not-allowed;
 }
 
 .contact-status {
-    font-family: 'Noto Serif Gurmukhi', sans-serif;
-    font-size: 14px;
+    font-family: var(--font-body);
+    font-size: var(--text-sm);
     text-align: center;
-    margin-top: 12px;
+    margin-top: var(--space-3);
     min-height: 20px;
 }
 
 .contact-status-success {
-    color: rgb(45, 74, 43);
+    color: var(--bog-green);
 }
 
 .contact-status-error {
-    color: rgb(218, 72, 72);
+    color: var(--bog-red-deep);
 }
 
 /* Mobile Responsive Styles */
@@ -1161,51 +2068,66 @@ body.mixcloud-player-active .floating-player-circle:hover {
         box-sizing: border-box;
     }
 
+    /* Two abreast on a phone, and only two cards to fill them: three cards in
+       two columns left an orphan on a second row. The third is hidden rather
+       than dropped in recent-shows.js so the count follows the layout — rotate
+       to landscape and the full three come back with no rerender. Its artwork
+       is `loading="lazy"`, so a hidden card costs no request either. */
+    .recent-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-3);
+    }
+
+    .recent-card:nth-child(n + 3) {
+        display: none;
+    }
+
+    /* the landing sections need the full mobile width, not the 500px reading
+       measure the interior plates use */
+    .recent-section {
+        max-width: none;
+        width: 92%;
+    }
+
+    /* the billboard keeps its full screen on a phone; only the side gutters
+       tighten, and the foot grows so the copy never collides with the cue */
+    .hero {
+        padding: var(--space-4) var(--space-3) calc(var(--space-5) * 2.5);
+    }
+
+    /* The EHFM dock is fixed to the bottom-left corner, and on a phone it is
+       wide enough to reach the middle of the frame. Lift the cue clear of it
+       rather than let the two share a line. */
+    .hero-scroll {
+        bottom: calc(var(--space-4) + 48px);
+    }
+
+    /* the arc needs the full width on a phone or the letters get tiny */
+    .wordmark {
+        max-width: none;
+        margin-bottom: var(--space-3);
+    }
+
     /* Keep images at reasonable size */
     .show-image {
         max-width: 100%;
     }
 
-    /* Increase live stream widget size on mobile */
-    .stream-widget {
-        position: fixed;
-        top: calc(var(--toolbar-height, 90px) + 15px);
-        left: 10px;
-        right: 10px;
-        max-width: none;
-        width: auto;
-        padding: 25px 20px;
-        box-sizing: border-box;
-    }
-
-    .live-text {
-        font-size: 24px;
-    }
-
     .live-dot {
-        width: 16px;
-        height: 16px;
-    }
-
-    .stream-play-button {
-        width: 80px;
-        height: 80px;
-        font-size: 32px;
-    }
-
-    .ehfm-logo {
-        width: 120px;
-        height: 120px;
-    }
-
-    .stream-subtitle {
-        font-size: 16px;
+        width: 13px;
+        height: 13px;
     }
 
     /* Increase draggable sun size on mobile */
     .sun-container img {
         width: 80px !important;
         height: 80px !important;
+    }
+
+    /* The dock is pinned bottom-left on every page. On a narrow screen the
+       footer links wrap into that corner, so the footer keeps clear of it. */
+    .footer {
+        padding-bottom: 84px;
     }
 
     /* Contact form mobile adjustments */
@@ -1223,9 +2145,9 @@ body.mixcloud-player-active .floating-player-circle:hover {
 
     /* Make tracklist modal take up more screen */
     .modal-content {
+        --modal-gutter: 10px;
         width: 95%;
         max-width: none;
-        margin: 10px auto;
         padding: 25px 20px;
         box-sizing: border-box;
     }
@@ -1267,19 +2189,20 @@ body.mixcloud-player-active .floating-player-circle:hover {
         max-width: 300px;
     }
 
-    /* Toolbar adjustments */
+    /* Toolbar adjustments. Trimmed from 18px padding: with four items at a 44px
+       tap target the bar was reaching 104px, an eighth of a phone viewport. */
     .toolbar {
-        padding: 18px 8px;
+        padding: 8px;
         gap: 8px;
         flex-wrap: nowrap;
         justify-content: space-evenly;
     }
 
-    .toolbar a {
+    .toolbar-nav a {
         font-size: 18px;
-        margin: 0 5px;
-        padding: 12px 8px;
-        min-height: 48px;
+        margin: 0 2px;
+        padding: 10px 6px;
+        min-height: 44px;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -1299,12 +2222,6 @@ body.mixcloud-player-active .floating-player-circle:hover {
         padding: 10px 12px;
         flex-shrink: 1;
         min-width: auto;
-    }
-
-    .toolbar-live-label {
-        font-size: 12px;
-        padding: 8px 12px;
-        gap: 6px;
     }
 
     .toolbar-live-dot {
@@ -1336,11 +2253,11 @@ body.mixcloud-player-active .floating-player-circle:hover {
     }
 
     /* About page specific improvements */
-    .about-page .textbox {
+    .lore-page .textbox {
         max-width: 500px;
     }
 
-    .about-page p,
+    .lore-page p,
     .radio-page p {
         font-size: 18px;
     }
@@ -1361,54 +2278,20 @@ body.mixcloud-player-active .floating-player-circle:hover {
         gap: 8px;
     }
 
-    /* Make minimize button bigger on mobile for better touch target */
-    .stream-minimize-btn {
-        font-size: 28px;
-        width: 44px;
-        height: 44px;
-        line-height: 28px;
+    /* The dock keeps its label on mobile: being unlabelled was the main thing
+       wrong with it, and hiding the label on the smaller screen would put the
+       problem back where most people meet it. It only tucks in slightly.
+       No `bottom` override is needed here any more, because the base rule
+       derives it from --player-height rather than guessing per breakpoint. */
+    .ehfm-dock {
+        left: var(--space-3);
+        max-width: calc(100vw - (2 * var(--space-3)));
     }
 
-    /* Floating player adjustments for mobile */
-    .floating-audio-player {
-        bottom: 15px;
-        left: 15px;
+    .ehfm-dock-mark {
+        width: 40px;
+        height: 40px;
     }
-
-    .floating-player-circle {
-        width: 60px;
-        height: 60px;
-        border-width: 2px;
-    }
-
-    body.mixcloud-player-active .floating-audio-player {
-        bottom: 200px;
-    }
-
-    .floating-player-pause {
-        font-size: 28px;
-    }
-
-    .floating-player-mute {
-        font-size: 28px;
-    }
-
-    .floating-player-expand {
-        width: 28px;
-        height: 28px;
-        font-size: 20px;
-        top: -2px;
-        right: -2px;
-    }
-
-    .floating-player-expand:hover {
-        transform: scale(1.15);
-    }
-
-    .floating-player-expand:active {
-        transform: scale(0.95);
-    }
-
 }
 
 /* Extra small mobile devices */
@@ -1428,55 +2311,31 @@ body.mixcloud-player-active .floating-player-circle:hover {
         box-sizing: border-box;
     }
 
-    .stream-widget {
-        top: calc(var(--toolbar-height, 80px) + 15px);
-        left: 5px;
-        right: 5px;
-        padding: 20px 15px;
-        box-sizing: border-box;
-    }
-
-    .ehfm-logo {
-        width: 100px;
-        height: 100px;
-    }
-
-    .stream-play-button {
-        width: 70px;
-        height: 70px;
-        font-size: 28px;
-    }
-
     .sun-container img {
         width: 60px !important;
         height: 60px !important;
     }
 
+    /* This block overrides the 768px one, so the height trim has to be repeated
+       here or the bar goes back to 100px on a phone. */
     .toolbar {
-        padding: 16px 5px;
+        padding: 6px 5px;
         gap: 5px;
     }
 
-    .toolbar a {
+    /* four nav items now, so the horizontal margin goes and the flex gap does
+       the spacing on its own. Keeps the bar on one line at 360px. */
+    .toolbar-nav a {
         font-size: 16px;
-        margin: 0 3px;
-        padding: 12px 6px;
+        margin: 0;
+        padding: 8px 5px;
+        min-height: 44px;
     }
 
-    .toolbar-live-btn {
+    .toolbar-live-btn,
+    .toolbar .toolbar-chat-btn {
         font-size: 12px;
         padding: 8px 10px;
-    }
-
-    .toolbar-chat-btn {
-        font-size: 12px;
-        padding: 8px 10px;
-    }
-
-    .toolbar-live-label {
-        font-size: 11px;
-        padding: 6px 10px;
-        gap: 5px;
     }
 
     .toolbar-live-dot {
@@ -1484,90 +2343,153 @@ body.mixcloud-player-active .floating-player-circle:hover {
         height: 6px;
     }
 
-    /* Floating player adjustments for small mobile */
-    .floating-audio-player {
-        bottom: 12px;
-        left: 12px;
+    /* This used to be a two-line lockup: stacked, the mark needed about 61px of
+       width, because a single line could not fit beside three nav items and the
+       live controls. The nav is one hamburger now, so the room is there and the
+       logo can read as one line again. */
+    .toolbar-logo {
+        font-size: var(--text-md);
+        letter-spacing: 0.02em;
+        line-height: 1.1;
+        text-align: left;
+        padding-left: var(--space-2);
     }
 
-    .floating-player-circle {
-        width: 55px;
-        height: 55px;
-        border-width: 2px;
+    /* Measured at 360px on air: logo 61 + nav 203 + live controls 87, plus gaps
+       and padding, came to 371 against a 360 viewport. Tightening the nav's own
+       spacing and the link padding buys back the ~22px that overflowed. */
+    .toolbar-nav {
+        gap: var(--space-1);
     }
 
-    body.mixcloud-player-active .floating-audio-player {
-        bottom: 172px;
+    .toolbar-nav a {
+        padding: 8px 4px;
     }
 
-    .floating-player-pause {
-        font-size: 24px;
-    }
-
-    .floating-player-mute {
-        font-size: 24px;
-    }
-
-    .floating-player-expand {
-        width: 26px;
-        height: 26px;
-        font-size: 18px;
-        top: -2px;
-        right: -2px;
-    }
-
-    .floating-player-expand:hover {
-        transform: scale(1.15);
-    }
-
-    .floating-player-expand:active {
-        transform: scale(0.95);
+    .ehfm-dock {
+        left: var(--space-2);
+        max-width: calc(100vw - (2 * var(--space-2)));
     }
 }
+
+/* Very narrow phones (old SE-class, 320px).
+   At 320px the bar needs 46px more than it has even fully tightened, and the
+   only ways to claw that back are cutting the Chat control or shortening a nav
+   label. Both are worse than letting the bar take a second row: sideways
+   scrolling on a whole page is a real defect, a two-row nav on a 320px screen
+   is just a small screen. The one-line rule still holds everywhere it matters. */
+@media screen and (max-width: 359px) {
+    .toolbar {
+        flex-wrap: wrap;
+        justify-content: center;
+        row-gap: var(--space-1);
+    }
+
+    .toolbar-logo {
+        /* no auto margin, so it centres on its own row instead of being shoved
+           left with the nav orphaned beside it, and no left inset to lean it
+           off that centre */
+        margin-right: 0;
+        padding-left: 0;
+        text-align: center;
+    }
+}
+
 /* ============================================================
-   Upcoming Shows — "town crier" cards
-   Rendered by scripts/upcoming-shows.js inside the live-stream widget
-   (the "Next show in…" / "LIVE NOW" panel), so the schedule announcement
-   shares that panel rather than floating separately.
+   Upcoming Shows: the "town crier" cards
+
+   These began crammed into the fixed live-stream widget, then spent a while as
+   their own band under the hero — where a single small card sat alone in a wide
+   empty stretch of photograph and read as unfinished. They now sit inside the
+   hero, in the place a second "Listen to EHFM" button used to hold: a notice
+   nailed up under the wordmark, which is what a town crier's card wanted to be
+   all along.
+
+   One card usually, two when a special shares the week. See MAX_CARDS in
+   scripts/upcoming-shows.js.
    ============================================================ */
-.upcoming-shows {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-top: 16px;
-    padding-top: 14px;
-    border-top: 1px solid rgba(135, 89, 33, 0.3);
-    text-align: left;
-    max-height: 45vh;
-    overflow-y: auto;
+.hero-crier {
+    /* Hugs its contents up to a limit, so a short notice reads as a handbill
+       rather than a wide panel with a date stranded at one end. Two cards widen
+       it to 640. */
+    width: fit-content;
+    min-width: min(300px, 100%);
+    max-width: min(440px, 100%);
+    margin-top: var(--space-4);
+    /* the hero above sets scroll-margin for the whole screen; this only needs
+       to clear the sticky toolbar if anything ever links to it directly */
+    scroll-margin-top: calc(var(--toolbar-height, 72px) + var(--space-4));
+    /* transparent wrapper: let clicks through to the suns behind it, and let the
+       cards inside take their own */
+    pointer-events: none;
 }
 
+.hero-crier:has(.crier-card + .crier-card) {
+    width: 100%;
+    max-width: min(640px, 100%);
+}
+
+.hero-crier .crier-card,
+.hero-crier .crier-heading {
+    pointer-events: auto;
+}
+
+/* While Bog Factor is on air, the hero's own status line says so — in lime, with
+   a pulsing dot — and a card announcing when the next show is would be arguing
+   with it. The card steps aside for the hour. */
+.hero[data-live="true"] .hero-crier {
+    display: none;
+}
+
+.upcoming-shows {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: var(--space-3);
+    text-align: left;
+}
+
+/* The crier's cry, once, above however many cards follow. It sits on the
+   photograph rather than on paper, so it is set in the hero's own ink — cream
+   with a dark halo, like the lede — not the brown-on-vellum it used when this
+   section had its own band further down the page. */
 .crier-heading {
-    margin: 0;
-    font-family: 'Luminari', fantasy;
-    color: rgb(135, 89, 33);
-    font-size: 1.1rem;
+    margin: 0 0 var(--space-2);
+    grid-column: 1 / -1;
+    font-family: var(--font-display);
+    font-size: var(--text-md);
     letter-spacing: 0.02em;
-    text-shadow: 0 1px 0 rgba(245, 222, 179, 0.8);
+    color: var(--bog-paper);
+    text-shadow:
+        0 1px 0 rgba(31, 26, 20, 0.6),
+        0 0 10px rgba(31, 26, 20, 0.8);
 }
 
 .crier-card {
     display: flex;
     align-items: stretch;
-    gap: 10px;
-    background: #f7e0c1ee;
-    border: 1px solid rgba(135, 89, 33, 0.45);
-    border-left: 4px solid rgb(135, 89, 33);
-    padding: 10px 12px 10px 8px;
+    gap: var(--space-2);
+    background: var(--bog-paper-solid);
+    border: 1px solid var(--bog-brown-soft);
+    border-left: 4px solid var(--bog-brown);
+    border-radius: var(--radius-edge);
+    padding: var(--space-2) var(--space-3) var(--space-2) var(--space-2);
     text-decoration: none;
-    color: rgb(54, 50, 41);
-    box-shadow: 0 2px 6px rgba(54, 50, 41, 0.18);
+    color: var(--bog-ink);
+    /* Deeper than the cards further down the page, because this one is paper
+       lying on a photograph rather than on the page's own ground: it needs the
+       shadow to sit on top of the carved stone instead of dissolving into it. */
+    box-shadow: 0 3px 12px rgba(31, 26, 20, 0.42);
     transition: transform 0.12s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+}
+
+a.crier-card:focus-visible {
+    outline: 3px solid var(--bog-brown);
+    outline-offset: 2px;
 }
 
 a.crier-card:hover {
     transform: translateY(-2px);
-    border-left-color: rgb(218, 72, 72);
+    border-left-color: var(--bog-red-deep);
     box-shadow: 0 4px 10px rgba(54, 50, 41, 0.28);
 }
 
@@ -1589,45 +2511,131 @@ a.crier-card:hover {
 
 .crier-card__when {
     margin: 0;
-    font-family: 'Noto Serif Gurmukhi', sans-serif;
-    font-size: 0.78rem;
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
     font-weight: 600;
-    color: rgb(135, 89, 33);
-    text-transform: uppercase;
-    letter-spacing: 0.04em;
+    color: var(--bog-brown);
+    letter-spacing: 0.02em;
+}
+
+/* Worn only while the line is genuinely counting down — the final hour before
+   air, and while the show is on. The rest of the month the "when" line is a
+   date, and a date does not need to shout in red. See ticks() in
+   scripts/upcoming-shows.js. */
+.crier-card__when--countdown {
+    font-size: var(--text-sm);
+    color: var(--bog-red-deep);
 }
 
 .crier-card__title {
     margin: 0;
-    font-family: 'Luminari', fantasy;
-    font-size: 1.05rem;
+    font-family: var(--font-display);
+    font-size: var(--text-base);
     line-height: 1.15;
-    color: rgb(54, 50, 41);
+    padding-bottom: 2px;
+    color: var(--bog-ink);
 }
 
 .crier-card__desc {
     margin: 2px 0 0;
-    font-family: 'Noto Serif Gurmukhi', sans-serif;
-    font-size: 0.82rem;
-    line-height: 1.3;
-    opacity: 0.85;
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    line-height: 1.35;
+    /* was opacity 0.85 on ink, which quietly dropped the contrast of the only
+       descriptive copy on the card */
+    color: var(--bog-ink);
     display: -webkit-box;
     -webkit-line-clamp: 3;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
 
-/* Currently on air — warm red accent + gentle pulse */
+/* On air right now: the accent edge plus a slow glow. Real state, so it earns
+   the motion. */
 .crier-card--live {
-    border-left-color: rgb(218, 72, 72);
+    border-left-color: var(--bog-red);
     animation: crierPulse 2s ease-in-out infinite;
 }
 
 .crier-card--live .crier-card__when {
-    color: rgb(218, 72, 72);
+    color: var(--bog-red-deep);
 }
 
 @keyframes crierPulse {
     0%, 100% { box-shadow: 0 2px 6px rgba(218, 72, 72, 0.25); }
     50% { box-shadow: 0 2px 14px rgba(218, 72, 72, 0.55); }
+}
+
+/* ============================================================
+   Reduced motion
+
+   The site had no such block, while running three infinite loops (the two live
+   pulses and the rotating suns), a four-second wheel spin and global smooth
+   scrolling. What repeats forever or animates position now stops; hover and
+   press feedback stays, because that is a response to an action rather than
+   something happening at the reader.
+
+   The suns are held out of this on purpose — see the note on them below.
+   ============================================================ */
+@media (prefers-reduced-motion: reduce) {
+    html {
+        scroll-behavior: auto;
+    }
+
+    /* The suns are the exception, deliberately.
+       They used to be stopped here and only spun on hover or while held, on the
+       reasoning that a forever-loop is motion happening at the reader without
+       being asked for. In practice that inverted the thing itself: with Reduce
+       Motion on, the suns sat dead on load and then started up under the
+       cursor, which is more startling than a slow constant turn, and it is not
+       what the site does. They turn, and they turn the other way when you touch
+       them — that is the toy. Left running for everyone.
+
+       Everything else below still stops. */
+
+    /* live indicators hold at full opacity: they still mark the state, they
+       simply stop throbbing */
+    .live-dot,
+    .toolbar-live-dot {
+        animation: none;
+        opacity: 1;
+    }
+
+    .crier-card--live {
+        animation: none;
+        box-shadow: 0 2px 10px rgba(218, 72, 72, 0.45);
+    }
+
+    /* the scroll cue holds still; the chevron is the signal, the bob was only
+       ever an attention-getter */
+    .hero-scroll__chevron {
+        animation: none;
+    }
+
+    /* the shovel keeps its resting tilt but stops swinging on hover */
+    .recent-all__icon,
+    .recent-all:hover .recent-all__icon,
+    .recent-all:focus .recent-all__icon {
+        transition: none;
+    }
+
+    /* The wheel still spins. It only ever moves because you pressed Spin, so it
+       is feedback rather than ambient motion, and removing it removes the
+       feature. Shortened from 4s to 1s instead of killed outright.
+       Qualified with .spin-section because the wheel's own rule lives in a
+       later <style> block on /vault/ and would otherwise win. */
+    .spin-section .bog-wheel {
+        transition-duration: 1s;
+    }
+
+    /* keep the slide-ins from moving, without disabling the transitions that
+       carry hover and focus feedback */
+    #mixcloud-player,
+    .ehfm-dock {
+        transition: none;
+    }
+
+    .textbox:target {
+        animation: none;
+    }
 }

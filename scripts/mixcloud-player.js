@@ -118,8 +118,15 @@
         window.BogFactorLiveStream.updateFloatingPlayer();
       }
 
+      // Publish the player's real height. Modals cap themselves against it, and
+      // the EHFM dock rides above it, so both follow the player rather than
+      // guessing at it. Also drives the body padding below, which used to be a
+      // hardcoded 140px that did not match the player at every breakpoint.
+      const height = player.offsetHeight;
+      document.documentElement.style.setProperty('--player-height', height + 'px');
+
       // Add padding to body to prevent content from being hidden
-      document.body.style.paddingBottom = '140px';
+      document.body.style.paddingBottom = height + 'px';
     },
 
     hidePlayer() {
@@ -137,6 +144,7 @@
 
       // Remove body padding
       document.body.style.paddingBottom = '0';
+      document.documentElement.style.setProperty('--player-height', '0px');
     }
   };
 

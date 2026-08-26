@@ -1,20 +1,41 @@
 <!doctype html>
-<html>
+<html lang="en-GB">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Radio - Bog Factor</title>
+    <meta name="description" content="Every Bog Factor show on EHFM, with full tracklists and Mixcloud players. Psychedelic folk, pagan boogie and sleaze from Sophie and Emily.">
+    <link rel="canonical" href="https://bogfactor.co.uk/radio/">
+
+    <meta property="og:type" content="website">
+    <meta property="og:site_name" content="Bog Factor">
+    <meta property="og:title" content="Radio - Bog Factor">
+    <meta property="og:description" content="Every Bog Factor show on EHFM, with full tracklists and Mixcloud players.">
+    <meta property="og:url" content="https://bogfactor.co.uk/radio/">
+    <meta property="og:image" content="https://bogfactor.co.uk/assets/vibes-graphic.jpg">
+    <meta property="og:locale" content="en_GB">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Radio - Bog Factor">
+    <meta name="twitter:description" content="Every Bog Factor show on EHFM, with full tracklists and Mixcloud players.">
+    <meta name="twitter:image" content="https://bogfactor.co.uk/assets/vibes-graphic.jpg">
+
     <link rel="icon" type="image/x-icon" href="/favicon.ico">
     <link rel="icon" type="image/png" sizes="32x32" href="/assets/favicon-32x32.png">
     <link rel="icon" type="image/png" sizes="16x16" href="/assets/favicon-16x16.png">
-    <link href="https://fonts.cdnfonts.com/css/luminari" rel="stylesheet">
-    <link href="https://fonts.cdnfonts.com/css/noto-serif-gurmukhi" rel="stylesheet">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preconnect" href="https://fonts.cdnfonts.com" crossorigin>
+    <link href="https://fonts.cdnfonts.com/css/morris-roman" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Gurmukhi:wght@400;600&family=MedievalSharp&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../styles.css">
+
     <script src="../scripts/mixcloud-player.js"></script>
     <script src="../scripts/draggable-suns.js"></script>
     <script src="../scripts/schedule.js"></script>
     <script src="../scripts/live-stream.js"></script>
     <script src="../scripts/toolbar-live-widget.js"></script>
+    <script src="../scripts/toolbar-menu.js"></script>
     <script src="../scripts/generate-show-list.js"></script>
     <script src="../scripts/contact-form.js"></script>
   </head>
@@ -22,22 +43,45 @@
   <body class="radio-page">
 
     <div class="toolbar">
-      <a href="/index.html">Home</a>
-      <a href="/radio/index.html">Radio</a>
-      <a href="/about/index.html">About</a>
+      <a class="toolbar-logo" href="/index.html" aria-label="Bog Factor, back to the home page"><span>Bog</span> <span>Factor</span></a>
+      <nav class="toolbar-nav">
+        <a href="/radio/index.html" aria-current="page">Radio</a>
+        <a href="/vault/index.html">Vault</a>
+        <a href="/lore/index.html">Lore</a>
+      </nav>
     </div>
 
-    <div class="textbox archive-card">
-      <h2 class="archive-card-title">✶ The Bog Archive ✶</h2>
-      <p class="archive-card-text">Every track we've ever dug up — search it, sort it, spin the wheel.</p>
-      <a href="/radio/tracks/index.html" class="play-btn">🔍 Search the Tracks</a>
-    </div>
+    <!-- A masthead rather than a plate. Wrapped in .textbox this heading was
+         visually identical to every show card beneath it - same veil, same
+         noise, same measure - so it read as the first item in the list rather
+         than as the title of the list. On open ground it can only be a title. -->
+    <header class="page-masthead">
+      <!-- The hero's arced wordmark at page-title scale: same lime, same dark
+           halo, same starburst under the curve. role="img" + aria-label rather
+           than a hidden span beside an aria-hidden svg, so the name is in the
+           document once. -->
+      <h1 class="page-title page-arc">
+        <svg class="page-arc-svg" viewBox="0 0 480 132" role="img"
+             aria-label="Radio Archive" focusable="false">
+          <defs>
+            <!-- the hero arc's proportions, scaled: a 450 chord on a 420 radius
+                 rises about 60, the same shallow curve at three quarters size -->
+            <path id="page-arc-path" d="M 15,118 A 420,420 0 0 1 465,118" fill="none"></path>
+          </defs>
+          <text class="page-arc-text">
+            <textPath href="#page-arc-path" startOffset="50%" text-anchor="middle">Radio Archive</textPath>
+          </text>
+        </svg>
+        <span class="bog-star page-arc-star" aria-hidden="true"></span>
+      </h1>
+      <p class="page-masthead__lead">Bog Factor shows from days of yore</p>
+    </header>
 
     <div id="shows-container"></div>
 
     <footer class="footer">
-      <a href="https://www.instagram.com" target="_blank">Instagram</a>
-      <a href="mailto:hello@bogfactor.co.uk" target="_blank">Email</a>
+      <a href="https://www.instagram.com/bog_factor/" target="_blank" rel="noopener noreferrer">Instagram</a>
+      <a href="mailto:hello@bogfactor.co.uk">Email</a>
       <a href="#" data-contact>Contact</a>
     </footer>
   </body>

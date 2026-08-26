@@ -49,6 +49,8 @@
       yt.className = 'youtube-search-btn track-yt-btn';
       yt.textContent = '🔍';
       yt.title = 'Search "' + query + '" on YouTube';
+      // the glyph alone gives a screen reader nothing to read out
+      yt.setAttribute('aria-label', 'Search for ' + query + ' on YouTube');
       yt.href = 'https://www.youtube.com/results?search_query=' +
         encodeURIComponent(query);
       yt.target = '_blank';
@@ -87,8 +89,15 @@
       { num: m.uniqueTracks, label: 'unique tracks' },
       { num: m.uniqueArtists, label: 'artists' },
       { num: m.showCount, label: 'shows' },
-      { num: Math.round(m.hours) + 'h', label: 'on air' },
+      { num: index.length, label: 'tracks played' },
     ];
+    // "on air" comes from each show's durationMin. That column exists and the
+    // API returns it, but no show has a duration recorded yet, so the tile read
+    // a flat "0h". Show it only once there is something real to show, rather
+    // than printing a zero or inventing an hour count per show.
+    if (m.hours > 0) {
+      tiles.push({ num: Math.round(m.hours) + 'h', label: 'on air' });
+    }
     const grid = $('metrics');
     grid.innerHTML = '';
     tiles.forEach(function (tile) {
@@ -142,7 +151,10 @@
       count.className = 'play-count';
       count.textContent = a.count;
       count.title = a.count + ' plays';
-      const name = document.createElement('span');
+      // A <button>, not a <span>. This was a click handler on a plain span, so
+      // it could not be reached or triggered from the keyboard at all.
+      const name = document.createElement('button');
+      name.type = 'button';
       name.className = 'track-line artist-link';
       name.textContent = a.artist;
       name.title = 'Search for ' + a.artist;
@@ -173,7 +185,7 @@
     }
     meta.textContent = results.length
       ? results.length + (results.length === 1 ? ' track' : ' tracks') + ' found'
-      : 'No tracks found — looks like a fresh one.';
+      : 'No tracks found. Looks like a fresh one.';
 
     results.slice(0, MAX_SEARCH_RESULTS).forEach(function (g) {
       const li = document.createElement('li');
@@ -206,7 +218,7 @@
     const wheel = $('bog-wheel');
     const btn = $('spin-btn');
 
-    // No wheel element (or animations disabled) — reveal immediately.
+    // No wheel element (or animations disabled), so reveal immediately.
     if (!wheel) {
       result.innerHTML = '';
       result.append(trackLineEl(pick), whereEl([pick]));

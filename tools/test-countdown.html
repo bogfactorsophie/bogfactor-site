@@ -1,11 +1,13 @@
 <!doctype html>
-<html>
+<html lang="en-GB">
   <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Test Countdown - Bog Factor</title>
-    <link href="https://fonts.cdnfonts.com/css/luminari" rel="stylesheet">
-    <link href="https://fonts.cdnfonts.com/css/noto-serif-gurmukhi" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.cdnfonts.com/css/morris-roman" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+Gurmukhi:wght@400;600&family=MedievalSharp&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../styles.css">
     <!-- Configure test overrides BEFORE loading main scripts -->
     <script>
@@ -37,82 +39,174 @@
           var now = new Date();
           var showEnd = new Date(testNextShowDate.getTime() + 60 * 60 * 1000);
           return now >= testNextShowDate && now < showEnd;
+        },
+        // The countdown lives in the crier card now, and that card is built
+        // from getUpcoming(). Without this the page would keep announcing
+        // whatever is really on the schedule and quietly ignore the test date.
+        // Returning the test show as a one-item window drives the same card the
+        // landing page shows, countdown and all.
+        getUpcoming: function() {
+          if (!testNextShowDate) return null; // fall through to real logic
+          var start = window.BogFactorTestConfig.getNextShowDate();
+          return [{
+            title: 'Bog Factor',
+            description: 'Test show, driven by the controls below.',
+            startsAt: start.toISOString(),
+            endsAt: new Date(start.getTime() + 60 * 60 * 1000).toISOString(),
+            image: '../assets/town-crier.png'
+          }];
         }
       };
     </script>
     <script src="../scripts/schedule.js"></script>
     <script src="../scripts/live-stream.js"></script>
     <script src="../scripts/toolbar-live-widget.js"></script>
+    <script src="../scripts/toolbar-menu.js"></script>
+    <script src="../scripts/upcoming-shows.js"></script>
   </head>
 
-  <body>
+  <!-- body.landing-page supplies the cover photo and the full-height column, so
+       this page no longer needs its own copy of those rules. -->
+  <body class="landing-page">
     <style>
-      body {
-        background: url('../assets/vibes-graphic.jpg') no-repeat center center fixed;
-        background-size: cover;
-        display: flex;
-        flex-direction: column;
-        height: 100vh;
-        margin: 0;
-      }
       .test-controls {
-        background: #f7e0c1;
-        padding: 20px;
-        margin: 20px auto;
+        background: var(--bog-paper);
+        padding: var(--space-4);
+        margin: var(--space-4) auto;
         max-width: 600px;
-        border-radius: 8px;
+        border-radius: var(--radius-soft);
       }
       .test-controls h2 {
         margin-top: 0;
-        font-family: 'Luminari', fantasy;
-        color: rgb(135, 89, 33);
+        font-family: var(--font-display);
+        color: var(--bog-brown);
       }
       .test-controls label {
         display: block;
-        margin: 15px 0 5px 0;
-        font-family: 'Noto Serif Gurmukhi', sans-serif;
+        margin: var(--space-3) 0 var(--space-1);
+        font-family: var(--font-body);
         font-weight: 600;
       }
       .test-controls input, .test-controls select {
         width: 100%;
-        padding: 8px;
+        padding: var(--space-2);
         font-size: 16px;
-        border: 2px solid rgb(135, 89, 33);
-        border-radius: 4px;
+        border: 2px solid var(--bog-brown);
+        border-radius: var(--radius-soft);
         box-sizing: border-box;
       }
       .test-controls button {
-        background-color: rgb(135, 89, 33);
-        color: wheat;
+        background-color: var(--bog-brown);
+        color: var(--bog-wheat);
         border: none;
-        padding: 12px 20px;
-        font-family: 'MedievalSharp', cursive;
+        padding: var(--space-3) var(--space-4);
+        font-family: var(--font-script);
         font-size: 16px;
         cursor: pointer;
-        margin-top: 15px;
+        margin-top: var(--space-3);
         width: 100%;
       }
       .test-controls button:hover {
-        background-color: rgb(218, 72, 72);
+        background-color: var(--bog-red-deep);
       }
       .test-info {
-        margin-top: 15px;
-        padding: 10px;
+        margin-top: var(--space-3);
+        padding: var(--space-2);
         background: rgba(135, 89, 33, 0.1);
-        border-radius: 4px;
-        font-family: 'Noto Serif Gurmukhi', sans-serif;
-        font-size: 14px;
+        border-radius: var(--radius-soft);
+        font-family: var(--font-body);
+        font-size: var(--text-sm);
       }
     </style>
 
 
     <div class="toolbar">
-      <a href="../index.html">Home</a>
-      <a href="../radio/index.html">Radio</a>
-      <a href="../about/index.html">About</a>
+      <span class="toolbar-logo" aria-hidden="true"><span>Bog</span> <span>Factor</span></span>
+      <nav class="toolbar-nav">
+        <a href="../radio/index.html">Radio</a>
+        <a href="../vault/index.html">Vault</a>
+        <a href="../lore/index.html">Lore</a>
+      </nav>
     </div>
 
-    <div class="test-controls">
+    <!-- The same static hero as index.html, crier card and all. The card is the
+         only countdown on the page now, and it keeps the .countdown class the
+         controls below read.
+
+         What to check as a preset counts down past zero:
+           - OUTSIDE the last hour the "when" line is a static date ("In 3 days
+             · Fri 5 Jun 1:00 pm", or just the time inside a day) in quiet
+             brown, and it does NOT tick. This is the paper state.
+           - crossing INTO the last hour it starts counting in seconds and turns
+             red. Try the "1 minute from now" preset to see the switch.
+           - at zero the card reads "On air now!", its left edge turns red and
+             it pulses; the hero status line gains "On air right now on EHFM"
+             with a pulsing dot
+           - going live HIDES the crier card, leaving the status line as the
+             hero's whole announcement; the card comes back when the hour is up
+           - the EHFM dock relabels itself from "EHFM, live" to
+             "Bog Factor, live" and back, and the toolbar grows its LIVE NOW and
+             Chat pair for the hour
+           - the hero has NO play or chat button in either state. Those live in
+             the toolbar and the dock; the hero's copies were duplicates. -->
+    <main class="hero" id="hero" data-live="false">
+      <!-- role="img" + aria-label, rather than a visually-hidden span beside an
+           aria-hidden svg: that arrangement put the name in the document twice,
+           so a crawler read "Bog Factor BOG FACTOR". This way the glyphs are the
+           only copy of the text and assistive tech gets one clean label. -->
+      <div class="hero-inner">
+      <h1 class="wordmark">
+        <svg class="wordmark-svg" viewBox="0 0 640 215" role="img"
+             aria-label="Bog Factor" focusable="false">
+          <defs>
+            <!-- A wide, shallow arc (radius 560 over a 600 chord, so it rises
+                 about 87 units). The original painted wordmark curves gently;
+                 a tighter radius rotates the outer letters so steeply that the
+                 word reads as lopsided. -->
+            <path id="bog-arc" d="M 20,190 A 560,560 0 0 1 620,190" fill="none"></path>
+          </defs>
+          <text class="wordmark-text">
+            <textPath href="#bog-arc" startOffset="50%" text-anchor="middle">Bog Factor</textPath>
+          </text>
+        </svg>
+        <!-- the shared starburst, sized and placed as a share of the arc so it
+             tracks the wordmark at any width -->
+        <span class="bog-star wordmark-star" aria-hidden="true"></span>
+      </h1>
+
+      <p class="hero-lede">Sophie and Emily go wading for psychedelic folk, pagan boogie and sleaze. Monthly on EHFM, Edinburgh.</p>
+
+      <!-- Empty and hidden off air. The crier card below answers when the next
+           show is; this line only speaks when the show is actually on. -->
+      <p class="hero-status" id="hero-status" role="status"></p>
+
+      <!-- The countdown lives in the crier card, and the crier card lives in
+           the hero, so this page has to render it to test it at all. -->
+      <div class="hero-crier" id="upcoming-section">
+        <div class="upcoming-shows" id="upcoming-shows">
+          <p class="crier-heading">Hear ye! Coming up...</p>
+          <div class="crier-card">
+            <img class="crier-card__crier" src="../assets/town-crier.png" alt="" aria-hidden="true">
+            <div class="crier-card__body">
+              <p class="crier-card__when">First Friday of the month</p>
+              <h3 class="crier-card__title">Bog Factor</h3>
+              <p class="crier-card__desc">Live on EHFM, 1pm to 2pm UK.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty off air, exactly as index.html authors it. -->
+      <div class="hero-actions" id="hero-actions"></div>
+      </div>
+
+      <a class="hero-scroll" href="#test-controls">
+        <span>Dig deeper</span>
+        <span class="hero-scroll__chevron" aria-hidden="true"></span>
+      </a>
+    </main>
+
+    <div class="test-controls" id="test-controls">
       <h2>Countdown Test Controls</h2>
       <p>Set a test "next show" date and time to see how the countdown displays.</p>
 
@@ -140,7 +234,7 @@
         <strong>Update interval:</strong> <span id="update-interval">-</span><br>
         <strong>Status:</strong> <span id="live-status">-</span><br>
         <br>
-        <em>Tip: Try "1 minute from now" to watch the countdown reach zero and automatically switch to "LIVE NOW!" mode.</em>
+        <em>Tip: try "1 minute from now" to watch the line tick down to zero and the hero switch itself into its on-air state. Try a preset several days out to check the opposite: the card should sit there as a static date and not tick at all.</em>
       </div>
     </div>
 
@@ -166,7 +260,7 @@
           document.getElementById('current-countdown').textContent = countdownText;
           document.getElementById('time-format').textContent = days === 0 ? 'Textual with seconds (< 1 day)' : 'Days, Hours (> 1 day)';
           document.getElementById('update-interval').textContent = interval === 1000 ? 'Every second' : 'Every minute';
-          document.getElementById('live-status').textContent = api.isLiveNow() ? 'LIVE NOW!' : 'Off-air (countdown mode)';
+          document.getElementById('live-status').textContent = api.isLiveNow() ? 'On air' : 'Off-air (countdown mode)';
         }
 
         // Update test info display every second
@@ -203,7 +297,15 @@
               break;
           }
 
-          var dateString = testDate.toISOString().slice(0, 16);
+          // <input type="datetime-local"> holds a LOCAL wall-clock time, and
+          // Apply reads it back with new Date(), which also parses it as local.
+          // toISOString() is UTC, so feeding it in here shifted every preset by
+          // the UTC offset — in BST that put "30 minutes from now" half an hour
+          // in the past, and the page went live instead of counting down.
+          var pad = function (n) { return String(n).padStart(2, '0'); };
+          var dateString = testDate.getFullYear() + '-' +
+            pad(testDate.getMonth() + 1) + '-' + pad(testDate.getDate()) + 'T' +
+            pad(testDate.getHours()) + ':' + pad(testDate.getMinutes());
           document.getElementById('test-datetime').value = dateString;
         });
 
