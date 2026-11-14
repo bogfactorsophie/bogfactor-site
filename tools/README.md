@@ -19,7 +19,7 @@ The "Chat" feature should send users to a Chatango chatroom hosted by EHFM.
 
 ### Test Countdown
 
-As the show is only scheduled for once a month, it is convenient to be able to simulate what it looks like in the moments leading up to the start and the end of the show. This ensures that the site transitions cleanly and looks good throughout. Even though Bog Factor is only live for an hour, EHFM broadcasts 24/7 and so the user should be able to listen to our friend's shows through our site.
+As the show is only on once a week, it is convenient to be able to simulate what it looks like in the moments leading up to the start and the end of the show. This ensures that the site transitions cleanly and looks good throughout. Even though Bog Factor is only live for two hours a week, EHFM broadcasts 24/7 and so the user should be able to listen to our friend's shows through our site.
 
 Typically this test page is used by setting the start of the show to be a minute from now, waiting until the next minute, and watching and listening for any transitions.
 

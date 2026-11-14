@@ -91,7 +91,7 @@ async function listShows(env, { includeUnpublished }) {
   const where = includeUnpublished ? '' : 'WHERE is_published = 1';
   const showsRes = await env.DB.prepare(
     `SELECT id, title, description, mixcloud_path, soundcloud_url, aired_at,
-            duration_min, producer, image_key, is_published
+            duration_min, producer, image_key, is_published, is_morning_show
        FROM shows
        ${where}
        ORDER BY aired_at DESC`
@@ -122,6 +122,9 @@ async function listShows(env, { includeUnpublished }) {
     airedAt: s.aired_at,
     durationMin: s.duration_min || undefined,
     producer: s.producer || undefined,
+    // Tagged when the show went out on EHFM Mornings (Mon 10am-12pm), as a
+    // cover or as residents. The old monthly Friday shows are false.
+    isMorningShow: Boolean(s.is_morning_show),
     image: s.image_key ? `/api/images/${encodeURIComponent(s.image_key)}` : undefined,
     isPublished: includeUnpublished ? Boolean(s.is_published) : undefined,
     tracklist: tracksByShow.get(s.id) || [],
@@ -148,7 +151,7 @@ async function serveImage(env, key) {
 
 const TOWN_CRIER_IMAGE = '/assets/town-crier.png';
 const SCHEDULE_WINDOW_BACK_MS = 2 * 60 * 60 * 1000;        // 2h before now
-const SCHEDULE_WINDOW_FWD_MS = 90 * 24 * 60 * 60 * 1000;   // 90d ahead (find next monthly show)
+const SCHEDULE_WINDOW_FWD_MS = 90 * 24 * 60 * 60 * 1000;   // 90d ahead (find the next show, even after a break)
 const UPCOMING_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;        // landing cards: next 7 days
 
 async function getSchedule(env) {
@@ -520,8 +523,8 @@ async function writeShow(env, body, { mode }) {
       env.DB.prepare(
         `INSERT INTO shows (id, title, description, mixcloud_path, soundcloud_url,
                             aired_at, duration_min, producer, image_key, is_published,
-                            created_at, updated_at)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+                            is_morning_show, created_at, updated_at)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`
       ).bind(
         body.id,
         body.title,
@@ -533,6 +536,7 @@ async function writeShow(env, body, { mode }) {
         body.producer || null,
         body.imageKey || null,
         body.isPublished === false ? 0 : 1,
+        body.isMorningShow ? 1 : 0,
         now,
         now
       )
@@ -543,7 +547,7 @@ async function writeShow(env, body, { mode }) {
         `UPDATE shows
             SET title = ?, description = ?, mixcloud_path = ?, soundcloud_url = ?,
                 aired_at = ?, duration_min = ?, producer = ?, image_key = ?,
-                is_published = ?, updated_at = ?
+                is_published = ?, is_morning_show = ?, updated_at = ?
           WHERE id = ?`
       ).bind(
         body.title,
@@ -555,6 +559,7 @@ async function writeShow(env, body, { mode }) {
         body.producer || null,
         body.imageKey || null,
         body.isPublished === false ? 0 : 1,
+        body.isMorningShow ? 1 : 0,
         now,
         body.id
       ),

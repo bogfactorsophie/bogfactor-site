@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS shows (
   producer        TEXT,
   image_key       TEXT,
   is_published    INTEGER NOT NULL DEFAULT 1,
+  is_morning_show INTEGER NOT NULL DEFAULT 0,   -- aired on EHFM Mornings (Mon 10am-12pm)
   created_at      TEXT NOT NULL DEFAULT (datetime('now')),
   updated_at      TEXT NOT NULL DEFAULT (datetime('now'))
 );
@@ -24,7 +25,7 @@ CREATE TABLE IF NOT EXISTS tracks (
 );
 
 -- Broadcast schedule. Two kinds of row:
---   'recurring' — a structured nth-weekday rule (e.g. 1st Friday monthly, 13:00)
+--   'recurring' — a weekly or nth-weekday rule (e.g. every Monday 10:00, EHFM Mornings)
 --   'oneoff'    — an ad-hoc show / special at a specific instant
 -- The site derives isLive / next-show / upcoming from these by expanding
 -- recurring rules into concrete occurrences in the Worker.

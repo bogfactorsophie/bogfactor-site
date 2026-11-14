@@ -1,8 +1,8 @@
 ## Project Overview
 
-Bog Factor is a monthly radio show hosted by Sophie and Emily on EHFM, a community radio station broadcasting from Edinburgh. The girls play psychedelic, folk, and sleazy music. They are inspired by nature and the neolithic, and have a particular fondness for the Rhynie Man, who they want to free from his shackles.
+Bog Factor is a radio show hosted by Sophie and Emily on EHFM, a community radio station broadcasting from Edinburgh. The girls play psychedelic, folk, and sleazy music. They are inspired by nature and the neolithic, and have a particular fondness for the Rhynie Man, who they want to free from his shackles.
 
-The show is live from 1pm-2pm UK time on the first Friday of every month.
+Since 23 November 2026 they are residents on **EHFM Mornings**, live 10am-12pm UK time every Monday. The old monthly show (1pm-2pm, first Friday of the month) has ended. Shows that went out on EHFM Mornings, whether as residents or earlier as covers, are tagged `isMorningShow` in D1 (set via the "EHFM Mornings" checkbox in `/admin/add-show`) and get an "EHFM Mornings" badge in the archive.
 
 ## Web Design Principles
 
@@ -91,6 +91,7 @@ newest first. Each show comes back as:
 - `mixcloudPath` - Path to the Mixcloud player (e.g., "/ehfm/bog-fav/")
 - `airedAt` - ISO date the show went out
 - `image` (optional) - `/api/images/{key}`, backed by R2 — **not** a path into `assets/`
+- `isMorningShow` - true if it aired on EHFM Mornings (column `is_morning_show`)
 - `tracklist` - Array of track strings in "Artist - Title" format
 
 `scripts/generate-show-list.js` (radio page) and `scripts/recent-shows.js`
@@ -163,7 +164,8 @@ npx wrangler d1 execute bogfactor --local --file=worker-shows/schema.sql -c work
 #   npx wrangler d1 export bogfactor --remote --output=tools/out/shows.sql
 #   npx wrangler d1 execute bogfactor --local --file=tools/out/shows.sql -c worker-shows/wrangler.dev.toml
 
-# Seed the default broadcast schedule (1st Friday monthly, 13:00–14:00 Europe/London)
+# Seed the broadcast schedule (EHFM Mornings, Mondays 10:00–12:00 Europe/London;
+# plus the ended 1st-Friday monthly rule)
 npx wrangler d1 execute bogfactor --local --file=tools/seed-schedule.sql -c worker-shows/wrangler.dev.toml
 ```
 
@@ -175,7 +177,13 @@ npx wrangler dev -c worker-shows/wrangler.dev.toml --port 8787
 ```
 
 Local D1 lives under `.wrangler/` (gitignored); re-run the seed step to refresh
-it. Show images are not seeded into local R2, so `/api/images/*` will 404
+it. `.assetsignore` (repo root) keeps tooling, secrets and the unreadable WSL
+symlinks under `.claude/skills/` and `tools/.venv/` out of the served assets;
+without it `wrangler dev` crashes with EACCES. The file watcher still trips on
+those symlinks, so hot-reload is off: restart `wrangler dev` after edits.
+
+One-off schema/data changes live in `worker-shows/migrations/`. Apply each once,
+remote and local, before deploying worker code that depends on it. Show images are not seeded into local R2, so `/api/images/*` will 404
 locally — harmless for everything except previewing show artwork.
 
 Note: `/api/admin/*` still requires a `Cf-Access-Jwt-Assertion` header (injected

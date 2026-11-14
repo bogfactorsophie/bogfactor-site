@@ -35,6 +35,15 @@ document.addEventListener('keydown', function (event) {
   }
 });
 
+// Small badge for shows that went out on EHFM Mornings (Mon 10am-12pm).
+// Shared look with the landing page's recent cards (.show-tag in styles.css).
+function morningTag() {
+  const tag = document.createElement('span');
+  tag.className = 'show-tag';
+  tag.textContent = 'EHFM Mornings';
+  return tag;
+}
+
 // Generate shows from JSON
 window.loadShows = async function () {
   try {
@@ -91,6 +100,7 @@ window.loadShows = async function () {
       };
 
       title.appendChild(titleLink);
+      if (show.isMorningShow) title.appendChild(morningTag());
       title.appendChild(linkIcon);
 
       const description = document.createElement('p');

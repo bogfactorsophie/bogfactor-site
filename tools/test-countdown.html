@@ -13,31 +13,32 @@
     <script>
       // Test state - modified by test controls below
       var testNextShowDate = null;
+      // EHFM Mornings runs two hours (Mon 10am-12pm).
+      var SHOW_LENGTH_MS = 2 * 60 * 60 * 1000;
 
       window.BogFactorTestConfig = {
         isLandingPage: true,
         getNextShowDate: function() {
           if (!testNextShowDate) return null; // fall through to real logic
           var now = new Date();
-          var showEnd = new Date(testNextShowDate.getTime() + 60 * 60 * 1000);
+          var showEnd = new Date(testNextShowDate.getTime() + SHOW_LENGTH_MS);
           // If test show has ended, return a date far in the future so countdown resets
           if (now >= showEnd) {
-            var nextMonth = new Date(testNextShowDate);
-            nextMonth.setMonth(nextMonth.getMonth() + 1);
-            nextMonth.setDate(1);
-            // Find first Friday of next month
-            while (nextMonth.getDay() !== 5) {
-              nextMonth.setDate(nextMonth.getDate() + 1);
+            // Next Monday, 10am
+            var nextShow = new Date(testNextShowDate);
+            nextShow.setDate(nextShow.getDate() + 1);
+            while (nextShow.getDay() !== 1) {
+              nextShow.setDate(nextShow.getDate() + 1);
             }
-            nextMonth.setHours(13, 0, 0, 0);
-            return nextMonth;
+            nextShow.setHours(10, 0, 0, 0);
+            return nextShow;
           }
           return testNextShowDate;
         },
         isLiveNow: function() {
           if (!testNextShowDate) return null; // fall through to real logic
           var now = new Date();
-          var showEnd = new Date(testNextShowDate.getTime() + 60 * 60 * 1000);
+          var showEnd = new Date(testNextShowDate.getTime() + SHOW_LENGTH_MS);
           return now >= testNextShowDate && now < showEnd;
         },
         // The countdown lives in the crier card now, and that card is built
@@ -49,10 +50,10 @@
           if (!testNextShowDate) return null; // fall through to real logic
           var start = window.BogFactorTestConfig.getNextShowDate();
           return [{
-            title: 'Bog Factor',
+            title: 'Bog Factor on EHFM Mornings',
             description: 'Test show, driven by the controls below.',
             startsAt: start.toISOString(),
-            endsAt: new Date(start.getTime() + 60 * 60 * 1000).toISOString(),
+            endsAt: new Date(start.getTime() + SHOW_LENGTH_MS).toISOString(),
             image: '../assets/town-crier.png'
           }];
         }
@@ -174,7 +175,7 @@
         <span class="bog-star wordmark-star" aria-hidden="true"></span>
       </h1>
 
-      <p class="hero-lede">Sophie and Emily go wading for psychedelic folk, pagan boogie and sleaze. Monthly on EHFM, Edinburgh.</p>
+      <p class="hero-lede">Sophie and Emily go wading for psychedelic folk, pagan boogie and sleaze. Residents on EHFM Mornings, every Monday from 10am to 12pm.</p>
 
       <!-- Empty and hidden off air. The crier card below answers when the next
            show is; this line only speaks when the show is actually on. -->
@@ -188,9 +189,9 @@
           <div class="crier-card">
             <img class="crier-card__crier" src="../assets/town-crier.png" alt="" aria-hidden="true">
             <div class="crier-card__body">
-              <p class="crier-card__when">First Friday of the month</p>
+              <p class="crier-card__when">Every Monday</p>
               <h3 class="crier-card__title">Bog Factor</h3>
-              <p class="crier-card__desc">Live on EHFM, 1pm to 2pm UK.</p>
+              <p class="crier-card__desc">Live on EHFM Mornings, 10am to 12pm UK.</p>
             </div>
           </div>
         </div>
@@ -214,7 +215,7 @@
       <select id="test-preset">
         <option value="">-- Choose a preset --</option>
         <option value="1min">1 minute from now (watch it go live!)</option>
-        <option value="59min-ago">1 minute until show ends (watch it end!)</option>
+        <option value="119min-ago">1 minute until show ends (watch it end!)</option>
         <option value="30min">30 minutes from now</option>
         <option value="2hours">2 hours from now</option>
         <option value="12hours">12 hours from now</option>
@@ -277,8 +278,8 @@
             case '1min':
               testDate.setMinutes(testDate.getMinutes() + 1);
               break;
-            case '59min-ago':
-              testDate.setMinutes(testDate.getMinutes() - 59);
+            case '119min-ago':
+              testDate.setMinutes(testDate.getMinutes() - 119);
               break;
             case '30min':
               testDate.setMinutes(testDate.getMinutes() + 30);

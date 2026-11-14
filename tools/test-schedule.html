@@ -113,7 +113,7 @@
         <span class="bog-star wordmark-star" aria-hidden="true"></span>
       </h1>
 
-      <p class="hero-lede">Sophie and Emily go wading for psychedelic folk, pagan boogie and sleaze. Monthly on EHFM, Edinburgh.</p>
+      <p class="hero-lede">Sophie and Emily go wading for psychedelic folk, pagan boogie and sleaze. Residents on EHFM Mornings, every Monday from 10am to 12pm.</p>
 
       <!-- Empty and hidden off air. The crier card below answers when the next
            show is; this line only speaks when the show is actually on. -->
@@ -129,9 +129,9 @@
           <div class="crier-card">
             <img class="crier-card__crier" src="/assets/town-crier.png" alt="" aria-hidden="true">
             <div class="crier-card__body">
-              <p class="crier-card__when">First Friday of the month</p>
+              <p class="crier-card__when">Every Monday</p>
               <h3 class="crier-card__title">Bog Factor</h3>
-              <p class="crier-card__desc">Live on EHFM, 1pm to 2pm UK.</p>
+              <p class="crier-card__desc">Live on EHFM Mornings, 10am to 12pm UK.</p>
             </div>
           </div>
         </div>
@@ -191,20 +191,20 @@
           testState.live = true;
           testState.nextDate = new Date(Date.now() + 32 * 24 * 60 * 60000);
           testState.upcoming = [
-            occ(-20, 60, 'Bog Factor', 'On air right now. Psychedelic folk from the bog.'),
-            occ(3 * 24 * 60, 120, 'Morning Show Cover', 'We are taking over the morning show!'),
+            occ(-20, 120, 'Bog Factor on EHFM Mornings', 'On air right now. Psychedelic folk from the bog.'),
+            occ(3 * 24 * 60, 90, 'Neolithic Special', 'A deep dive for the Rhynie Man.'),
           ];
         },
         soon: function () {
           testState.live = false;
           testState.nextDate = new Date(Date.now() + 60000);
-          testState.upcoming = [occ(1, 60, 'Bog Factor', 'Starting in a minute, tune in!')];
+          testState.upcoming = [occ(1, 120, 'Bog Factor on EHFM Mornings', 'Starting in a minute, tune in!')];
         },
         week: function () {
           testState.live = false;
           testState.nextDate = new Date(Date.now() + 2 * 24 * 60 * 60000);
           testState.upcoming = [
-            occ(2 * 24 * 60, 60, 'Bog Factor', 'The usual monthly dose of bog.'),
+            occ(2 * 24 * 60, 120, 'Bog Factor on EHFM Mornings', 'The usual Monday dose of bog.'),
             occ(4 * 24 * 60, 90, 'Neolithic Special', 'A deep dive for the Rhynie Man.', 'https://bogfactor.co.uk'),
           ];
         },

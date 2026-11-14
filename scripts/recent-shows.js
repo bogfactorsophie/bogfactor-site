@@ -165,6 +165,13 @@
     link.textContent = show.title;
     title.appendChild(link);
     meta.appendChild(title);
+
+    if (show.isMorningShow) {
+      const tag = document.createElement('span');
+      tag.className = 'show-tag';
+      tag.textContent = 'EHFM Mornings';
+      meta.appendChild(tag);
+    }
     body.appendChild(meta);
 
     const text = blurb(show.description);

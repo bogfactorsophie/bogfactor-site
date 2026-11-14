@@ -1,6 +1,6 @@
 // Admin tool for the broadcast schedule (/admin/schedule/).
 // One page, two kinds of event sharing the /api/admin/schedule endpoints:
-//   - recurring rules (the monthly show, editable)  -> #recurring-form / #recurring-list
+//   - recurring rules (EHFM Mornings every Monday, editable)  -> #recurring-form / #recurring-list
 //   - one-off ad-hoc shows & specials               -> #oneoff-form    / #oneoff-list
 // Mirrors the conventions in scripts/admin-shows.js (api() helper + Cloudflare Access).
 (function () {
@@ -139,12 +139,12 @@
   function resetRecurring() {
     $('recurring-form').reset();
     $('rec-editing-id').value = '';
-    $('rec-title').value = 'Bog Factor';
-    $('rec-freq').value = 'monthly';
+    $('rec-title').value = 'Bog Factor on EHFM Mornings';
+    $('rec-freq').value = 'weekly';
     $('rec-week').value = '1';
-    $('rec-weekday').value = '5';
-    $('rec-time').value = '13:00';
-    $('rec-duration').value = '60';
+    $('rec-weekday').value = '1';
+    $('rec-time').value = '10:00';
+    $('rec-duration').value = '120';
     $('rec-timezone').value = 'Europe/London';
     $('rec-active').checked = true;
     $('recurring-form-title').textContent = 'New recurring rule';
@@ -156,11 +156,11 @@
     $('rec-editing-id').value = e.id;
     $('rec-title').value = e.title || '';
     $('rec-description').value = e.description || '';
-    $('rec-freq').value = e.recFreq || 'monthly';
+    $('rec-freq').value = e.recFreq || 'weekly';
     $('rec-week').value = e.recWeek || 1;
-    $('rec-weekday').value = e.recWeekday != null ? e.recWeekday : 5;
-    $('rec-time').value = e.recTime || '13:00';
-    $('rec-duration').value = e.durationMin || 60;
+    $('rec-weekday').value = e.recWeekday != null ? e.recWeekday : 1;
+    $('rec-time').value = e.recTime || '10:00';
+    $('rec-duration').value = e.durationMin || 120;
     $('rec-timezone').value = e.timezone || 'Europe/London';
     $('rec-from').value = e.recFrom || '';
     $('rec-until').value = e.recUntil || '';

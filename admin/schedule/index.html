@@ -112,7 +112,7 @@
       <input type="hidden" id="rec-editing-id">
 
       <label>Title
-        <input type="text" id="rec-title" required value="Bog Factor">
+        <input type="text" id="rec-title" required value="Bog Factor on EHFM Mornings">
       </label>
       <label>Description <span class="hint">(optional)</span>
         <textarea id="rec-description" rows="2"></textarea>
@@ -121,11 +121,11 @@
       <div class="row-3">
         <label>Frequency
           <select id="rec-freq">
+            <option value="weekly" selected>Weekly</option>
             <option value="monthly">Monthly</option>
-            <option value="weekly">Weekly</option>
           </select>
         </label>
-        <label id="rec-week-wrap">Week of month
+        <label id="rec-week-wrap" style="display:none">Week of month
           <select id="rec-week">
             <option value="1">1st</option>
             <option value="2">2nd</option>
@@ -137,11 +137,11 @@
         <label>Day
           <select id="rec-weekday">
             <option value="0">Sunday</option>
-            <option value="1">Monday</option>
+            <option value="1" selected>Monday</option>
             <option value="2">Tuesday</option>
             <option value="3">Wednesday</option>
             <option value="4">Thursday</option>
-            <option value="5" selected>Friday</option>
+            <option value="5">Friday</option>
             <option value="6">Saturday</option>
           </select>
         </label>
@@ -149,10 +149,10 @@
 
       <div class="row-3">
         <label>Start time <span class="hint">(local)</span>
-          <input type="time" id="rec-time" value="13:00" required>
+          <input type="time" id="rec-time" value="10:00" required>
         </label>
         <label>Duration (min)
-          <input type="number" id="rec-duration" min="1" step="1" value="60" required>
+          <input type="number" id="rec-duration" min="1" step="1" value="120" required>
         </label>
         <label>Timezone
           <input type="text" id="rec-timezone" value="Europe/London">
@@ -168,8 +168,8 @@
         </label>
       </div>
 
-      <label>Skip dates <span class="hint">(one YYYY-MM-DD per line, for months off or moved)</span>
-        <textarea id="rec-skips" rows="3" placeholder="2026-08-07"></textarea>
+      <label>Skip dates <span class="hint">(one YYYY-MM-DD per line, for weeks off or moved)</span>
+        <textarea id="rec-skips" rows="3" placeholder="2026-12-28"></textarea>
       </label>
 
       <label class="inline-check">
