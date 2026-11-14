@@ -120,7 +120,7 @@
 
       <div class="row">
         <label>Duration (minutes) <span class="hint">(optional)</span>
-          <input type="number" id="durationMin" min="0" step="1">
+          <input type="number" id="durationMin" min="0" step="1" value="120">
         </label>
         <label>Producer <span class="hint">(optional)</span>
           <input type="text" id="producer">
@@ -139,6 +139,11 @@
 
       <label>Tracklist <span class="hint">(one per line, "Title - Artist")</span>
         <textarea id="tracklist" rows="10" placeholder="Track Title - Artist"></textarea>
+      </label>
+
+      <label>
+        <input type="checkbox" id="isMorningShow" checked style="width:auto;display:inline-block;margin-right:6px">
+        EHFM Mornings <span class="hint">(aired on the Monday 10am&ndash;12pm morning show)</span>
       </label>
 
       <label>

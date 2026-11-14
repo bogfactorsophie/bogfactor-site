@@ -1211,6 +1211,24 @@ img {
     text-decoration: underline;
 }
 
+/* "EHFM Mornings" badge on archived shows (radio page and landing cards).
+   A little stamped chip, like a guidebook's route marker. */
+.show-tag {
+    display: inline-block;
+    flex: 0 0 auto;
+    padding: 1px 10px;
+    border: 1px solid var(--bog-green);
+    border-radius: var(--radius-pill);
+    color: var(--bog-green);
+    background: rgba(190, 205, 121, 0.25);
+    font-family: var(--font-body);
+    font-size: var(--text-xs);
+    font-weight: 600;
+    line-height: 1.6;
+    white-space: nowrap;
+    letter-spacing: 0.02em;
+}
+
 /* Show Title Links */
 .show-title {
     display: flex;

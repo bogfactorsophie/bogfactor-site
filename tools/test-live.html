@@ -17,13 +17,13 @@
         isLandingPage: true,
         // The crier card below the hero builds itself from getUpcoming(), so
         // forcing isLiveNow() alone would leave it counting down to the next
-        // real show while the hero says we are on air. Hand it an occurrence
-        // that started half an hour ago and runs for another half hour.
+        // real show while the hero says we are on air. Hand it a two-hour
+        // EHFM Mornings occurrence that started an hour ago.
         getUpcoming: () => [{
-          title: 'Bog Factor',
-          description: 'Test show, on air for the next half hour.',
-          startsAt: new Date(Date.now() - 30 * 60 * 1000).toISOString(),
-          endsAt: new Date(Date.now() + 30 * 60 * 1000).toISOString(),
+          title: 'Bog Factor on EHFM Mornings',
+          description: 'Test show, on air for the next hour.',
+          startsAt: new Date(Date.now() - 60 * 60 * 1000).toISOString(),
+          endsAt: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
           image: '../assets/town-crier.png'
         }]
       };
@@ -90,7 +90,7 @@
         <span class="bog-star wordmark-star" aria-hidden="true"></span>
       </h1>
 
-      <p class="hero-lede">Sophie and Emily go wading for psychedelic folk, pagan boogie and sleaze. Monthly on EHFM, Edinburgh.</p>
+      <p class="hero-lede">Sophie and Emily go wading for psychedelic folk, pagan boogie and sleaze. Residents on EHFM Mornings, every Monday from 10am to 12pm.</p>
 
       <!-- Empty and hidden off air. The crier card below answers when the next
            show is; this line only speaks when the show is actually on. -->
@@ -106,9 +106,9 @@
           <div class="crier-card">
             <img class="crier-card__crier" src="/assets/town-crier.png" alt="" aria-hidden="true">
             <div class="crier-card__body">
-              <p class="crier-card__when">First Friday of the month</p>
+              <p class="crier-card__when">Every Monday</p>
               <h3 class="crier-card__title">Bog Factor</h3>
-              <p class="crier-card__desc">Live on EHFM, 1pm to 2pm UK.</p>
+              <p class="crier-card__desc">Live on EHFM Mornings, 10am to 12pm UK.</p>
             </div>
           </div>
         </div>

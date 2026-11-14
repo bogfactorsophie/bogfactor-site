@@ -193,7 +193,7 @@
     const note = dock.querySelector('.ehfm-dock-note');
 
     // Whose sound is this? Off air it is the station, on air it is us. The old
-    // circle looked identical either way, which wasted the one hour a month
+    // circle looked identical either way, which wasted the two hours a week
     // where the answer actually matters.
     if (live) {
       kicker.innerHTML = '<span class="live-dot"></span>Bog Factor, live';

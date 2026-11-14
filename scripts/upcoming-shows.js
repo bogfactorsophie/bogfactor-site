@@ -29,7 +29,7 @@
   'use strict';
 
   const CONTAINER_ID = 'upcoming-shows';
-  const STANDING_SCHEDULE = 'Live on EHFM, first Friday of the month, 1pm to 2pm UK.';
+  const STANDING_SCHEDULE = 'Live on EHFM Mornings, every Monday, 10am to 12pm UK.';
 
   const SECOND = 1000;
   const HOUR = 60 * 60 * SECOND;
@@ -94,7 +94,7 @@
 
   // The card's headline fact.
   //
-  // For a monthly show, "in 15 hours 39 minutes 16 seconds" is precision nobody
+  // For a weekly show, "in 15 hours 39 minutes 16 seconds" is precision nobody
   // asked for, and a line rewriting itself every second turns a proclamation
   // into a dashboard. So outside the final hour this is a date: days at the
   // coarsest, a clock time at the finest, changing once a day at most.
@@ -135,7 +135,7 @@
     const live = isLive(occ, now);
     // `.countdown` is the stable hook the test pages read. The `--countdown`
     // modifier is the loud red styling, and it is earned only while the line is
-    // actually counting down; the rest of the month it is quiet brown on paper.
+    // actually counting down; the rest of the week it is quiet brown on paper.
     const whenClass = 'crier-card__when countdown' +
       (ticks(occ, now) ? ' crier-card__when--countdown' : '');
 

@@ -1,0 +1,11 @@
+# Local-dev only (worker-shows/wrangler.dev.toml serves the repo root as assets).
+# Keep tooling, secrets and unreadable symlinks out of the served site.
+.claude
+.git
+.github
+.env
+.wrangler
+tools/.venv
+tools/out
+worker
+worker-shows

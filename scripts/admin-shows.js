@@ -81,6 +81,7 @@
       $('durationMin').value = s.durationMin || '';
       $('producer').value = s.producer || '';
       $('isPublished').checked = s.isPublished !== false;
+      $('isMorningShow').checked = Boolean(s.isMorningShow);
       $('tracklist').value = (s.tracklist || []).join('\n');
       $('imageKey').value = s.image ? extractKey(s.image) : '';
       if (s.image) {
@@ -150,6 +151,7 @@
         producer: $('producer').value.trim() || null,
         imageKey: $('imageKey').value || null,
         isPublished: $('isPublished').checked,
+        isMorningShow: $('isMorningShow').checked,
         tracklist: $('tracklist').value.split('\n').map((l) => l.trim()).filter(Boolean),
       };
 
@@ -217,6 +219,7 @@
           const aired = new Date(s.airedAt);
           info.innerHTML = `<strong>${escapeHtml(s.title)}</strong>` +
             `<div class="meta">${s.id} · ${isNaN(aired) ? s.airedAt : aired.toLocaleString()}` +
+            (s.isMorningShow ? ' · <span class="tag">EHFM Mornings</span>' : '') +
             (s.isPublished === false ? ' · <em>unpublished</em>' : '') + '</div>';
           const edit = document.createElement('button');
           edit.textContent = 'Edit';
