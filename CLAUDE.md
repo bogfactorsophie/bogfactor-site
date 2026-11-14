@@ -183,7 +183,9 @@ without it `wrangler dev` crashes with EACCES. The file watcher still trips on
 those symlinks, so hot-reload is off: restart `wrangler dev` after edits.
 
 One-off schema/data changes live in `worker-shows/migrations/`. Apply each once,
-remote and local, before deploying worker code that depends on it. Show images are not seeded into local R2, so `/api/images/*` will 404
+remote and local, before deploying worker code that depends on it.
+
+Show images are not seeded into local R2, so `/api/images/*` will 404
 locally — harmless for everything except previewing show artwork.
 
 Note: `/api/admin/*` still requires a `Cf-Access-Jwt-Assertion` header (injected
