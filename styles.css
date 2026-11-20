@@ -1044,10 +1044,15 @@ img {
        behind it. It was 9999 against the modal's 2000. */
     z-index: var(--z-player);
     transition: transform 0.3s ease-in-out;
+    box-sizing: border-box;
+    overflow: hidden;
 }
 
 #mixcloud-player.player-hidden {
-    transform: translateY(100%);
+    /* calc(100% + 40px) ensures the player is fully off-screen even when
+       mobile browser chrome (tab bars, home indicators) or iframe sizing
+       quirks would leave a sliver visible with a bare 100%. */
+    transform: translateY(calc(100% + 40px));
 }
 
 #mixcloud-player.player-visible {
@@ -1071,6 +1076,17 @@ img {
 
 .player-iframe-container {
     padding: 0;
+}
+
+/* Ensure the Mixcloud iframe stays at its intended height and never picks up
+   a default border that would push the real content outside the hidden
+   container. */
+#mixcloud-widget,
+.player-iframe-container iframe {
+    display: block;
+    width: 100%;
+    height: 120px;
+    border: none;
 }
 
 /* ---- the button family ------------------------------------------------
