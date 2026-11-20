@@ -125,8 +125,11 @@
       const height = player.offsetHeight;
       document.documentElement.style.setProperty('--player-height', height + 'px');
 
-      // Add padding to body to prevent content from being hidden
-      document.body.style.paddingBottom = height + 'px';
+      // Add padding to body to prevent content from being hidden.
+      // Some mobile browsers report 0 for off-screen fixed elements,
+      // so fall back to a known safe value (controls ~50 px + iframe 120 px).
+      const safeHeight = height || 170;
+      document.body.style.paddingBottom = safeHeight + 'px';
     },
 
     hidePlayer() {
