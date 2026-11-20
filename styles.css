@@ -785,7 +785,8 @@ span.toolbar-logo {
 
 body.radio-page .sun-container,
 body.lore-page .sun-container,
-body.blog-page .sun-container {
+body.blog-page .sun-container,
+body.epk-page .sun-container {
     z-index: var(--z-behind);
     pointer-events: none;
 }
