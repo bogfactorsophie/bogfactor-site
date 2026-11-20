@@ -99,7 +99,8 @@ body {
 body.landing-page,
 body.radio-page,
 body.lore-page,
-body.blog-page {
+body.blog-page,
+body.epk-page {
     background: url('assets/vibes-graphic-crop.jpg') no-repeat center center fixed;
     background-size: cover;
 }
@@ -1165,18 +1166,21 @@ img {
     box-shadow: 0 4px 15px rgba(54, 50, 41, 0.25);
 }
 
-.lore-page a {
+.lore-page a,
+.epk-page a {
     color: var(--bog-brown);
     text-decoration: none;
     transition: color 0.3s ease;
 }
 
-.lore-page a:hover {
+.lore-page a:hover,
+.epk-page a:hover {
     color: var(--bog-red-deep);
     text-decoration: underline;
 }
 
-.lore-page a:visited {
+.lore-page a:visited,
+.epk-page a:visited {
     color: var(--bog-plum);
 }
 
@@ -2065,6 +2069,95 @@ html {
     color: var(--bog-red-deep);
 }
 
+/* ============================================================
+   EPK Gallery
+   ============================================================ */
+
+.epk-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-family: var(--font-body);
+    color: var(--bog-ink);
+    margin-top: var(--space-3);
+}
+
+.epk-table tr {
+    border-bottom: 1px solid var(--bog-brown-hair);
+}
+
+.epk-table tr:last-child {
+    border-bottom: none;
+}
+
+.epk-table th,
+.epk-table td {
+    padding: var(--space-2) var(--space-2);
+    text-align: left;
+    vertical-align: top;
+    line-height: 1.5;
+}
+
+.epk-table th {
+    font-family: var(--font-display);
+    font-weight: 400;
+    color: var(--bog-brown);
+    white-space: nowrap;
+    width: 1%;
+}
+
+.epk-table td {
+    font-family: var(--font-body);
+    color: var(--bog-ink);
+}
+
+.epk-gallery {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-4);
+    margin-top: var(--space-4);
+}
+
+.epk-gallery__item {
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-2);
+}
+
+.epk-gallery__item a {
+    display: block;
+    overflow: hidden;
+    border-radius: var(--radius-soft);
+    background-color: var(--bog-brown-hair);
+    aspect-ratio: 3 / 4;
+}
+
+.epk-gallery__item a img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.4s ease, filter 0.3s ease;
+}
+
+.epk-gallery__item a:hover img,
+.epk-gallery__item a:focus img {
+    transform: scale(1.05);
+    filter: sepia(0.2) saturate(1.1);
+}
+
+.epk-gallery__item a:focus-visible {
+    outline: 3px solid var(--bog-brown);
+    outline-offset: 2px;
+}
+
+.epk-gallery__item figcaption {
+    font-family: var(--font-script);
+    font-size: var(--text-sm);
+    color: var(--bog-brown);
+    text-align: center;
+}
+
 /* Mobile Responsive Styles */
 @media screen and (max-width: 768px) {
     /* Increase base text size for better accessibility on mobile */
@@ -2105,6 +2198,12 @@ html {
     .recent-section {
         max-width: none;
         width: 92%;
+    }
+
+    /* EPK gallery collapses to two columns on mobile */
+    .epk-gallery {
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-3);
     }
 
     /* the billboard keeps its full screen on a phone; only the side gutters
